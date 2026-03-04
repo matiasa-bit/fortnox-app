@@ -87,6 +87,10 @@ export async function getCrmClients(search = "") {
 
   if (["active", "paused", "former"].includes(status)) {
     clients = clients.filter(row => String(row.client_status || "").trim() === status);
+  } else if (status === "fortnox_active") {
+    clients = clients.filter(row => row.fortnox_active === true);
+  } else if (status === "fortnox_inactive") {
+    clients = clients.filter(row => row.fortnox_active === false);
   }
 
   if (term) {

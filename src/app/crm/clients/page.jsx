@@ -60,6 +60,8 @@ export default async function CrmClientsPage({ searchParams }) {
           <option value="active">active</option>
           <option value="paused">paused</option>
           <option value="former">former</option>
+          <option value="fortnox_active">Fortnox: aktiv</option>
+          <option value="fortnox_inactive">Fortnox: inaktiv</option>
         </select>
 
         <button type="submit" style={{ background: "#2f7ef7", color: "#fff", border: "none", borderRadius: 10, padding: "10px 14px", fontWeight: 700, cursor: "pointer" }}>
