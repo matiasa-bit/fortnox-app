@@ -1252,6 +1252,14 @@ export default function DashboardClient({
   const articleGroupOptionsForRevenuePerHour = useMemo(() => {
     const names = new Set();
 
+    (articleGroupMappings || []).forEach(row => {
+      const groupName = String(row.group_name || "").trim();
+      const isActive = row.active === false ? false : true;
+      if (groupName && isActive) {
+        names.add(groupName);
+      }
+    });
+
     filteredInvoicesForRollingWindow.forEach(inv => {
       const invoiceNumber = String(inv.document_number || "").trim();
       const cachedRows = invoiceRows[invoiceNumber];
