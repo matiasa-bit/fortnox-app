@@ -571,10 +571,8 @@ async function getDashboardDataFromDbCached(fromDate) {
 export default async function Home({ searchParams }) {
   const cookieStore = await cookies();
   const hasAppAuth = cookieStore.get("app_auth")?.value === "1";
-  const isLoggedIn = cookieStore.get("fortnox_auth")?.value;
   const userId = cookieStore.get("user_id")?.value || "default_user"; // använd user_id från cookies eller default
   const token = await getToken(userId);
-  const allowSharedView = process.env.ALLOW_SHARED_VIEW_WITHOUT_LOGIN === "true";
 
   const appAuthParam = searchParams?.appAuth;
   const appAuthFailed = Array.isArray(appAuthParam) ? appAuthParam.includes("failed") : appAuthParam === "failed";
@@ -616,7 +614,7 @@ export default async function Home({ searchParams }) {
     );
   }
 
-  if (!token || (!isLoggedIn && !allowSharedView)) {
+  if (!token) {
     return (
       <main className="min-h-screen flex items-center justify-center" style={{background: "linear-gradient(135deg, #0f1923 0%, #1a2e3b 100%)"}}>
         <div className="text-center">
