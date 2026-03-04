@@ -194,6 +194,39 @@ function findOptionByInput(options = [], input = "") {
   );
 }
 
+function getContractTemplateNumber(row = {}) {
+  const raw = row?.raw_data || row || {};
+  const candidate =
+    raw.ContractTemplateNumber ??
+    raw.ContractTemplateNo ??
+    raw.ContractTemplate ??
+    raw.TemplateNumber ??
+    raw.TemplateNo ??
+    raw.Template ??
+    raw.AgreementTemplateNumber ??
+    raw.AgreementTemplate ??
+    null;
+
+  if (candidate == null) return null;
+
+  if (typeof candidate === "object") {
+    const nested = candidate.Number ?? candidate.No ?? candidate.Code ?? candidate.Id ?? null;
+    if (nested == null) return null;
+    const nestedNum = Number.parseInt(String(nested).replace(/\D/g, ""), 10);
+    return Number.isFinite(nestedNum) ? nestedNum : null;
+  }
+
+  const parsed = Number.parseInt(String(candidate).replace(/\D/g, ""), 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getContractDescription(row = {}) {
+  const templateNumber = getContractTemplateNumber(row);
+  if (templateNumber === 1) return "Löpande redovisning";
+  if (templateNumber === 2) return "Bokslut och deklaration";
+  return String(row?.description || "").trim() || null;
+}
+
 export default function DashboardClient({
   invoices = [],
   customers: customersProp = [],
@@ -2913,6 +2946,7 @@ export default function DashboardClient({
                 {selectedCustomerContracts.map((row, idx) => {
                   const rowKey = `${selectedCustomer}-${row.contract_number || idx}`;
                   const isExpanded = expandedCustomerContracts.has(rowKey);
+                  const resolvedContractDescription = getContractDescription(row);
                   const amountExVat = exMoms(parseFloat(row.total || 0) || 0);
                   const intervalMonths = Math.max(1, parseInt(String(row.period || "").trim(), 10) || 1);
                   const invoicesPerYear = 12 / intervalMonths;
@@ -2934,7 +2968,7 @@ export default function DashboardClient({
                           </button>
                         </td>
                         <td style={{padding:"12px 16px 12px 0", color:"#fff", fontWeight:600, fontSize:13}}>{row.contract_number || "-"}</td>
-                        <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:13}}>{row.description || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:13}}>{resolvedContractDescription || "-"}</td>
                         <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.start_date || "-"}</td>
                         <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.end_date || "-"}</td>
                         <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.status || "-"}</td>
@@ -2953,7 +2987,7 @@ export default function DashboardClient({
                                   ))}
                                 </div>
                               ) : (
-                                <div style={{color:"#8fb1c3"}}>• {row.description || "Beskrivning saknas i Fortnox"}</div>
+                                <div style={{color:"#8fb1c3"}}>• {resolvedContractDescription || "Beskrivning saknas i Fortnox"}</div>
                               )}
                               <div style={{display:"flex", gap:16, flexWrap:"wrap", marginTop:2}}>
                                 <span>Per faktura ex. moms: {formatSEK(amountExVat)}</span>
@@ -3518,6 +3552,7 @@ export default function DashboardClient({
                   {contractModal.rows.map((row, idx) => {
                     const rowKey = `${contractModal.customerNumber}-${row.contract_number || idx}`;
                     const isExpanded = expandedModalContracts.has(rowKey);
+                    const resolvedContractDescription = getContractDescription(row);
                     const amountExVat = exMoms(parseFloat(row.total || 0) || 0);
                     const intervalMonths = Math.max(1, parseInt(String(row.period || "").trim(), 10) || 1);
                     const invoicesPerYear = 12 / intervalMonths;
@@ -3539,7 +3574,7 @@ export default function DashboardClient({
                             </button>
                           </td>
                           <td style={{padding:"12px 16px 12px 0", color:"#fff", fontWeight:600, fontSize:13}}>{row.contract_number || "-"}</td>
-                          <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:13}}>{row.description || "-"}</td>
+                          <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:13}}>{resolvedContractDescription || "-"}</td>
                           <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.start_date || "-"}</td>
                           <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.end_date || "-"}</td>
                           <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.status || "-"}</td>
@@ -3558,7 +3593,7 @@ export default function DashboardClient({
                                     ))}
                                   </div>
                                 ) : (
-                                  <div style={{color:"#8fb1c3"}}>• {row.description || "Beskrivning saknas i Fortnox"}</div>
+                                  <div style={{color:"#8fb1c3"}}>• {resolvedContractDescription || "Beskrivning saknas i Fortnox"}</div>
                                 )}
                                 <div style={{display:"flex", gap:16, flexWrap:"wrap", marginTop:2}}>
                                   <span>Per faktura ex. moms: {formatSEK(amountExVat)}</span>

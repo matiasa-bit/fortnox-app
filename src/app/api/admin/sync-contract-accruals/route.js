@@ -125,6 +125,39 @@ function normalizeAmount(raw) {
   return Number.isFinite(n) ? n : null;
 }
 
+function extractTemplateNumber(row = {}) {
+  const rawTemplate = pickFirst(row, [
+    "ContractTemplate",
+    "ContractTemplateNumber",
+    "ContractTemplateNo",
+    "Template",
+    "TemplateNumber",
+    "TemplateNo",
+    "AgreementTemplate",
+    "AgreementTemplateNumber",
+    "AccrualTemplate",
+    "AccrualTemplateNumber",
+  ]);
+
+  if (rawTemplate == null) return null;
+
+  if (typeof rawTemplate === "object") {
+    const nested = pickFirst(rawTemplate, ["Number", "No", "Code", "Id", "TemplateNumber"]);
+    if (nested == null) return null;
+    const nestedNum = Number.parseInt(String(nested).replace(/\D/g, ""), 10);
+    return Number.isFinite(nestedNum) ? nestedNum : null;
+  }
+
+  const parsed = Number.parseInt(String(rawTemplate).replace(/\D/g, ""), 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function descriptionFromTemplate(templateNumber) {
+  if (templateNumber === 1) return "Löpande redovisning";
+  if (templateNumber === 2) return "Bokslut och deklaration";
+  return null;
+}
+
 function extractRows(data) {
   if (!data || typeof data !== "object") return [];
   const candidates = [
@@ -176,12 +209,15 @@ function mapRows(rows = []) {
       const isContinuous = row?.Continuous === true ? "Continuous" : row?.Continuous === false ? "Fixed" : null;
       const contractLength = pickFirst(row, ["ContractLength"]);
       const accrualType = String(isContinuous || contractLength || pickFirst(row, ["AccrualType", "ContractType", "Type"]) || "").trim() || null;
+      const templateNumber = extractTemplateNumber(row);
+      const mappedDescription = descriptionFromTemplate(templateNumber);
+      const sourceDescription = String(pickFirst(row, ["Description", "Text"]) || "").trim() || null;
 
       return {
         contract_number: contractNumber,
         customer_number: String(pickFirst(row, ["CustomerNumber", "CustomerNo", "CustomerId"]) || "").trim() || null,
         customer_name: String(pickFirst(row, ["CustomerName", "Name"]) || "").trim() || null,
-        description: String(pickFirst(row, ["Description", "Text"]) || "").trim() || null,
+        description: mappedDescription || sourceDescription,
         start_date: normalizeDate(pickFirst(row, ["StartDate", "FromDate", "PeriodStart"])),
         end_date: normalizeDate(pickFirst(row, ["EndDate", "ToDate", "PeriodEnd"])),
         status: resolvedStatus,
