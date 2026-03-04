@@ -1677,7 +1677,14 @@ export default function DashboardClient({
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ maxPages: 40 }),
                 });
-                const data = await res.json();
+                const raw = await res.text();
+                let data = {};
+                try {
+                  data = raw ? JSON.parse(raw) : {};
+                } catch {
+                  data = { error: raw ? raw.slice(0, 280) : 'Tomt svar från servern' };
+                }
+
                 if (!res.ok || data.ok === false) {
                   alert(`Sync kundavtal misslyckades: ${data.error || 'okänt fel'}`);
                 } else {
@@ -1685,7 +1692,7 @@ export default function DashboardClient({
                   window.location.reload();
                 }
               } catch (err) {
-                alert('Sync kundavtal misslyckades. Se konsol.');
+                alert(`Sync kundavtal misslyckades: ${err?.message || 'okänt fel'}`);
                 console.error(err);
               } finally {
                 setSyncingContracts(false);
