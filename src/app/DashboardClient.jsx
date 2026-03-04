@@ -2670,6 +2670,7 @@ export default function DashboardClient({
                       "Faktura",
                       ...(invoiceModal.mode === "unpaid" ? ["Kund"] : []),
                       "Datum",
+                      "Förfallodag",
                       "Omsättning ex. moms",
                       ...(invoiceModal.mode === "unpaid" ? ["Restsaldo"] : []),
                       ...(invoiceModal.mode === "unpaid" ? ["Status"] : []),
@@ -2695,6 +2696,9 @@ export default function DashboardClient({
                           base.setDate(base.getDate() + 30);
                           return base;
                         })() : null);
+                    const dueDateLabel = dueDate && !Number.isNaN(dueDate.getTime())
+                      ? `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}-${String(dueDate.getDate()).padStart(2, "0")}`
+                      : "-";
                     const isOverdue = !!(dueDate && !Number.isNaN(dueDate.getTime()) && dueDate < todayStart);
 
                     return (
@@ -2730,6 +2734,7 @@ export default function DashboardClient({
                           </td>
                         )}
                         <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:14}}>{inv.invoice_date || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:14}}>{dueDateLabel}</td>
                         <td style={{padding:"12px 0", color:"#00c97a", fontWeight:700, fontSize:14, display:"flex", justifyContent:"space-between", alignItems:"center", gap:12}}>
                           <span>{formatSEK(exMoms(inv.total || 0))}</span>
                           <span style={{color:"#6b8fa3", fontSize:12}}>{isExpanded ? "▼ Dölj artiklar" : "▶ Visa artiklar"}</span>
@@ -2747,7 +2752,7 @@ export default function DashboardClient({
                       </tr>
                       {isExpanded && (
                         <tr style={{borderBottom:"1px solid #1e3545"}}>
-                          <td colSpan={invoiceModal.mode === "unpaid" ? 6 : 3} style={{padding:"0 0 12px 0"}}>
+                          <td colSpan={invoiceModal.mode === "unpaid" ? 7 : 4} style={{padding:"0 0 12px 0"}}>
                             {(() => {
                               const rows = invoiceRows[invNumber] || [];
                               const isLoadingRows = !!modalInvoiceRowsLoading[invNumber];
