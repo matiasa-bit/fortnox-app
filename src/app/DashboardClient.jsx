@@ -1309,7 +1309,8 @@ export default function DashboardClient({
   const monthlyRevenuePerHourData = useMemo(() => {
     const map = {};
     const hasArticleGroupFilter = selectedArticleGroupFilters.length > 0;
-    const monthsWithGroupRevenue = new Set();
+    const monthlySelectedGroupRevenue = new Map();
+    const monthlyMappedGroupRevenue = new Map();
 
     const ensureEntry = (dateValue) => {
       const date = String(dateValue || "");
@@ -1345,11 +1346,23 @@ export default function DashboardClient({
         rows.forEach(row => {
           const articleNumber = String(row.ArticleNumber || row.article_number || row.ArticleNo || row.article_no || "").trim();
           const groupName = articleNumberToGroupName.get(articleNumber);
-          if (!groupName || !selectedArticleGroupFilterSet.has(groupName)) return;
-
           const { total: rowTotal } = resolveInvoiceRowNumbers(row);
-          entry.omsattning += normalizeInvoiceRowAmount(rowTotal);
-          monthsWithGroupRevenue.add(entry.key);
+          const rowAmount = normalizeInvoiceRowAmount(rowTotal);
+
+          if (!groupName) return;
+
+          monthlyMappedGroupRevenue.set(
+            entry.key,
+            (monthlyMappedGroupRevenue.get(entry.key) || 0) + rowAmount
+          );
+
+          if (selectedArticleGroupFilterSet.has(groupName)) {
+            entry.omsattning += rowAmount;
+            monthlySelectedGroupRevenue.set(
+              entry.key,
+              (monthlySelectedGroupRevenue.get(entry.key) || 0) + rowAmount
+            );
+          }
         });
       });
     } else {
@@ -1363,8 +1376,19 @@ export default function DashboardClient({
     filteredTimeReportsForRollingWindow.forEach(row => {
       const entry = ensureEntry(row.report_date);
       if (!entry) return;
-      if (hasArticleGroupFilter && !monthsWithGroupRevenue.has(entry.key)) return;
-      entry.timmar += parseFloat(row.hours) || 0;
+
+      const hours = parseFloat(row.hours) || 0;
+      if (!hasArticleGroupFilter) {
+        entry.timmar += hours;
+        return;
+      }
+
+      const selectedRevenue = monthlySelectedGroupRevenue.get(entry.key) || 0;
+      const mappedRevenue = monthlyMappedGroupRevenue.get(entry.key) || 0;
+      if (selectedRevenue <= 0 || mappedRevenue <= 0) return;
+
+      const ratio = Math.max(0, Math.min(1, selectedRevenue / mappedRevenue));
+      entry.timmar += hours * ratio;
     });
 
     return rolling12MonthsDescending
