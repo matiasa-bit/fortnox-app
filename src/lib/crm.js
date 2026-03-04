@@ -1,5 +1,9 @@
 import { supabaseServer } from "@/lib/supabase";
 
+const CRM_CLIENTS_FETCH_LIMIT = 10000;
+const CUSTOMERS_FETCH_LIMIT = 20000;
+const CRM_CLIENTS_RESULT_LIMIT = 10000;
+
 function isMissingCrmTable(error) {
   return error?.code === "PGRST205";
 }
@@ -21,12 +25,12 @@ export async function getCrmClients(search = "") {
       .from("crm_clients")
       .select("id, company_name, organization_number, customer_number, fortnox_active, client_status, responsible_consultant")
       .order("company_name", { ascending: true })
-      .limit(2000),
+      .limit(CRM_CLIENTS_FETCH_LIMIT),
     supabaseServer
       .from("customers")
       .select("customer_number, name")
       .order("name", { ascending: true })
-      .limit(5000),
+      .limit(CUSTOMERS_FETCH_LIMIT),
   ]);
 
   if (error) {
@@ -184,7 +188,7 @@ export async function getCrmClients(search = "") {
   clients = clients
     .slice()
     .sort((a, b) => String(a.company_name || "").localeCompare(String(b.company_name || ""), "sv-SE"))
-    .slice(0, 500);
+    .slice(0, CRM_CLIENTS_RESULT_LIMIT);
 
   const clientIds = clients.map(row => row.id).filter(id => Number.isFinite(Number(id)));
 
