@@ -196,22 +196,23 @@ function mapRows(rows = []) {
 }
 
 export async function POST(request) {
-  const cookieStore = await cookies();
-  const userId = cookieStore.get("user_id")?.value || "default_user";
-  let token = await getToken(cookieStore, userId);
+  try {
+    const cookieStore = await cookies();
+    const userId = cookieStore.get("user_id")?.value || "default_user";
+    let token = await getToken(cookieStore, userId);
 
-  if (!token) {
-    return Response.json({ ok: false, error: "Ingen Fortnox-token. Klicka 'Återaktivera Fortnox'." }, { status: 401 });
-  }
+    if (!token) {
+      return Response.json({ ok: false, error: "Ingen Fortnox-token. Klicka 'Återaktivera Fortnox'." }, { status: 401 });
+    }
 
-  const body = await request.json().catch(() => ({}));
-  const maxPages = Math.max(1, Math.min(200, Number(body?.maxPages || 40)));
+    const body = await request.json().catch(() => ({}));
+    const maxPages = Math.max(1, Math.min(200, Number(body?.maxPages || 40)));
 
-  let page = 1;
-  let hasMore = true;
-  let fetched = 0;
-  const allMapped = [];
-  let sourceUsed = "contractaccruals";
+    let page = 1;
+    let hasMore = true;
+    let fetched = 0;
+    const allMapped = [];
+    let sourceUsed = "contractaccruals";
 
   async function fetchFromEndpoint(endpoint) {
     let endpointPage = 1;
@@ -344,55 +345,59 @@ export async function POST(request) {
     };
   }
 
-  const contractsResult = await fetchFromEndpoint("contracts");
-  if (!contractsResult.ok) {
-    return Response.json({ ok: false, error: contractsResult.error || "Sync kundavtal misslyckades" }, { status: 401 });
-  }
-
-  fetched = contractsResult.fetched;
-  page = contractsResult.pages + 1;
-  hasMore = contractsResult.hasMore;
-  allMapped.push(...contractsResult.mapped);
-  sourceUsed = "contracts";
-
-  if (allMapped.length === 0) {
-    const accrualsResult = await fetchFromEndpoint("contractaccruals");
-    if (!accrualsResult.ok) {
-      return Response.json({ ok: false, error: accrualsResult.error || "Sync kundavtal misslyckades" }, { status: 401 });
+    const contractsResult = await fetchFromEndpoint("contracts");
+    if (!contractsResult.ok) {
+      return Response.json({ ok: false, error: contractsResult.error || "Sync kundavtal misslyckades" }, { status: 401 });
     }
-    fetched = accrualsResult.fetched;
-    page = accrualsResult.pages + 1;
-    hasMore = accrualsResult.hasMore;
-    allMapped.push(...accrualsResult.mapped);
-    sourceUsed = "contractaccruals";
-  }
 
-  const deduped = Array.from(
-    allMapped.reduce((map, row) => {
-      const key = `${String(row.customer_number || "").trim()}::${String(row.contract_number || "").trim()}`;
-      map.set(key, row);
-      return map;
-    }, new Map()).values()
-  );
+    fetched = contractsResult.fetched;
+    page = contractsResult.pages + 1;
+    hasMore = contractsResult.hasMore;
+    allMapped.push(...contractsResult.mapped);
+    sourceUsed = "contracts";
 
-  if (deduped.length > 0) {
-    await saveContractAccruals(deduped);
-  } else {
+    if (allMapped.length === 0) {
+      const accrualsResult = await fetchFromEndpoint("contractaccruals");
+      if (!accrualsResult.ok) {
+        return Response.json({ ok: false, error: accrualsResult.error || "Sync kundavtal misslyckades" }, { status: 401 });
+      }
+      fetched = accrualsResult.fetched;
+      page = accrualsResult.pages + 1;
+      hasMore = accrualsResult.hasMore;
+      allMapped.push(...accrualsResult.mapped);
+      sourceUsed = "contractaccruals";
+    }
+
+    const deduped = Array.from(
+      allMapped.reduce((map, row) => {
+        const key = `${String(row.customer_number || "").trim()}::${String(row.contract_number || "").trim()}`;
+        map.set(key, row);
+        return map;
+      }, new Map()).values()
+    );
+
+    if (deduped.length > 0) {
+      await saveContractAccruals(deduped);
+    } else {
+      return Response.json({
+        ok: false,
+        error: "Inga kundavtal hämtades från Fortnox. Kontrollera token/behörighet och försök igen.",
+        fetched,
+        pages: page - 1,
+        source: sourceUsed,
+      }, { status: 502 });
+    }
+
     return Response.json({
-      ok: false,
-      error: "Inga kundavtal hämtades från Fortnox. Kontrollera token/behörighet och försök igen.",
+      ok: true,
       fetched,
+      saved: deduped.length,
       pages: page - 1,
+      hasMore,
       source: sourceUsed,
-    }, { status: 502 });
+    });
+  } catch (err) {
+    console.error("Sync kundavtal exception:", err);
+    return Response.json({ ok: false, error: err?.message || "Oväntat fel vid synk av kundavtal" }, { status: 500 });
   }
-
-  return Response.json({
-    ok: true,
-    fetched,
-    saved: deduped.length,
-    pages: page - 1,
-    hasMore,
-    source: sourceUsed,
-  });
 }
