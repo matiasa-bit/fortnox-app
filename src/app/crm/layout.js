@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SyncCrmCustomersButton from "@/app/crm/SyncCrmCustomersButton";
 
 const navItems = [
   { href: "/crm", label: "Dashboard" },
@@ -16,20 +17,23 @@ export default function CrmLayout({ children }) {
             <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800 }}>Internt CRM</h1>
             <p style={{ margin: "4px 0 0", color: "#6b8fa3", fontSize: 14 }}>Klienthantering för redovisningsbyrå</p>
           </div>
-          <Link
-            href="/"
-            style={{
-              background: "#1a2e3b",
-              color: "#fff",
-              border: "1px solid #2a4a5e",
-              borderRadius: 10,
-              padding: "8px 12px",
-              fontSize: 14,
-              textDecoration: "none",
-            }}
-          >
-            Till dashboard
-          </Link>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
+            <SyncCrmCustomersButton />
+            <Link
+              href="/"
+              style={{
+                background: "#1a2e3b",
+                color: "#fff",
+                border: "1px solid #2a4a5e",
+                borderRadius: 10,
+                padding: "8px 12px",
+                fontSize: 14,
+                textDecoration: "none",
+              }}
+            >
+              Till dashboard
+            </Link>
+          </div>
         </header>
 
         <nav style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>

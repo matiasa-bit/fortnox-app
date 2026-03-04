@@ -29,6 +29,32 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - `APP_LOGIN_PASSWORD` (default: `fortnox123`)
 	- Lösenord för enkel app-inloggning innan Fortnox-login.
 
+## Bolagsverket API (CRM)
+
+Miljövariabler:
+
+- `BOLAGSVERKET_API_BASE_URL`
+	- Bas-URL till er Bolagsverket API-gateway.
+- `BOLAGSVERKET_API_KEY` (eller `BOLAGSVERKET_SUBSCRIPTION_KEY`)
+	- API-nyckel för anrop.
+- `BOLAGSVERKET_BEARER_TOKEN` (valfri)
+	- Om er gateway kräver bearer-token.
+- `BOLAGSVERKET_COMPANY_PATH_TEMPLATE` (valfri, default: `/v1/companies/{orgNumber}`)
+- `BOLAGSVERKET_BOARD_PATH_TEMPLATE` (valfri, default: `/v1/companies/{orgNumber}/board`)
+
+Ny endpoint:
+
+- `GET /api/admin/sync-bolagsverket?limit=25&offset=0`
+	- Synkar bolagsdata + styrelse för ett batchurval av CRM-klienter.
+- `GET /api/admin/sync-bolagsverket?clientId=123`
+	- Synkar en specifik CRM-klient.
+- `POST /api/admin/sync-bolagsverket`
+	- JSON body: `{ "clientId": 123 }` eller `{ "organizationNumber": "556677-8899" }`.
+
+SQL migration:
+
+- Kör `scripts/migrate-crm-bolagsverket.sql` i Supabase för nya kolumner i `crm_clients`.
+
 ## Tillfällig delning
 
 - Starta appen lokalt: `npm run dev`

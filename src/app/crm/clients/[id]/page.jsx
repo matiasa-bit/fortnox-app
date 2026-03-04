@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCrmClientDetails } from "@/lib/crm";
 import ClientProfileTabs from "@/app/crm/clients/[id]/ClientProfileTabs";
+import SyncSingleBolagsverketButton from "@/app/crm/clients/[id]/SyncSingleBolagsverketButton";
 
 export const dynamic = "force-dynamic";
 
@@ -34,22 +35,28 @@ export default async function CrmClientProfilePage({ params }) {
             <p style={{ margin: "4px 0 0", color: "#8fb1c3", fontSize: 13 }}>
               Fortnox: {client.fortnox_active === true ? "Aktiv" : client.fortnox_active === false ? "Inaktiv" : "-"}
             </p>
+            <p style={{ margin: "4px 0 0", color: "#8fb1c3", fontSize: 13 }}>
+              Bolagsverket: {client.bolagsverket_status || "-"}
+            </p>
           </div>
-          <Link
-            href={`/crm/clients/${client.id}/edit`}
-            style={{
-              background: "#1a2e3b",
-              color: "#fff",
-              border: "1px solid #2a4a5e",
-              borderRadius: 10,
-              padding: "8px 12px",
-              textDecoration: "none",
-              fontSize: 14,
-              fontWeight: 600,
-            }}
-          >
-            Redigera klient
-          </Link>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <SyncSingleBolagsverketButton clientId={client.id} />
+            <Link
+              href={`/crm/clients/${client.id}/edit`}
+              style={{
+                background: "#1a2e3b",
+                color: "#fff",
+                border: "1px solid #2a4a5e",
+                borderRadius: 10,
+                padding: "8px 12px",
+                textDecoration: "none",
+                fontSize: 14,
+                fontWeight: 600,
+              }}
+            >
+              Redigera klient
+            </Link>
+          </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginTop: 16 }}>
@@ -60,6 +67,9 @@ export default async function CrmClientProfilePage({ params }) {
           <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Startdatum:</strong> {client.start_date || "-"}</div>
           <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Ansvarig:</strong> {client.responsible_consultant || "-"}</div>
           <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Kontor:</strong> {client.office || "-"}</div>
+          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Registreringsort:</strong> {client.bolagsverket_registered_office || "-"}</div>
+          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Styrelse (antal):</strong> {client.bolagsverket_board_count ?? "-"}</div>
+          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Senast Bolagsverket-sync:</strong> {client.bolagsverket_updated_at || "-"}</div>
         </div>
 
         <p style={{ margin: "16px 0 0", color: "#dbe7ef", fontSize: 14 }}>
