@@ -651,15 +651,23 @@ export default async function Home({ searchParams }) {
 
   return (
     <>
-      <form action="/api/app-auth/logout" method="post" style={{position: "fixed", top: 12, right: 12, zIndex: 50}}>
-        <button
-          type="submit"
+      <div style={{position: "fixed", top: 12, right: 12, zIndex: 50, display: "flex", gap: 8, alignItems: "center"}}>
+        <span
           className="px-3 py-2 rounded-lg text-xs font-semibold text-white"
-          style={{background: "rgba(15,25,35,0.75)", border: "1px solid rgba(255,255,255,0.25)"}}
+          style={{background: "rgba(0,201,122,0.18)", border: "1px solid rgba(0,201,122,0.45)"}}
         >
-          Logga ut
-        </button>
-      </form>
+          Fortnox: Kopplat
+        </span>
+        <form action="/api/app-auth/logout" method="post">
+          <button
+            type="submit"
+            className="px-3 py-2 rounded-lg text-xs font-semibold text-white"
+            style={{background: "rgba(15,25,35,0.75)", border: "1px solid rgba(255,255,255,0.25)"}}
+          >
+            Logga ut
+          </button>
+        </form>
+      </div>
       <DashboardClient
         invoices={invoices}
         customers={customerMappings}
