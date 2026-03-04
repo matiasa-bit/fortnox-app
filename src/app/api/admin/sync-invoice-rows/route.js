@@ -95,8 +95,8 @@ async function fetchInvoiceRows(invoiceNumber, token) {
     return { rateLimited: true, retryAfter };
   }
 
-  const data = await res.json();
-  return { data };
+  const data = await res.json().catch(() => ({}));
+  return { data, status: res.status, ok: res.ok };
 }
 
 function mapRows(invoiceNumber, rows = []) {
@@ -144,7 +144,8 @@ export async function POST(request) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const batchSize = Math.max(1, Math.min(50, Number(body?.batchSize || 15)));
+  const batchSize = Math.max(1, Math.min(250, Number(body?.batchSize || 15)));
+  const forceResync = Boolean(body?.forceResync);
   const requestedInvoiceNumbers = Array.isArray(body?.invoiceNumbers)
     ? body.invoiceNumbers.map(num => String(num || "").trim()).filter(Boolean)
     : [];
@@ -166,9 +167,11 @@ export async function POST(request) {
   const missingInvoiceNumbers = invoiceNumbers.filter(num => !invoicesWithRows.has(num));
 
   const isFilteredScope = requestedInvoiceNumbers.length > 0;
-  const syncCandidates = missingInvoiceNumbers.length > 0
-    ? missingInvoiceNumbers
-    : (isFilteredScope ? invoiceNumbers : missingInvoiceNumbers);
+  const syncCandidates = forceResync
+    ? invoiceNumbers
+    : (missingInvoiceNumbers.length > 0
+      ? missingInvoiceNumbers
+      : (isFilteredScope ? invoiceNumbers : missingInvoiceNumbers));
   const toSync = syncCandidates.slice(0, batchSize);
   if (toSync.length === 0) {
     return Response.json({
@@ -176,6 +179,7 @@ export async function POST(request) {
       message: isFilteredScope
         ? "Inga fakturor i aktuellt filter att synka"
         : "Alla fakturor har redan artikelrader i databasen",
+      forceResync,
       scope: isFilteredScope ? "filtered" : "all",
       totalInvoices: invoiceNumbers.length,
       missing: 0,
@@ -185,6 +189,7 @@ export async function POST(request) {
 
   let syncedNow = 0;
   const failedNumbers = [];
+  const syncedInvoiceNumbers = [];
 
   for (const invoiceNumber of toSync) {
     try {
@@ -200,6 +205,22 @@ export async function POST(request) {
           token = newToken;
           result = await fetchInvoiceRows(invoiceNumber, token);
         }
+      }
+
+      const hasFortnoxError = !!result?.data?.ErrorInformation;
+      const hasInvoicePayload = !!result?.data?.Invoice;
+      if (hasFortnoxError || !hasInvoicePayload) {
+        const status = Number(result?.status || 0) || 0;
+        const rawMessage = result?.data?.ErrorInformation?.message || result?.data?.message || "";
+        const failureReason = hasFortnoxError
+          ? String(rawMessage || "Fortnox returnerade ett fel vid hämtning av fakturarader")
+          : String(rawMessage || "Fortnox svar saknar Invoice-data");
+        console.warn(`Hoppar över faktura ${invoiceNumber}: ${failureReason}`);
+        if (status) {
+          console.warn(`Detalj faktura ${invoiceNumber}: HTTP ${status}`);
+        }
+        failedNumbers.push(invoiceNumber);
+        continue;
       }
 
       const rows = result?.data?.Invoice?.InvoiceRows || [];
@@ -227,6 +248,7 @@ export async function POST(request) {
         }
       }
       syncedNow += 1;
+      syncedInvoiceNumbers.push(String(invoiceNumber));
       await delay(250);
     } catch (err) {
       console.error(`Kunde inte synka artiklar för faktura ${invoiceNumber}:`, err);
@@ -236,8 +258,10 @@ export async function POST(request) {
 
   return Response.json({
     ok: true,
+    forceResync,
     scope: isFilteredScope ? "filtered" : "all",
     syncedNow,
+    syncedInvoiceNumbers,
     failed: failedNumbers.length,
     failedNumbers: failedNumbers.slice(0, 10),
     totalInvoices: invoiceNumbers.length,

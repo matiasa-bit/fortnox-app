@@ -776,6 +776,7 @@ export default function DashboardClient({
 
   useEffect(() => {
     let cancelled = false;
+    const successfullySyncedInvoices = new Set();
 
     const missingInvoiceNumbers = filteredInvoiceNumbers
       .filter(invoiceNumber => invoiceRows[invoiceNumber] === undefined)
@@ -1068,6 +1069,20 @@ export default function DashboardClient({
     });
   }, [selectedArticleGroupFilters, rollingInvoiceNumbers, invoiceRows]);
 
+  const hasLowRollingInvoiceRowCoverageForGroupFilter = useMemo(() => {
+    if (selectedArticleGroupFilters.length === 0) return false;
+    if (rollingInvoiceNumbers.length === 0) return false;
+
+    let invoicesWithRows = 0;
+    rollingInvoiceNumbers.forEach(invoiceNumber => {
+      const rows = invoiceRows[invoiceNumber];
+      if (Array.isArray(rows) && rows.length > 0) invoicesWithRows += 1;
+    });
+
+    const coverage = invoicesWithRows / rollingInvoiceNumbers.length;
+    return coverage < 0.95;
+  }, [selectedArticleGroupFilters, rollingInvoiceNumbers, invoiceRows]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -1165,10 +1180,15 @@ export default function DashboardClient({
       return;
     }
 
-    if (missingRollingInvoiceNumbersForGroupFilter.length === 0) return;
+    const shouldForceResync = hasLowRollingInvoiceRowCoverageForGroupFilter;
+    const invoiceNumbersToSync = shouldForceResync
+      ? rollingInvoiceNumbers
+      : missingRollingInvoiceNumbersForGroupFilter;
 
-    const filterKey = [...selectedArticleGroupFilters].sort((a, b) => a.localeCompare(b, "sv-SE")).join("|");
-    const autoSyncKey = `${selectedCustomer}|${effectiveRollingEndMonth}|${filterKey}|${missingRollingInvoiceNumbersForGroupFilter.join(",")}`;
+    if (invoiceNumbersToSync.length === 0) return;
+
+    const syncMode = shouldForceResync ? "force" : "missing";
+    const autoSyncKey = `${selectedCustomer}|${effectiveRollingEndMonth}|${syncMode}|${invoiceNumbersToSync.join(",")}`;
     if (articleGroupAutoSyncKeyRef.current === autoSyncKey) return;
     articleGroupAutoSyncKeyRef.current = autoSyncKey;
 
@@ -1182,13 +1202,23 @@ export default function DashboardClient({
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              invoiceNumbers: missingRollingInvoiceNumbersForGroupFilter,
-              batchSize: 50,
+              invoiceNumbers: invoiceNumbersToSync,
+              batchSize: shouldForceResync ? 200 : 50,
+              forceResync: shouldForceResync,
             }),
           });
 
           const payload = await res.json().catch(() => ({}));
           if (!res.ok || payload?.ok === false) break;
+
+          const syncedList = Array.isArray(payload?.syncedInvoiceNumbers)
+            ? payload.syncedInvoiceNumbers
+            : [];
+          syncedList.forEach(invoiceNumber => {
+            const normalizedInvoiceNumber = String(invoiceNumber || "").trim();
+            if (normalizedInvoiceNumber) successfullySyncedInvoices.add(normalizedInvoiceNumber);
+          });
+
           if (!Number(payload?.syncedNow) || Number(payload?.remaining || 0) <= 0) break;
         }
 
@@ -1197,7 +1227,7 @@ export default function DashboardClient({
         const loadRes = await fetch("/api/invoice-rows", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ invoiceNumbers: missingRollingInvoiceNumbersForGroupFilter }),
+          body: JSON.stringify({ invoiceNumbers: invoiceNumbersToSync }),
           cache: "no-store",
         });
         const loadPayload = await loadRes.json().catch(() => ({}));
@@ -1206,9 +1236,16 @@ export default function DashboardClient({
         const rowsByInvoice = loadPayload?.rowsByInvoice || {};
         setInvoiceRows(prev => {
           const next = { ...prev };
-          missingRollingInvoiceNumbersForGroupFilter.forEach(invoiceNumber => {
+          invoiceNumbersToSync.forEach(invoiceNumber => {
+            const syncedRows = Array.isArray(rowsByInvoice[invoiceNumber]) ? rowsByInvoice[invoiceNumber] : [];
+            if (shouldForceResync) {
+              if (!successfullySyncedInvoices.has(invoiceNumber)) return;
+              next[invoiceNumber] = syncedRows;
+              return;
+            }
+
             if (next[invoiceNumber] && next[invoiceNumber].length > 0) return;
-            next[invoiceNumber] = Array.isArray(rowsByInvoice[invoiceNumber]) ? rowsByInvoice[invoiceNumber] : (next[invoiceNumber] || []);
+            next[invoiceNumber] = syncedRows;
           });
           return next;
         });
@@ -1223,7 +1260,14 @@ export default function DashboardClient({
     return () => {
       cancelled = true;
     };
-  }, [selectedArticleGroupFilters, selectedCustomer, effectiveRollingEndMonth, missingRollingInvoiceNumbersForGroupFilter]);
+  }, [
+    selectedArticleGroupFilters,
+    selectedCustomer,
+    effectiveRollingEndMonth,
+    rollingInvoiceNumbers,
+    missingRollingInvoiceNumbersForGroupFilter,
+    hasLowRollingInvoiceRowCoverageForGroupFilter,
+  ]);
 
   const rolling12Months = useMemo(() => {
     return buildRolling12MonthWindow(effectiveRollingEndMonth);
@@ -1255,7 +1299,7 @@ export default function DashboardClient({
   }, [articleGroupMappings]);
 
   const articleGroupOptionsForRevenuePerHour = useMemo(() => {
-    const names = new Set();
+    const usedNames = new Set();
 
     filteredInvoicesForRollingWindow.forEach(inv => {
       const invoiceNumber = String(inv.document_number || "").trim();
@@ -1265,12 +1309,18 @@ export default function DashboardClient({
       rows.forEach(row => {
         const articleNumber = normalizeArticleNumber(row.ArticleNumber || row.article_number || row.ArticleNo || row.article_no);
         const groupName = articleNumberToGroupName.get(articleNumber);
-        if (groupName) names.add(groupName);
+        if (groupName) usedNames.add(groupName);
       });
     });
 
-    return Array.from(names).sort((a, b) => a.localeCompare(b, "sv-SE"));
-  }, [filteredInvoicesForRollingWindow, invoiceRows, articleNumberToGroupName]);
+    filteredTimeReportsForRollingWindow.forEach(row => {
+      const articleNumber = normalizeArticleNumber(row.article_number);
+      const groupName = articleNumberToGroupName.get(articleNumber);
+      if (groupName) usedNames.add(groupName);
+    });
+
+    return Array.from(usedNames).sort((a, b) => a.localeCompare(b, "sv-SE"));
+  }, [filteredInvoicesForRollingWindow, filteredTimeReportsForRollingWindow, invoiceRows, articleNumberToGroupName]);
 
   const selectedArticleGroupFilterSet = useMemo(() => {
     return new Set(selectedArticleGroupFilters);
