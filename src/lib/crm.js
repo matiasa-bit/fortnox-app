@@ -260,9 +260,8 @@ export async function getCrmClientDetails(clientId) {
   const id = Number(clientId);
   if (!Number.isFinite(id)) return null;
 
-  const [clientRes, contactsRes, servicesRes, activitiesRes, docsRes] = await Promise.all([
+  const [clientRes, servicesRes, activitiesRes, docsRes] = await Promise.all([
     supabaseServer.from("crm_clients").select("*").eq("id", id).single(),
-    supabaseServer.from("crm_contacts").select("*").eq("client_id", id).order("name", { ascending: true }),
     supabaseServer.from("crm_services").select("*").eq("client_id", id).order("start_date", { ascending: false }),
     supabaseServer.from("crm_activities").select("*").eq("client_id", id).order("date", { ascending: false }).limit(100),
     supabaseServer.from("crm_document_links").select("*").eq("client_id", id).order("created_at", { ascending: false }),
@@ -275,13 +274,101 @@ export async function getCrmClientDetails(clientId) {
     return null;
   }
 
+  let contacts = [];
+  const linksRes = await supabaseServer
+    .from("crm_client_contacts")
+    .select("contact_id")
+    .eq("client_id", id)
+    .limit(5000);
+
+  if (!linksRes.error) {
+    const contactIds = Array.from(new Set(
+      (linksRes.data || [])
+        .map(row => Number(row?.contact_id))
+        .filter(value => Number.isFinite(value))
+    ));
+
+    if (contactIds.length > 0) {
+      const directoryRes = await supabaseServer
+        .from("crm_contact_directory")
+        .select("id, name, role, email, phone, linkedin, notes")
+        .in("id", contactIds)
+        .order("name", { ascending: true });
+
+      if (!directoryRes.error) {
+        contacts = directoryRes.data || [];
+      }
+    }
+  }
+
+  // Backward-compatible fallback for environments that still use old crm_contacts model.
+  if (contacts.length === 0) {
+    const legacyContacts = await supabaseServer
+      .from("crm_contacts")
+      .select("id, name, role, email, phone, linkedin, notes")
+      .eq("client_id", id)
+      .order("name", { ascending: true });
+
+    if (!legacyContacts.error) {
+      contacts = legacyContacts.data || [];
+    }
+  }
+
+  const contactDirectory = await getCrmContactDirectory();
+
   return {
     client: clientRes.data || null,
-    contacts: contactsRes.data || [],
+    contacts,
+    contactDirectory,
     services: servicesRes.data || [],
     activities: activitiesRes.data || [],
     documents: docsRes.data || [],
   };
+}
+
+export async function getCrmContactDirectory() {
+  const directoryRes = await supabaseServer
+    .from("crm_contact_directory")
+    .select("id, name, role, email, phone, linkedin, notes")
+    .order("name", { ascending: true })
+    .limit(5000);
+
+  if (!directoryRes.error) {
+    return directoryRes.data || [];
+  }
+
+  if (!isMissingCrmTable(directoryRes.error)) {
+    console.error("Fel vid hämtning av crm_contact_directory:", directoryRes.error);
+  }
+
+  // Backward-compatible fallback: dedupe old per-client contacts as best effort.
+  const legacyRes = await supabaseServer
+    .from("crm_contacts")
+    .select("id, name, role, email, phone, linkedin, notes")
+    .order("name", { ascending: true })
+    .limit(5000);
+
+  if (legacyRes.error) {
+    if (!isMissingCrmTable(legacyRes.error)) {
+      console.error("Fel vid hämtning av legacy crm_contacts:", legacyRes.error);
+    }
+    return [];
+  }
+
+  const dedup = new Map();
+  for (const row of legacyRes.data || []) {
+    const key = [
+      String(row?.name || "").trim().toLowerCase(),
+      String(row?.email || "").trim().toLowerCase(),
+      String(row?.phone || "").trim(),
+    ].join("::");
+
+    if (!dedup.has(key)) {
+      dedup.set(key, row);
+    }
+  }
+
+  return Array.from(dedup.values());
 }
 
 export async function getRecentCrmActivities(limit = 100) {

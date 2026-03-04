@@ -5,6 +5,10 @@ function text(value) {
   return trimmed || null;
 }
 
+function isMissingTable(error) {
+  return error?.code === "PGRST205";
+}
+
 export async function POST(request, { params }) {
   const { id } = await params;
   const clientId = Number(id);
@@ -14,31 +18,82 @@ export async function POST(request, { params }) {
   }
 
   const body = await request.json().catch(() => ({}));
+  const contactId = Number(body?.contact_id);
   const name = String(body?.name || "").trim();
 
-  if (!name) {
-    return Response.json({ ok: false, error: "Namn är obligatoriskt." }, { status: 400 });
+  if (!Number.isFinite(contactId) && !name) {
+    return Response.json({ ok: false, error: "Namn eller contact_id ar obligatoriskt." }, { status: 400 });
   }
 
-  const payload = {
-    client_id: clientId,
-    name,
-    role: text(body?.role),
-    email: text(body?.email),
-    phone: text(body?.phone),
-    linkedin: text(body?.linkedin),
-    notes: text(body?.notes),
-  };
+  // New model: shared contact directory + many-to-many links.
+  let resolvedContactId = Number.isFinite(contactId) ? contactId : null;
 
-  const { data, error } = await supabaseServer
-    .from("crm_contacts")
-    .insert(payload)
-    .select("*")
+  if (!Number.isFinite(resolvedContactId)) {
+    const createPayload = {
+      name,
+      role: text(body?.role),
+      email: text(body?.email),
+      phone: text(body?.phone),
+      linkedin: text(body?.linkedin),
+      notes: text(body?.notes),
+      updated_at: new Date().toISOString(),
+    };
+
+    const createRes = await supabaseServer
+      .from("crm_contact_directory")
+      .insert(createPayload)
+      .select("id")
+      .single();
+
+    if (createRes.error) {
+      if (isMissingTable(createRes.error)) {
+        // Legacy fallback.
+        const legacyPayload = {
+          client_id: clientId,
+          name,
+          role: text(body?.role),
+          email: text(body?.email),
+          phone: text(body?.phone),
+          linkedin: text(body?.linkedin),
+          notes: text(body?.notes),
+        };
+
+        const legacyCreate = await supabaseServer
+          .from("crm_contacts")
+          .insert(legacyPayload)
+          .select("*")
+          .single();
+
+        if (legacyCreate.error) {
+          return Response.json({ ok: false, error: legacyCreate.error.message || "Kunde inte skapa kontakt." }, { status: 500 });
+        }
+
+        return Response.json({ ok: true, contact: legacyCreate.data, legacy: true });
+      }
+
+      return Response.json({ ok: false, error: createRes.error.message || "Kunde inte skapa kontakt i kontaktlistan." }, { status: 500 });
+    }
+
+    resolvedContactId = Number(createRes.data?.id);
+  }
+
+  const linkRes = await supabaseServer
+    .from("crm_client_contacts")
+    .upsert([{ client_id: clientId, contact_id: resolvedContactId }], { onConflict: "client_id,contact_id" });
+
+  if (linkRes.error) {
+    return Response.json({ ok: false, error: linkRes.error.message || "Kunde inte koppla kontakt till kund." }, { status: 500 });
+  }
+
+  const contactRes = await supabaseServer
+    .from("crm_contact_directory")
+    .select("id, name, role, email, phone, linkedin, notes")
+    .eq("id", resolvedContactId)
     .single();
 
-  if (error) {
-    return Response.json({ ok: false, error: error.message || "Kunde inte skapa kontakt." }, { status: 500 });
+  if (contactRes.error) {
+    return Response.json({ ok: true, contact: { id: resolvedContactId }, linked: true });
   }
 
-  return Response.json({ ok: true, contact: data });
+  return Response.json({ ok: true, contact: contactRes.data, linked: true });
 }

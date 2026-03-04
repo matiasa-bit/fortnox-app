@@ -4,6 +4,7 @@ import SyncCrmCustomersButton from "@/app/crm/SyncCrmCustomersButton";
 const navItems = [
   { href: "/crm", label: "Dashboard" },
   { href: "/crm/clients", label: "Klienter" },
+  { href: "/crm/contacts", label: "Kontakter" },
   { href: "/crm/activity", label: "Aktivitetslogg" },
   { href: "/crm/clients/new", label: "Ny klient" },
 ];

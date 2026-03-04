@@ -40,13 +40,14 @@ function TabButton({ tab, activeTab, label, onClick }) {
   );
 }
 
-export default function ClientProfileTabs({ clientId, contacts = [], services = [], activities = [], documents = [] }) {
+export default function ClientProfileTabs({ clientId, contacts = [], contactDirectory = [], services = [], activities = [], documents = [] }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("contacts");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   const [contactForm, setContactForm] = useState({ name: "", role: "", email: "", phone: "" });
+  const [selectedContactId, setSelectedContactId] = useState("");
   const [serviceForm, setServiceForm] = useState({ service_type: "", billing_model: "", price: "", start_date: "" });
   const [noteForm, setNoteForm] = useState({ description: "", date: today() });
 
@@ -96,6 +97,36 @@ export default function ClientProfileTabs({ clientId, contacts = [], services = 
 
       {activeTab === "contacts" && (
         <div style={{ display: "grid", gap: 14 }}>
+          <div style={cardStyle}>
+            <h3 style={{ margin: "0 0 10px", fontSize: 16 }}>Koppla kontakt fran kontaktlista</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "center" }}>
+              <select
+                value={selectedContactId}
+                onChange={e => setSelectedContactId(e.target.value)}
+                style={inputStyle}
+              >
+                <option value="">Valj kontakt</option>
+                {contactDirectory.map(contact => (
+                  <option key={contact.id} value={contact.id}>
+                    {contact.name || "-"} · {contact.email || "-"} · {contact.phone || "-"}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                disabled={saving || !selectedContactId}
+                onClick={() => submit(
+                  `/api/crm/clients/${clientId}/contacts`,
+                  { contact_id: Number(selectedContactId) },
+                  () => setSelectedContactId("")
+                )}
+                style={{ background: "#2f7ef7", color: "#fff", border: "none", borderRadius: 8, padding: "9px 12px", fontWeight: 700, cursor: "pointer" }}
+              >
+                Koppla kontakt
+              </button>
+            </div>
+          </div>
+
           <div style={cardStyle}>
             <h3 style={{ margin: "0 0 10px", fontSize: 16 }}>Lägg till kontaktperson</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>

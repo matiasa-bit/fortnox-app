@@ -23,7 +23,7 @@ export default async function CrmClientProfilePage({ params }) {
     );
   }
 
-  const { client, contacts, services, activities, documents } = details;
+  const { client, contacts, contactDirectory, services, activities, documents } = details;
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
@@ -82,6 +82,7 @@ export default async function CrmClientProfilePage({ params }) {
       <ClientProfileTabs
         clientId={client.id}
         contacts={contacts}
+        contactDirectory={contactDirectory}
         services={services}
         activities={activities}
         documents={documents}
