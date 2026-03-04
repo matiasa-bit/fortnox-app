@@ -117,6 +117,37 @@ function isTransientGatewayError(error) {
   );
 }
 
+function normalizeContractStatusForFilter(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function isClosedContractRow(row = {}) {
+  const statusRaw = row?.status || row?.Status || row?.raw_data?.Status || row?.raw_data?.State || row?.raw_data?.ContractStatus;
+  const status = normalizeContractStatusForFilter(statusRaw);
+
+  if (
+    status.includes("avslut") ||
+    status.includes("closed") ||
+    status.includes("inactive") ||
+    status.includes("inaktiv") ||
+    status.includes("cancel") ||
+    status.includes("terminated")
+  ) {
+    return true;
+  }
+
+  const raw = row?.raw_data || {};
+  if (raw.Active === false || raw.active === false) return true;
+  if (raw.Inactive === true || raw.inactive === true) return true;
+  if (raw.Closed === true || raw.closed === true) return true;
+
+  return false;
+}
+
 // Hämta cachade fakturor
 export async function getCachedInvoices(fromDate) {
   try {
@@ -734,7 +765,7 @@ export async function getCachedContractAccruals() {
       from += chunkSize;
     }
 
-    return allRows;
+    return allRows.filter(row => !isClosedContractRow(row));
   } catch (err) {
     console.error("Exception vid getCachedContractAccruals:", err);
     return [];

@@ -126,6 +126,22 @@ function mapRows(rows = []) {
       const contractNumber = String(pickFirst(row, ["ContractNumber", "Number", "ContractNo", "DocumentNumber"]) || "").trim();
       if (!contractNumber) return null;
 
+      const rawStatus = String(
+        pickFirst(row, ["Status", "State", "ContractStatus", "ContractState", "AccrualStatus"]) || ""
+      ).trim();
+      const activeFlag = pickFirst(row, ["Active", "active"]);
+      const inactiveFlag = pickFirst(row, ["Inactive", "inactive"]);
+      const closedFlag = pickFirst(row, ["Closed", "closed", "Ended", "ended"]);
+
+      let resolvedStatus = rawStatus || null;
+      if (!resolvedStatus) {
+        if (activeFlag === false || inactiveFlag === true || closedFlag === true) {
+          resolvedStatus = "Avslutad";
+        } else if (activeFlag === true || inactiveFlag === false) {
+          resolvedStatus = "Aktiv";
+        }
+      }
+
       const isContinuous = row?.Continuous === true ? "Continuous" : row?.Continuous === false ? "Fixed" : null;
       const contractLength = pickFirst(row, ["ContractLength"]);
       const accrualType = String(isContinuous || contractLength || pickFirst(row, ["AccrualType", "ContractType", "Type"]) || "").trim() || null;
@@ -137,7 +153,7 @@ function mapRows(rows = []) {
         description: String(pickFirst(row, ["Description", "Text"]) || "").trim() || null,
         start_date: normalizeDate(pickFirst(row, ["StartDate", "FromDate", "PeriodStart"])),
         end_date: normalizeDate(pickFirst(row, ["EndDate", "ToDate", "PeriodEnd"])),
-        status: String(pickFirst(row, ["Status", "State"]) || "").trim() || null,
+        status: resolvedStatus,
         accrual_type: accrualType,
         period: String(pickFirst(row, ["Period", "Interval", "Frequency", "Invoiceinterval", "InvoiceInterval"]) || "").trim() || null,
         total: normalizeAmount(pickFirst(row, ["Total", "Amount", "ContractAmount"])),
