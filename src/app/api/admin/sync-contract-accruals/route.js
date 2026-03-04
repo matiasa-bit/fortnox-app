@@ -1,12 +1,18 @@
 import { cookies } from "next/headers";
 import { readFileSync } from "fs";
-import { saveContractAccruals } from "@/lib/supabase";
+import { getTokenFromDb, saveContractAccruals, saveToken, supabaseServer } from "@/lib/supabase";
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function getToken() {
+async function getToken(cookieStore, userId) {
+  const tokenFromCookie = cookieStore.get("fortnox_access_token")?.value;
+  if (tokenFromCookie) return tokenFromCookie;
+
+  const tokenFromDb = await getTokenFromDb(userId);
+  if (tokenFromDb) return tokenFromDb;
+
   try {
     return readFileSync(".fortnox_token", "utf8").trim();
   } catch {
@@ -14,9 +20,33 @@ function getToken() {
   }
 }
 
-async function refreshToken() {
+async function getRefreshToken(cookieStore, userId) {
+  const refreshFromCookie = cookieStore.get("fortnox_refresh_token")?.value;
+  if (refreshFromCookie) return refreshFromCookie;
+
   try {
-    const refreshToken = readFileSync(".fortnox_refresh", "utf8").trim();
+    const { data } = await supabaseServer
+      .from("tokens")
+      .select("refresh_token")
+      .eq("user_id", userId)
+      .single();
+
+    if (data?.refresh_token) return data.refresh_token;
+  } catch {
+  }
+
+  try {
+    return readFileSync(".fortnox_refresh", "utf8").trim();
+  } catch {
+    return null;
+  }
+}
+
+async function refreshToken(cookieStore, userId) {
+  try {
+    const refreshToken = await getRefreshToken(cookieStore, userId);
+    if (!refreshToken) return null;
+
     const credentials = Buffer.from(
       `${process.env.FORTNOX_CLIENT_ID}:${process.env.FORTNOX_CLIENT_SECRET}`
     ).toString("base64");
@@ -35,6 +65,7 @@ async function refreshToken() {
 
     const data = await response.json();
     if (data.access_token) {
+      await saveToken(userId, data.access_token, data.refresh_token || refreshToken);
       return data.access_token;
     }
   } catch (err) {
@@ -166,11 +197,11 @@ function mapRows(rows = []) {
 
 export async function POST(request) {
   const cookieStore = await cookies();
-  const isLoggedIn = cookieStore.get("fortnox_auth")?.value;
-  let token = getToken();
+  const userId = cookieStore.get("user_id")?.value || "default_user";
+  let token = await getToken(cookieStore, userId);
 
-  if (!isLoggedIn || !token) {
-    return Response.json({ ok: false, error: "Ingen Fortnox-token. Logga in igen." }, { status: 401 });
+  if (!token) {
+    return Response.json({ ok: false, error: "Ingen Fortnox-token. Klicka 'Återaktivera Fortnox'." }, { status: 401 });
   }
 
   const body = await request.json().catch(() => ({}));
@@ -200,7 +231,7 @@ export async function POST(request) {
 
       if (!result?.ok) {
         if (result?.status === 401 || result?.status === 403) {
-          const newToken = await refreshToken();
+          const newToken = await refreshToken(cookieStore, userId);
           if (!newToken) {
             return {
               ok: false,
@@ -227,7 +258,7 @@ export async function POST(request) {
       }
 
       if (result?.data?.ErrorInformation) {
-        const newToken = await refreshToken();
+        const newToken = await refreshToken(cookieStore, userId);
         if (!newToken) {
           return {
             ok: false,
@@ -270,7 +301,7 @@ export async function POST(request) {
           }, 4);
 
           if (!detailResult?.ok && (detailResult?.status === 401 || detailResult?.status === 403)) {
-            const newToken = await refreshToken();
+            const newToken = await refreshToken(cookieStore, userId);
             if (newToken) {
               token = newToken;
               detailResult = await fetchJsonWithRetry(detailUrl, {
