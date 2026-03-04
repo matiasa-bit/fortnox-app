@@ -1686,13 +1686,13 @@ export default function DashboardClient({
                 }
 
                 if (!res.ok || data.ok === false) {
-                  alert(`Sync kundavtal misslyckades: ${data.error || 'okänt fel'}`);
+                  alert(`Sync kundavtal misslyckades [v2 ${res.status}]: ${data.error || 'okänt fel'}`);
                 } else {
                   alert(`Kundavtal synkade (${data.source || 'okänd källa'}). Sparade: ${data.saved || 0}`);
                   window.location.reload();
                 }
               } catch (err) {
-                alert(`Sync kundavtal misslyckades: ${err?.message || 'okänt fel'}`);
+                alert(`Sync kundavtal misslyckades [v2]: ${err?.message || 'nätverksfel eller blockerad request'}`);
                 console.error(err);
               } finally {
                 setSyncingContracts(false);
