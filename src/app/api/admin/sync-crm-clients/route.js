@@ -265,6 +265,11 @@ async function runCrmSync(request, body = {}) {
     }
 
     const toUpsert = Array.from(toUpsertByOrgNumber.values());
+    const fortnoxStatusSummary = {
+      fortnoxActive: toUpsert.filter(row => row.fortnox_active === true).length,
+      fortnoxInactive: toUpsert.filter(row => row.fortnox_active === false).length,
+      fortnoxUnknown: toUpsert.filter(row => row.fortnox_active === null || row.fortnox_active === undefined).length,
+    };
 
     if (toUpsert.length > 0) {
       const { error } = await supabaseServer
@@ -301,6 +306,7 @@ async function runCrmSync(request, body = {}) {
       ok: true,
       fetched: allRows.length,
       upserted: toUpsert.length,
+      ...fortnoxStatusSummary,
       skipped: skipped.length,
       skippedRows: skipped.slice(0, 20),
       pagesFetched: Math.max(0, page - 1),
