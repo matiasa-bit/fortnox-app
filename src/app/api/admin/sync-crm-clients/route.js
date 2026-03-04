@@ -186,13 +186,18 @@ async function runCrmSync(request, body = {}) {
     }
 
     const maxPages = Math.max(1, Math.min(100, Number(body?.maxPages || 10)));
+    const fromPage = Math.max(1, Number(body?.fromPage || 1));
+    const maxDetailLookups = Math.max(0, Math.min(1000, Number(body?.maxDetailLookups || 120)));
 
-    let page = 1;
+    let page = fromPage;
     let hasMore = true;
     const allRows = [];
     let syncWarning = null;
+    let detailLookups = 0;
+    let skippedDetailLookups = 0;
+    const lastPage = fromPage + maxPages - 1;
 
-    while (hasMore && page <= maxPages) {
+    while (hasMore && page <= lastPage) {
       const url = `https://api.fortnox.se/3/customers?limit=500&page=${page}`;
       let result;
       try {
@@ -350,10 +355,13 @@ async function runCrmSync(request, body = {}) {
 
       let fortnoxActive = normalizeFortnoxActive(row);
       if (fortnoxActive === null && customerNumber) {
-        if (!customerCardCache.has(customerNumber)) {
+        if (detailLookups >= maxDetailLookups) {
+          skippedDetailLookups += 1;
+        } else if (!customerCardCache.has(customerNumber)) {
           const cardResult = await fetchFortnoxCustomerCard(customerNumber, token, cookieStore, userId);
           token = cardResult.token || token;
           customerCardCache.set(customerNumber, cardResult.customer || null);
+          detailLookups += 1;
           await delay(80);
         }
 
@@ -425,6 +433,11 @@ async function runCrmSync(request, body = {}) {
       upserted: toUpsert.length,
       ...fortnoxStatusSummary,
       warning: syncWarning,
+      fromPage,
+      toPage: Math.max(fromPage, Math.min(page - 1, lastPage)),
+      nextPage: hasMore ? page : null,
+      detailLookups,
+      skippedDetailLookups,
       skipped: skipped.length,
       skippedRows: skipped.slice(0, 20),
       pagesFetched: Math.max(0, page - 1),
@@ -442,6 +455,8 @@ export async function POST(request) {
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const maxPages = Number(searchParams.get("maxPages") || 10);
-  return runCrmSync(request, { maxPages });
+  const maxPages = Number(searchParams.get("maxPages") || 1);
+  const fromPage = Number(searchParams.get("fromPage") || 1);
+  const maxDetailLookups = Number(searchParams.get("maxDetailLookups") || 120);
+  return runCrmSync(request, { maxPages, fromPage, maxDetailLookups });
 }
