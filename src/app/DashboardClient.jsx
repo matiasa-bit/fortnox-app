@@ -1861,6 +1861,53 @@ export default function DashboardClient({
     setModalExpandedInvoices(new Set());
   };
 
+  const invoiceMatchesSelectedArticleGroupFilter = (inv = {}) => {
+    if (selectedArticleGroupFilters.length === 0) return true;
+
+    const invoiceNumber = String(inv.document_number || "").trim();
+    const cachedRows = invoiceRows[invoiceNumber];
+    const rows = Array.isArray(cachedRows) ? cachedRows : (inv.InvoiceRows || []);
+    if (!Array.isArray(rows) || rows.length === 0) return false;
+
+    return rows.some(row => {
+      const articleNumber = String(row.ArticleNumber || row.article_number || row.ArticleNo || row.article_no || "").trim();
+      const groupName = articleNumberToGroupName.get(articleNumber);
+      return !!(groupName && selectedArticleGroupFilterSet.has(groupName));
+    });
+  };
+
+  const openInvoicesForRevenueMonth = (monthKey, monthLabel) => {
+    const key = String(monthKey || "").trim();
+    if (!/^\d{4}-\d{2}$/.test(key)) return;
+
+    const invoicesForMonth = filteredInvoicesForRollingWindow
+      .filter(inv => String(inv.invoice_date || "").slice(0, 7) === key)
+      .filter(inv => invoiceMatchesSelectedArticleGroupFilter(inv))
+      .sort((a, b) => String(b.invoice_date || "").localeCompare(String(a.invoice_date || "")));
+
+    setInvoiceModal({
+      mode: "all",
+      customerNumber: selectedCustomer === "ALL" ? null : selectedCustomer,
+      customerName: `${selectedCustomerLabel} · ${monthLabel || key}`,
+      invoices: invoicesForMonth,
+    });
+    setModalExpandedInvoices(new Set());
+  };
+
+  const openInvoicesForRevenuePeriod = () => {
+    const invoicesForPeriod = filteredInvoicesForRollingWindow
+      .filter(inv => invoiceMatchesSelectedArticleGroupFilter(inv))
+      .sort((a, b) => String(b.invoice_date || "").localeCompare(String(a.invoice_date || "")));
+
+    setInvoiceModal({
+      mode: "all",
+      customerNumber: selectedCustomer === "ALL" ? null : selectedCustomer,
+      customerName: `${selectedCustomerLabel} · ${rollingPeriodLabel}`,
+      invoices: invoicesForPeriod,
+    });
+    setModalExpandedInvoices(new Set());
+  };
+
   const openContractsForCustomer = (customerNumber, customerName) => {
     const number = normalizeCustomerNumber(customerNumber);
     if (!number) return;
@@ -2771,7 +2818,19 @@ export default function DashboardClient({
                 {monthlyRevenuePerHourData.map((row) => (
                   <tr key={row.key} style={{borderBottom:"1px solid #1e3545"}}>
                     <td style={{padding:"14px 16px 14px 0", color:"#fff", fontSize:14}}>{row.month}</td>
-                    <td style={{padding:"14px 16px 14px 0", color:"#00c97a", fontWeight:700, fontSize:14}}>{formatSEK(row.omsattning)}</td>
+                    <td style={{padding:"14px 16px 14px 0", color:"#00c97a", fontWeight:700, fontSize:14}}>
+                      {(parseFloat(row.omsattning) || 0) > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => openInvoicesForRevenueMonth(row.key, row.month)}
+                          style={{background:"transparent", border:"none", color:"#00c97a", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
+                        >
+                          {formatSEK(row.omsattning)}
+                        </button>
+                      ) : (
+                        formatSEK(row.omsattning)
+                      )}
+                    </td>
                     <td style={{padding:"14px 16px 14px 0", color:"#1db3a7", fontWeight:700, fontSize:14}}>
                       {row.timmar > 0 ? (
                         <button
@@ -2793,7 +2852,19 @@ export default function DashboardClient({
                 {monthlyRevenuePerHourData.length > 0 && (
                   <tr style={{borderTop:"1px solid #2a4a5e", background:"rgba(9,16,24,0.22)"}}>
                     <td style={{padding:"14px 16px 14px 0", color:"#dbe7ef", fontWeight:700, fontSize:14}}>Snitt (hela perioden)</td>
-                    <td style={{padding:"14px 16px 14px 0", color:"#00c97a", fontWeight:700, fontSize:14}}>{formatSEK(monthlyRevenuePerHourSummary.totalOmsattning)}</td>
+                    <td style={{padding:"14px 16px 14px 0", color:"#00c97a", fontWeight:700, fontSize:14}}>
+                      {monthlyRevenuePerHourSummary.totalOmsattning > 0 ? (
+                        <button
+                          type="button"
+                          onClick={openInvoicesForRevenuePeriod}
+                          style={{background:"transparent", border:"none", color:"#00c97a", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
+                        >
+                          {formatSEK(monthlyRevenuePerHourSummary.totalOmsattning)}
+                        </button>
+                      ) : (
+                        formatSEK(monthlyRevenuePerHourSummary.totalOmsattning)
+                      )}
+                    </td>
                     <td style={{padding:"14px 16px 14px 0", color:"#1db3a7", fontWeight:700, fontSize:14}}>
                       {monthlyRevenuePerHourSummary.totalTimmar > 0 ? (
                         <button
