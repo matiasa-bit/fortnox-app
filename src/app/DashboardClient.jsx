@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 const MONTHS = ["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt","Nov","Dec"];
 const INVOICE_ROWS_ARE_EX_VAT = process.env.NEXT_PUBLIC_INVOICE_ROWS_ARE_EX_VAT !== "false";
 const DEFAULT_SELECTED_YEAR = "2026";
+const DASHBOARD_FILTERS_STORAGE_KEY = "fortnox-dashboard-filters-v1";
 
 function exMoms(total) {
   const num = parseFloat(total);
@@ -308,6 +309,53 @@ export default function DashboardClient({
   const [timeReportsLoading, setTimeReportsLoading] = useState(() => !Array.isArray(timeReports) || timeReports.length === 0);
   const [contractAccrualsData, setContractAccrualsData] = useState(() => (Array.isArray(contractAccruals) ? contractAccruals : []));
   const [contractAccrualsLoading, setContractAccrualsLoading] = useState(() => !Array.isArray(contractAccruals) || contractAccruals.length === 0);
+  const [filtersHydrated, setFiltersHydrated] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(DASHBOARD_FILTERS_STORAGE_KEY);
+      if (!raw) {
+        setFiltersHydrated(true);
+        return;
+      }
+
+      const saved = JSON.parse(raw);
+      if (saved && typeof saved === "object") {
+        if (typeof saved.selectedYear === "string") setSelectedYear(saved.selectedYear);
+        if (typeof saved.selectedCustomer === "string") setSelectedCustomer(saved.selectedCustomer);
+        if (typeof saved.selectedGroup === "string") setSelectedGroup(saved.selectedGroup);
+        if (typeof saved.selectedCostcenter === "string") setSelectedCostcenter(saved.selectedCostcenter);
+
+        if (typeof saved.yearInput === "string") setYearInput(saved.yearInput);
+        if (typeof saved.customerInput === "string") setCustomerInput(saved.customerInput);
+        if (typeof saved.groupInput === "string") setGroupInput(saved.groupInput);
+        if (typeof saved.costcenterInput === "string") setCostcenterInput(saved.costcenterInput);
+      }
+    } catch {
+    } finally {
+      setFiltersHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!filtersHydrated) return;
+
+    const payload = {
+      selectedYear,
+      selectedCustomer,
+      selectedGroup,
+      selectedCostcenter,
+      yearInput,
+      customerInput,
+      groupInput,
+      costcenterInput,
+    };
+
+    try {
+      window.localStorage.setItem(DASHBOARD_FILTERS_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+    }
+  }, [filtersHydrated, selectedYear, selectedCustomer, selectedGroup, selectedCostcenter, yearInput, customerInput, groupInput, costcenterInput]);
 
   useEffect(() => {
     let isCancelled = false;
