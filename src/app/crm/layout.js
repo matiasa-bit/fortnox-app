@@ -10,7 +10,7 @@ const navItems = [
 export default function CrmLayout({ children }) {
   return (
     <main style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0f1923 0%, #1a2e3b 100%)", color: "#fff", padding: "32px" }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+      <div style={{ width: "100%" }}>
         <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800 }}>Internt CRM</h1>
