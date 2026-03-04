@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 
 const MONTHS = ["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt","Nov","Dec"];
 const INVOICE_ROWS_ARE_EX_VAT = process.env.NEXT_PUBLIC_INVOICE_ROWS_ARE_EX_VAT !== "false";
+const DEFAULT_SELECTED_YEAR = "2026";
 const DASHBOARD_FILTERS_STORAGE_KEY = "fortnox-dashboard-filters-v1";
 
 function getCurrentYearMonth() {
