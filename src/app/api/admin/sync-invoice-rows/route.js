@@ -135,7 +135,9 @@ export async function POST(request) {
   const missingInvoiceNumbers = invoiceNumbers.filter(num => !invoicesWithRows.has(num));
 
   const isFilteredScope = requestedInvoiceNumbers.length > 0;
-  const syncCandidates = isFilteredScope ? invoiceNumbers : missingInvoiceNumbers;
+  const syncCandidates = missingInvoiceNumbers.length > 0
+    ? missingInvoiceNumbers
+    : (isFilteredScope ? invoiceNumbers : missingInvoiceNumbers);
   const toSync = syncCandidates.slice(0, batchSize);
   if (toSync.length === 0) {
     return Response.json({

@@ -1711,22 +1711,40 @@ export default function DashboardClient({
                     .filter(Boolean)
                 ));
 
-                const res = await fetch('/api/admin/sync-invoice-rows', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    batchSize: 20,
-                    invoiceNumbers: invoicesForSync,
-                    fromDate: selectedYear ? `${selectedYear}-01-01` : '2025-01-01',
-                  }),
-                });
-                const data = await res.json();
-                if (!res.ok || data.ok === false) {
-                  alert(`Sync artiklar misslyckades: ${data.error || 'okänt fel'}`);
-                } else {
-                  alert(`Artikelsync (aktuellt filter) klar. Synkade: ${data.syncedNow || 0}, kvar: ${data.remaining || 0}`);
-                  window.location.reload();
+                let rounds = 0;
+                let totalSynced = 0;
+                let remaining = invoicesForSync.length;
+                const maxRounds = 12;
+
+                while (rounds < maxRounds && remaining > 0) {
+                  rounds += 1;
+                  const res = await fetch('/api/admin/sync-invoice-rows', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      batchSize: 20,
+                      invoiceNumbers: invoicesForSync,
+                      fromDate: selectedYear ? `${selectedYear}-01-01` : '2025-01-01',
+                    }),
+                  });
+
+                  const data = await res.json();
+                  if (!res.ok || data.ok === false) {
+                    alert(`Sync artiklar misslyckades: ${data.error || 'okänt fel'}`);
+                    return;
+                  }
+
+                  const syncedNow = Number(data.syncedNow || 0);
+                  totalSynced += syncedNow;
+                  remaining = Number(data.remaining || 0);
+
+                  if (syncedNow === 0) {
+                    break;
+                  }
                 }
+
+                alert(`Artikelsync (aktuellt filter) klar. Synkade: ${totalSynced}, kvar: ${remaining}`);
+                window.location.reload();
               } catch (err) {
                 alert('Sync artiklar misslyckades. Se konsol.');
                 console.error(err);
