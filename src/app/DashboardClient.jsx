@@ -284,6 +284,7 @@ export default function DashboardClient({
   const [contractModal, setContractModal] = useState(null);
   const [expandedCustomerContracts, setExpandedCustomerContracts] = useState(new Set());
   const [expandedModalContracts, setExpandedModalContracts] = useState(new Set());
+  const [expandedArticleGroups, setExpandedArticleGroups] = useState(new Set());
   const [modalExpandedInvoices, setModalExpandedInvoices] = useState(new Set());
   const [modalHoveredInvoice, setModalHoveredInvoice] = useState(null);
   const [modalInvoiceRowsLoading, setModalInvoiceRowsLoading] = useState({});
@@ -860,6 +861,7 @@ export default function DashboardClient({
           antal: 0,
           quantity: 0,
           articleNumbers: new Set(),
+          articles: [],
         };
       }
 
@@ -867,12 +869,14 @@ export default function DashboardClient({
       grouped[key].antal += parseFloat(article.antal || 0) || 0;
       grouped[key].quantity += parseFloat(article.quantity || 0) || 0;
       grouped[key].articleNumbers.add(articleNumber);
+      grouped[key].articles.push(article);
     });
 
     return Object.values(grouped)
       .map(group => ({
         ...group,
         articleCount: group.articleNumbers.size,
+        articles: (group.articles || []).slice().sort((a, b) => (parseFloat(b.omsattning || 0) || 0) - (parseFloat(a.omsattning || 0) || 0)),
       }))
       .sort((a, b) => b.omsattning - a.omsattning);
   }, [articleData, articleGroupMappings]);
@@ -1442,6 +1446,15 @@ export default function DashboardClient({
       const next = new Set(prev);
       if (next.has(rowKey)) next.delete(rowKey);
       else next.add(rowKey);
+      return next;
+    });
+  };
+
+  const toggleArticleGroupExpanded = (groupKey) => {
+    setExpandedArticleGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupKey)) next.delete(groupKey);
+      else next.add(groupKey);
       return next;
     });
   };
@@ -2460,23 +2473,67 @@ export default function DashboardClient({
                 </tr>
               </thead>
               <tbody>
-                {articleGroupStats.map((group) => (
-                  <tr key={group.key} style={{borderBottom:"1px solid #1e3545"}}>
-                    <td style={{padding:"14px 16px 14px 0", color:"#fff", fontWeight:500, fontSize:14}}>{group.groupName}</td>
-                    <td style={{padding:"14px 16px 14px 0", color:"#00c97a", fontWeight:700, fontSize:14}}>{formatSEK(group.omsattning)}</td>
-                    <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{group.articleCount}</td>
-                    <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{group.antal}</td>
-                    <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{group.quantity.toFixed(1)}</td>
-                    <td style={{padding:"14px 0", minWidth:120}}>
-                      <div style={{display:"flex", alignItems:"center", gap:8}}>
-                        <div style={{flex:1, height:6, background:"#2a4a5e", borderRadius:3, overflow:"hidden"}}>
-                          <div style={{width:`${totalOmsattning > 0 ? (group.omsattning / totalOmsattning * 100) : 0}%`, height:"100%", background:"#2f7ef7", borderRadius:3}} />
-                        </div>
-                        <span style={{color:"#6b8fa3", fontSize:12, minWidth:36}}>{totalOmsattning > 0 ? Math.round(group.omsattning / totalOmsattning * 100) : 0}%</span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {articleGroupStats.map((group) => {
+                  const isExpanded = expandedArticleGroups.has(group.key);
+                  return (
+                    <Fragment key={group.key}>
+                      <tr style={{borderBottom:"1px solid #1e3545"}}>
+                        <td style={{padding:"14px 16px 14px 0", color:"#fff", fontWeight:500, fontSize:14}}>
+                          <button
+                            type="button"
+                            onClick={() => toggleArticleGroupExpanded(group.key)}
+                            style={{background:"transparent", border:"none", color:"#fff", cursor:"pointer", padding:0, fontWeight:500, fontSize:14, display:"flex", alignItems:"center", gap:8}}
+                          >
+                            <span style={{color:"#6b8fa3", fontSize:12}}>{isExpanded ? "▼" : "▶"}</span>
+                            <span>{group.groupName}</span>
+                          </button>
+                        </td>
+                        <td style={{padding:"14px 16px 14px 0", color:"#00c97a", fontWeight:700, fontSize:14}}>{formatSEK(group.omsattning)}</td>
+                        <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{group.articleCount}</td>
+                        <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{group.antal}</td>
+                        <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{group.quantity.toFixed(1)}</td>
+                        <td style={{padding:"14px 0", minWidth:120}}>
+                          <div style={{display:"flex", alignItems:"center", gap:8}}>
+                            <div style={{flex:1, height:6, background:"#2a4a5e", borderRadius:3, overflow:"hidden"}}>
+                              <div style={{width:`${totalOmsattning > 0 ? (group.omsattning / totalOmsattning * 100) : 0}%`, height:"100%", background:"#2f7ef7", borderRadius:3}} />
+                            </div>
+                            <span style={{color:"#6b8fa3", fontSize:12, minWidth:36}}>{totalOmsattning > 0 ? Math.round(group.omsattning / totalOmsattning * 100) : 0}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr style={{borderBottom:"1px solid #1e3545"}}>
+                          <td colSpan={6} style={{padding:"0 0 12px 0"}}>
+                            <table style={{width:"100%", borderCollapse:"collapse", background:"#0f1923", border:"1px solid #1e3545", borderRadius:8}}>
+                              <thead>
+                                <tr style={{borderBottom:"1px solid #1e3545"}}>
+                                  {["Artikelnr", "Benämning", "Omsättning ex. moms", "Antal", "Mängd", "Andel"].map(h => (
+                                    <th key={`${group.key}-${h}`} style={{padding:"8px 10px", color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.6, textAlign:"left"}}>{h}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(group.articles || []).map(article => {
+                                  const share = group.omsattning > 0 ? Math.round(((parseFloat(article.omsattning || 0) || 0) / group.omsattning) * 100) : 0;
+                                  return (
+                                    <tr key={`${group.key}-${article.key}`} style={{borderBottom:"1px solid #1e3545"}}>
+                                      <td style={{padding:"8px 10px", color:"#dbe7ef", fontSize:13}}>{article.articleNumber || "-"}</td>
+                                      <td style={{padding:"8px 10px", color:"#fff", fontSize:13}}>{article.name || "-"}</td>
+                                      <td style={{padding:"8px 10px", color:"#00c97a", fontWeight:700, fontSize:13}}>{formatSEK(article.omsattning || 0)}</td>
+                                      <td style={{padding:"8px 10px", color:"#6b8fa3", fontSize:13}}>{article.antal}</td>
+                                      <td style={{padding:"8px 10px", color:"#6b8fa3", fontSize:13}}>{(parseFloat(article.quantity || 0) || 0).toFixed(1)}</td>
+                                      <td style={{padding:"8px 10px", color:"#6b8fa3", fontSize:13}}>{share}%</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
