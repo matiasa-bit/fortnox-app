@@ -1,0 +1,485 @@
+[
+  {
+    "employee_id": "49",
+    "employee_name": "Marcus Wohlström",
+    "group_name": "Tokyo",
+    "cost_center": "24",
+    "active": true
+  },
+  {
+    "employee_id": "108",
+    "employee_name": "Linus Lindholm",
+    "group_name": "Annan",
+    "cost_center": "33",
+    "active": true
+  },
+  {
+    "employee_id": "333",
+    "employee_name": "Nahrin Sharro",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "93",
+    "employee_name": "Nahrin Sharro Aphram",
+    "group_name": "Annan",
+    "cost_center": "32",
+    "active": true
+  },
+  {
+    "employee_id": "183",
+    "employee_name": "Ida Martinsson",
+    "group_name": "Tokyo",
+    "cost_center": "44",
+    "active": true
+  },
+  {
+    "employee_id": "136",
+    "employee_name": "Michael Chamoun",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "114",
+    "employee_name": "Oscar Blas",
+    "group_name": "Implementering",
+    "cost_center": "34",
+    "active": true
+  },
+  {
+    "employee_id": "4",
+    "employee_name": "Martin Jansson",
+    "group_name": "Milano",
+    "cost_center": "20",
+    "active": true
+  },
+  {
+    "employee_id": "21",
+    "employee_name": "Alex Chamoun",
+    "group_name": "Annan",
+    "cost_center": "22",
+    "active": true
+  },
+  {
+    "employee_id": "5",
+    "employee_name": "Margareta Rusik",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "190",
+    "employee_name": "Nina ?hlund",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "131",
+    "employee_name": "Linnea Berggren",
+    "group_name": "Tokyo",
+    "cost_center": "36",
+    "active": true
+  },
+  {
+    "employee_id": "2",
+    "employee_name": "Matias Aphram",
+    "group_name": "Annan",
+    "cost_center": "3",
+    "active": true
+  },
+  {
+    "employee_id": "204",
+    "employee_name": "Achraf Chentouf",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "207",
+    "employee_name": "Maria Wiklund Johansson",
+    "group_name": "Annan",
+    "cost_center": "48",
+    "active": true
+  },
+  {
+    "employee_id": "218",
+    "employee_name": "Elisabeth Widerström",
+    "group_name": "Milano",
+    "cost_center": "50",
+    "active": true
+  },
+  {
+    "employee_id": "219",
+    "employee_name": "Elin Erkendal",
+    "group_name": "Lima",
+    "cost_center": "29",
+    "active": true
+  },
+  {
+    "employee_id": "225",
+    "employee_name": "George Sharro",
+    "group_name": "Implementering",
+    "cost_center": "52",
+    "active": true
+  },
+  {
+    "employee_id": "222",
+    "employee_name": "Angelica Thörnqvist",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "304",
+    "employee_name": "Hanna Dahl",
+    "group_name": "Tokyo",
+    "cost_center": "59",
+    "active": true
+  },
+  {
+    "employee_id": "305",
+    "employee_name": "John Hyttner",
+    "group_name": "Milano",
+    "cost_center": "61",
+    "active": true
+  },
+  {
+    "employee_id": "306",
+    "employee_name": "Jelena Österlind",
+    "group_name": "Milano",
+    "cost_center": "62",
+    "active": true
+  },
+  {
+    "employee_id": "307",
+    "employee_name": "Derya Kuzey",
+    "group_name": "Milano",
+    "cost_center": "63",
+    "active": true
+  },
+  {
+    "employee_id": "308",
+    "employee_name": "Rebecka Knås",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "311",
+    "employee_name": "Rasmus Mellquist",
+    "group_name": "London",
+    "cost_center": "65",
+    "active": true
+  },
+  {
+    "employee_id": "325",
+    "employee_name": "Yasmine Ait Attaleb",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "312",
+    "employee_name": "Adalia Najim",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "329",
+    "employee_name": "Klara Eriksson",
+    "group_name": "Tokyo",
+    "cost_center": "67",
+    "active": true
+  },
+  {
+    "employee_id": "323",
+    "employee_name": "Sofia Bengtsson",
+    "group_name": "London",
+    "cost_center": "68",
+    "active": true
+  },
+  {
+    "employee_id": "321",
+    "employee_name": "Karin Sohlin",
+    "group_name": "Sydney",
+    "cost_center": "69",
+    "active": true
+  },
+  {
+    "employee_id": "322",
+    "employee_name": "Andreas Hafelt",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "346",
+    "employee_name": "Alice Karlsson",
+    "group_name": "Tokyo",
+    "cost_center": "71",
+    "active": true
+  },
+  {
+    "employee_id": "343",
+    "employee_name": "Rebecka Linder",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "348",
+    "employee_name": "Nicole Valencia",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "355",
+    "employee_name": "Erica Wartmark",
+    "group_name": "Borttagen",
+    "cost_center": "75",
+    "active": true
+  },
+  {
+    "employee_id": "357",
+    "employee_name": "Carolina Zabihi",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "361",
+    "employee_name": "Linda Jallo",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "326",
+    "employee_name": "Caroline Petersson",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "143",
+    "employee_name": "Evelina Wohlstr?m",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "295",
+    "employee_name": "Borttagen användare",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "296",
+    "employee_name": "Borttagen användare",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "324",
+    "employee_name": "Borttagen användare",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "221",
+    "employee_name": "Borttagen användare",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "302",
+    "employee_name": "Borttagen användare",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "1",
+    "employee_name": "Borttagen användare",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "367",
+    "employee_name": "Angie Jimenez",
+    "group_name": "Milano",
+    "cost_center": "76",
+    "active": true
+  },
+  {
+    "employee_id": "374",
+    "employee_name": "Emma Victoria Jeansson",
+    "group_name": "London",
+    "cost_center": "78",
+    "active": true
+  },
+  {
+    "employee_id": "376",
+    "employee_name": "Anders Daniel Helgen",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "381",
+    "employee_name": "Alexandros Megalooikono",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "386",
+    "employee_name": "Karin Ståhl",
+    "group_name": "Lima",
+    "cost_center": "18",
+    "active": true
+  },
+  {
+    "employee_id": "458",
+    "employee_name": "Jesper Acosta",
+    "group_name": "Tokyo",
+    "cost_center": "80",
+    "active": true
+  },
+  {
+    "employee_id": "459",
+    "employee_name": "Maria Larsson",
+    "group_name": "Lima",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "468",
+    "employee_name": "Agneta Åhlin",
+    "group_name": "Lima",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "470",
+    "employee_name": "Romil Poli",
+    "group_name": "London",
+    "cost_center": "90",
+    "active": true
+  },
+  {
+    "employee_id": "467",
+    "employee_name": "Dina Kilje",
+    "group_name": "Sydney",
+    "cost_center": "85",
+    "active": true
+  },
+  {
+    "employee_id": "469",
+    "employee_name": "Eddy Tshimanga",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "509",
+    "employee_name": "Johan Samuelsson",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "507",
+    "employee_name": "Tyra Fredin",
+    "group_name": "Sydney",
+    "cost_center": "87",
+    "active": true
+  },
+  {
+    "employee_id": "505",
+    "employee_name": "Isabella Hedlund",
+    "group_name": "Lima",
+    "cost_center": "89",
+    "active": true
+  },
+  {
+    "employee_id": "464",
+    "employee_name": "Elin Bellwart",
+    "group_name": "Sydney",
+    "cost_center": "84",
+    "active": true
+  },
+  {
+    "employee_id": "506",
+    "employee_name": "Alper Cecen",
+    "group_name": "Milano",
+    "cost_center": "88",
+    "active": true
+  },
+  {
+    "employee_id": "466",
+    "employee_name": "Lukasz Ziemba",
+    "group_name": "Sydney",
+    "cost_center": "81",
+    "active": true
+  },
+  {
+    "employee_id": "514",
+    "employee_name": "Lisa Lundin",
+    "group_name": "Lima",
+    "cost_center": "91",
+    "active": true
+  },
+  {
+    "employee_id": "516",
+    "employee_name": "Douglas Rube",
+    "group_name": "London",
+    "cost_center": "93",
+    "active": true
+  },
+  {
+    "employee_id": "510",
+    "employee_name": "Agnes Cardfelt",
+    "group_name": "Sydney",
+    "cost_center": "94",
+    "active": true
+  },
+  {
+    "employee_id": "463",
+    "employee_name": "Helene Fredin",
+    "group_name": "Implementering",
+    "cost_center": "92",
+    "active": true
+  },
+  {
+    "employee_id": "461",
+    "employee_name": "Lennart Sjoberg",
+    "group_name": "Borttagen",
+    "cost_center": "",
+    "active": true
+  },
+  {
+    "employee_id": "462",
+    "employee_name": "Anna Söderhielm",
+    "group_name": "Sydney",
+    "cost_center": "96",
+    "active": true
+  },
+  {
+    "employee_id": "582",
+    "employee_name": "William Edlund",
+    "group_name": "Tokyo",
+    "cost_center": "95",
+    "active": true
+  }
+]
