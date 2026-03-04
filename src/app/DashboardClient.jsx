@@ -194,7 +194,7 @@ function findOptionByInput(options = [], input = "") {
 }
 
 export default function DashboardClient({
-  invoices,
+  invoices = [],
   customers: customersProp = [],
   initialInvoiceRows = [],
   articleCacheStatus = {},
