@@ -1290,6 +1290,32 @@ export default function DashboardClient({
   const totalFakturor = filtered.length;
   const obetalda = filtered.filter(inv => parseFloat(inv.balance || inv.Balance) > 0).length;
 
+  const isInvoiceOverdue = (inv = {}) => {
+    const balance = parseFloat(inv.balance || inv.Balance || 0) || 0;
+    if (balance <= 0) return false;
+
+    const dueDateRaw = String(inv.due_date || inv.DueDate || "").trim();
+    const invoiceDateRaw = String(inv.invoice_date || inv.InvoiceDate || "").trim();
+    const dueDate = dueDateRaw
+      ? new Date(dueDateRaw)
+      : (invoiceDateRaw
+          ? (() => {
+              const base = new Date(invoiceDateRaw);
+              if (Number.isNaN(base.getTime())) return null;
+              base.setDate(base.getDate() + 30);
+              return base;
+            })()
+          : null);
+
+    if (!dueDate || Number.isNaN(dueDate.getTime())) return false;
+
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return dueDate < todayStart;
+  };
+
+  const overdueInvoicesCount = filtered.reduce((sum, inv) => sum + (isInvoiceOverdue(inv) ? 1 : 0), 0);
+
   const getAnnualContractValueForCustomer = (customerNumber, targetYear) => {
     const rows = contractRowsByCustomer.get(customerNumber) || [];
     let total = 0;
@@ -1412,6 +1438,20 @@ export default function DashboardClient({
       customerNumber: null,
       customerName: "Obetalda fakturor",
       invoices: unpaidInvoices,
+    });
+    setModalExpandedInvoices(new Set());
+  };
+
+  const openAllInvoices = () => {
+    const allInvoices = filtered
+      .slice()
+      .sort((a, b) => String(b.invoice_date || "").localeCompare(String(a.invoice_date || "")));
+
+    setInvoiceModal({
+      mode: "all",
+      customerNumber: null,
+      customerName: selectedCustomer === "ALL" ? "Alla fakturor" : selectedCustomerLabel,
+      invoices: allInvoices,
     });
     setModalExpandedInvoices(new Set());
   };
@@ -1958,7 +1998,7 @@ export default function DashboardClient({
       <div style={{display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))", gap:16, marginBottom:32}}>
         {[
           { label:"Total omsättning", value: formatSEK(totalOmsattning), color:"#00c97a" },
-          { label:"Antal fakturor", value: totalFakturor, color:"#3b9eff" },
+          { label:"Antal fakturor", value: totalFakturor, color:"#3b9eff", onClick: openAllInvoices, overdueCount: overdueInvoicesCount },
           { label:"Timmar (tid)", value: totalHours.toFixed(1), color:"#1db3a7" },
           { label:"Obetalda fakturor", value: obetalda, color:"#ff6b6b", onClick: openUnpaidInvoices },
           { label:"Avtalsvärde", value: contractAccrualsLoading ? "Laddar avtal..." : (contractValueForCurrentSelection > 0 ? formatSEK(contractValueForCurrentSelection) : (hasContractsForCurrentSelection ? formatSEK(0) : "Inga avtal hittade")), color:"#f59e0b" },
@@ -1972,8 +2012,15 @@ export default function DashboardClient({
               padding:"20px 24px",
               border:"1px solid #2a4a5e",
               cursor: card.onClick ? "pointer" : "default",
+              position: "relative",
             }}
           >
+            {card.label === "Antal fakturor" && card.overdueCount > 0 && (
+              <span
+                title={`${card.overdueCount} förfallen faktura${card.overdueCount === 1 ? "" : "or"}`}
+                style={{position:"absolute", top:10, right:10, width:10, height:10, borderRadius:"50%", background:"#ff6b6b", boxShadow:"0 0 0 3px rgba(255,107,107,0.2)"}}
+              />
+            )}
             <p style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:1, margin:"0 0 8px"}}>{card.label}</p>
             <p style={{fontSize:26, fontWeight:800, color:card.color, margin:0}}>{card.value}</p>
           </div>
