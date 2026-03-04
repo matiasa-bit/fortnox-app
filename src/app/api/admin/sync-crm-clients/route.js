@@ -208,6 +208,8 @@ async function runCrmSync(request, body = {}) {
     let syncWarning = null;
     let detailLookups = 0;
     let skippedDetailLookups = 0;
+    let detailStatusesResolved = 0;
+    let detailStatusesStillUnknown = 0;
     const lastPage = fromPage + maxPages - 1;
 
     while (hasMore && page <= lastPage) {
@@ -385,6 +387,11 @@ async function runCrmSync(request, body = {}) {
         const customerCard = customerCardCache.get(customerNumber);
         if (customerCard) {
           fortnoxActive = normalizeFortnoxActive(customerCard);
+          if (fortnoxActive === null) {
+            detailStatusesStillUnknown += 1;
+          } else {
+            detailStatusesResolved += 1;
+          }
         }
       }
 
@@ -455,6 +462,8 @@ async function runCrmSync(request, body = {}) {
       nextPage: hasMore ? page : null,
       detailLookups,
       skippedDetailLookups,
+      detailStatusesResolved,
+      detailStatusesStillUnknown,
       skipped: skipped.length,
       skippedRows: skipped.slice(0, 20),
       pagesFetched: Math.max(0, page - 1),
