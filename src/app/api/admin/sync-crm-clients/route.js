@@ -367,7 +367,11 @@ async function runCrmSync(request, body = {}) {
       }
 
       let fortnoxActive = normalizeFortnoxActive(row);
-      if (fortnoxActive === null && customerNumber) {
+      const hasSavedFortnoxStatus = existing?.fortnox_active === true || existing?.fortnox_active === false;
+
+      // Only spend detail lookups on customers that still lack saved status.
+      // Otherwise we keep re-querying the same customers on every run.
+      if (fortnoxActive === null && customerNumber && !hasSavedFortnoxStatus) {
         if (detailLookups >= maxDetailLookups) {
           skippedDetailLookups += 1;
         } else if (!customerCardCache.has(customerNumber)) {
