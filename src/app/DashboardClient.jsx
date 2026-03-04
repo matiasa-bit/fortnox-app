@@ -1769,6 +1769,25 @@ export default function DashboardClient({
     });
   };
 
+  const openTimeEntriesForPeriod = () => {
+    const rows = filteredTimeReportsForRollingWindow
+      .slice()
+      .sort((a, b) => {
+        const dateDiff = String(b.report_date || "").localeCompare(String(a.report_date || ""));
+        if (dateDiff !== 0) return dateDiff;
+        return String(a.employee_name || a.employee_id || "").localeCompare(String(b.employee_name || b.employee_id || ""), "sv-SE", { numeric: true });
+      });
+
+    setTimeEntriesModal({
+      mode: "period",
+      employeeKey: `period-${effectiveRollingEndMonth}`,
+      employeeName: rollingPeriodLabel,
+      employeeGroup: selectedCustomerLabel,
+      rows,
+      totalHours: rows.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0),
+    });
+  };
+
   const toggleModalInvoiceExpand = (invoiceNumber) => {
     const key = String(invoiceNumber || "").trim();
     if (!key) return;
@@ -2483,7 +2502,19 @@ export default function DashboardClient({
                   <tr style={{borderTop:"1px solid #2a4a5e", background:"rgba(9,16,24,0.22)"}}>
                     <td style={{padding:"14px 16px 14px 0", color:"#dbe7ef", fontWeight:700, fontSize:14}}>Snitt (hela perioden)</td>
                     <td style={{padding:"14px 16px 14px 0", color:"#00c97a", fontWeight:700, fontSize:14}}>{formatSEK(monthlyRevenuePerHourSummary.totalOmsattning)}</td>
-                    <td style={{padding:"14px 16px 14px 0", color:"#1db3a7", fontWeight:700, fontSize:14}}>{monthlyRevenuePerHourSummary.totalTimmar.toFixed(1)}</td>
+                    <td style={{padding:"14px 16px 14px 0", color:"#1db3a7", fontWeight:700, fontSize:14}}>
+                      {monthlyRevenuePerHourSummary.totalTimmar > 0 ? (
+                        <button
+                          type="button"
+                          onClick={openTimeEntriesForPeriod}
+                          style={{background:"transparent", border:"none", color:"#1db3a7", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
+                        >
+                          {monthlyRevenuePerHourSummary.totalTimmar.toFixed(1)}
+                        </button>
+                      ) : (
+                        "0.0"
+                      )}
+                    </td>
                     <td style={{padding:"14px 0", color:"#3b9eff", fontWeight:700, fontSize:14}}>
                       {monthlyRevenuePerHourSummary.snittPerTimme !== null ? formatSEK(Math.round(monthlyRevenuePerHourSummary.snittPerTimme)) : "–"}
                     </td>
@@ -3046,7 +3077,7 @@ export default function DashboardClient({
             </div>
 
             <div style={{color:"#6b8fa3", fontSize:13, marginBottom:10}}>
-              {timeEntriesModal.mode === "month"
+              {timeEntriesModal.mode === "month" || timeEntriesModal.mode === "period"
                 ? `Kund: ${timeEntriesModal.employeeGroup} · Rader: ${timeEntriesModal.rows.length} · Timmar: ${timeEntriesModal.totalHours.toFixed(1)}`
                 : `Grupp: ${timeEntriesModal.employeeGroup} · Rader: ${timeEntriesModal.rows.length} · Timmar: ${timeEntriesModal.totalHours.toFixed(1)}`}
             </div>
@@ -3077,8 +3108,8 @@ export default function DashboardClient({
 
             {timeEntriesModal.rows.length === 0 && (
               <div style={{color:"#6b8fa3", fontSize:13, marginTop:12}}>
-                {timeEntriesModal.mode === "month"
-                  ? "Inga tidsrader hittades för vald månad i nuvarande filter."
+                {timeEntriesModal.mode === "month" || timeEntriesModal.mode === "period"
+                  ? "Inga tidsrader hittades för vald period i nuvarande filter."
                   : "Inga tidsrader hittades för vald medarbetare i nuvarande filter."}
               </div>
             )}
