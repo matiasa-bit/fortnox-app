@@ -1,0 +1,14 @@
+import ClientForm from "@/app/crm/clients/ClientForm";
+
+export default function CrmCreateClientPage() {
+  return (
+    <section style={{ background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 14, padding: 18 }}>
+      <h2 style={{ margin: "0 0 10px", fontSize: 18 }}>Skapa klient</h2>
+      <p style={{ margin: "0 0 14px", color: "#8fb1c3", fontSize: 14 }}>
+        Fyll i grunduppgifter för den nya klienten.
+      </p>
+
+      <ClientForm mode="create" />
+    </section>
+  );
+}
