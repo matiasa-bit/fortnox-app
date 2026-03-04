@@ -9,6 +9,39 @@ const INVOICE_ROWS_ARE_EX_VAT = process.env.NEXT_PUBLIC_INVOICE_ROWS_ARE_EX_VAT 
 const DEFAULT_SELECTED_YEAR = "2026";
 const DASHBOARD_FILTERS_STORAGE_KEY = "fortnox-dashboard-filters-v1";
 
+function getCurrentYearMonth() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+}
+
+function buildRolling12MonthWindow(endYearMonth) {
+  if (!/^\d{4}-\d{2}$/.test(String(endYearMonth || ""))) return [];
+
+  const [endYearStr, endMonthStr] = String(endYearMonth).split("-");
+  const endYear = Number.parseInt(endYearStr, 10);
+  const endMonthIndex = Number.parseInt(endMonthStr, 10) - 1;
+  if (!Number.isFinite(endYear) || !Number.isFinite(endMonthIndex) || endMonthIndex < 0 || endMonthIndex > 11) {
+    return [];
+  }
+
+  return Array.from({ length: 12 }, (_, i) => {
+    const offset = i - 11;
+    const date = new Date(endYear, endMonthIndex + offset, 1);
+    const year = date.getFullYear();
+    const monthIndex = date.getMonth();
+    const month = String(monthIndex + 1).padStart(2, "0");
+    return {
+      key: `${year}-${month}`,
+      year,
+      month,
+      monthIndex,
+      label: `${MONTHS[monthIndex]} ${year}`,
+    };
+  });
+}
+
 function exMoms(total) {
   const num = parseFloat(total);
   if (isNaN(num)) return 0;
@@ -277,6 +310,7 @@ export default function DashboardClient({
   const [selectedGroup, setSelectedGroup] = useState("ALL");
   const [selectedCostcenter, setSelectedCostcenter] = useState("ALL");
   const [yearInput, setYearInput] = useState(DEFAULT_SELECTED_YEAR);
+  const [rollingEndMonthInput, setRollingEndMonthInput] = useState("");
   const [customerInput, setCustomerInput] = useState("");
   const [costcenterInput, setCostcenterInput] = useState("");
   const [groupInput, setGroupInput] = useState("");
@@ -325,6 +359,7 @@ export default function DashboardClient({
         if (typeof saved.selectedCustomer === "string") setSelectedCustomer(saved.selectedCustomer);
         if (typeof saved.selectedGroup === "string") setSelectedGroup(saved.selectedGroup);
         if (typeof saved.selectedCostcenter === "string") setSelectedCostcenter(saved.selectedCostcenter);
+        if (typeof saved.rollingEndMonthInput === "string") setRollingEndMonthInput(saved.rollingEndMonthInput);
 
         if (typeof saved.yearInput === "string") setYearInput(saved.yearInput);
         if (typeof saved.customerInput === "string") setCustomerInput(saved.customerInput);
@@ -345,6 +380,7 @@ export default function DashboardClient({
       selectedCustomer,
       selectedGroup,
       selectedCostcenter,
+      rollingEndMonthInput,
       yearInput,
       customerInput,
       groupInput,
@@ -355,7 +391,7 @@ export default function DashboardClient({
       window.localStorage.setItem(DASHBOARD_FILTERS_STORAGE_KEY, JSON.stringify(payload));
     } catch {
     }
-  }, [filtersHydrated, selectedYear, selectedCustomer, selectedGroup, selectedCostcenter, yearInput, customerInput, groupInput, costcenterInput]);
+  }, [filtersHydrated, selectedYear, selectedCustomer, selectedGroup, selectedCostcenter, rollingEndMonthInput, yearInput, customerInput, groupInput, costcenterInput]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -554,6 +590,23 @@ export default function DashboardClient({
     return numbers;
   }, [normalizedTimeReports, selectedGroup, selectedYear, selectedCostcenter, customerNumberToCostCenter]);
 
+  const customerNumbersForSelectedGroupAllMonths = useMemo(() => {
+    if (selectedGroup === "ALL") return null;
+
+    const numbers = new Set();
+    normalizedTimeReports.forEach(row => {
+      const cc = customerNumberToCostCenter.get(row.customer_number) || "";
+      const costcenterMatch = selectedCostcenter === "ALL" || cc === selectedCostcenter;
+      const groupMatch = row.employee_group === selectedGroup;
+
+      if (costcenterMatch && groupMatch && row.customer_number) {
+        numbers.add(row.customer_number);
+      }
+    });
+
+    return numbers;
+  }, [normalizedTimeReports, selectedGroup, selectedCostcenter, customerNumberToCostCenter]);
+
   const employeeIdsForSelectedCostcenter = useMemo(() => {
     if (selectedCostcenter === "ALL") return null;
 
@@ -702,44 +755,6 @@ export default function DashboardClient({
   const yearOptions = useMemo(() => {
     return [{ value: "", label: "Alla år" }, ...years.map(y => ({ value: y, label: y }))];
   }, [years]);
-
-  const monthlyData = useMemo(() => {
-    if (selectedYear) {
-      const map = {};
-      filtered.forEach(inv => {
-        const month = inv.invoice_date?.slice(5,7);
-        if (!month) return;
-        const idx = parseInt(month, 10) - 1;
-        if (!map[idx]) map[idx] = { month: MONTHS[idx], omsattning: 0, antal: 0 };
-        map[idx].omsattning += exMoms(inv.total || inv.Total);
-        map[idx].antal += 1;
-      });
-      return Array.from({length: 12}, (_, i) => map[i] || { month: MONTHS[i], omsattning: 0, antal: 0 });
-    }
-
-    const map = {};
-    filtered.forEach(inv => {
-      const date = String(inv.invoice_date || "");
-      const yearMonth = date.slice(0, 7);
-      const month = date.slice(5, 7);
-      const year = date.slice(0, 4);
-      if (!yearMonth || !month || !year) return;
-      const idx = parseInt(month, 10) - 1;
-      if (idx < 0 || idx > 11) return;
-      if (!map[yearMonth]) {
-        map[yearMonth] = {
-          month: `${MONTHS[idx]} ${year}`,
-          omsattning: 0,
-          antal: 0,
-          sortKey: yearMonth,
-        };
-      }
-      map[yearMonth].omsattning += exMoms(inv.total || inv.Total);
-      map[yearMonth].antal += 1;
-    });
-
-    return Object.values(map).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-  }, [filtered, selectedYear]);
 
   const customerData = useMemo(() => {
     const map = {};
@@ -954,6 +969,99 @@ export default function DashboardClient({
     });
   }, [normalizedTimeReports, selectedYear, selectedCustomer, selectedCostcenter, selectedGroup, customerNumberToCostCenter, employeeIdsForSelectedCostcenter, customerNumbersForSelectedCostcenter, timeCostcenterFilterMode]);
 
+  const filteredInvoicesForRollingWindow = useMemo(() => {
+    return data.filter(inv => {
+      const invCustomerNumber = normalizeCustomerNumber(inv.customer_number);
+      const custMatch = selectedCustomer === "ALL" || invCustomerNumber === selectedCustomer;
+      const cc = customerNumberToCostCenter.get(invCustomerNumber) || "";
+      const costcenterMatch = selectedCostcenter === "ALL" || cc === selectedCostcenter;
+      const groupMatch = selectedGroup === "ALL" || customerNumbersForSelectedGroupAllMonths?.has(invCustomerNumber);
+      const hasTotal = parseFloat(inv.total) !== 0;
+      return custMatch && costcenterMatch && groupMatch && hasTotal;
+    });
+  }, [data, selectedCustomer, selectedCostcenter, selectedGroup, customerNumberToCostCenter, customerNumbersForSelectedGroupAllMonths]);
+
+  const filteredTimeReportsForRollingWindow = useMemo(() => {
+    return normalizedTimeReports.filter(row => {
+      const customerMatch = selectedCustomer === "ALL" || row.customer_number === selectedCustomer;
+      const cc = customerNumberToCostCenter.get(row.customer_number) || "";
+      const mappedEmployeeFilterEnabled = timeCostcenterFilterMode?.mode === "employee";
+      const mappedByNameFilterEnabled = timeCostcenterFilterMode?.mode === "employee-name-fallback";
+      const effectiveEmployeeIds = mappedEmployeeFilterEnabled
+        ? employeeIdsForSelectedCostcenter
+        : (mappedByNameFilterEnabled ? timeCostcenterFilterMode?.employeeIds : null);
+      const isMappedEmployee = !!(effectiveEmployeeIds && effectiveEmployeeIds.has(row.employee_id));
+      const isCollaboratorOnCostcenterCustomer = mappedEmployeeFilterEnabled && customerNumbersForSelectedCostcenter?.has(row.customer_number);
+      const costcenterMatch = selectedCostcenter === "ALL"
+        ? true
+        : mappedEmployeeFilterEnabled
+          ? (isMappedEmployee || isCollaboratorOnCostcenterCustomer)
+          : mappedByNameFilterEnabled
+            ? isMappedEmployee
+            : cc === selectedCostcenter;
+      const groupMatch = selectedGroup === "ALL" || row.employee_group === selectedGroup;
+      const hasHours = row.hours > 0;
+      return customerMatch && costcenterMatch && groupMatch && hasHours;
+    });
+  }, [normalizedTimeReports, selectedCustomer, selectedCostcenter, selectedGroup, customerNumberToCostCenter, employeeIdsForSelectedCostcenter, customerNumbersForSelectedCostcenter, timeCostcenterFilterMode]);
+
+  const latestAvailableRollingMonth = useMemo(() => {
+    const months = [];
+
+    filteredInvoicesForRollingWindow.forEach(inv => {
+      const yearMonth = String(inv.invoice_date || "").slice(0, 7);
+      if (/^\d{4}-\d{2}$/.test(yearMonth)) months.push(yearMonth);
+    });
+
+    filteredTimeReportsForRollingWindow.forEach(row => {
+      const yearMonth = String(row.report_date || "").slice(0, 7);
+      if (/^\d{4}-\d{2}$/.test(yearMonth)) months.push(yearMonth);
+    });
+
+    if (months.length === 0) return "";
+    months.sort((a, b) => a.localeCompare(b));
+    return months[months.length - 1];
+  }, [filteredInvoicesForRollingWindow, filteredTimeReportsForRollingWindow]);
+
+  const effectiveRollingEndMonth = useMemo(() => {
+    if (/^\d{4}-\d{2}$/.test(String(rollingEndMonthInput || ""))) {
+      return rollingEndMonthInput;
+    }
+    return latestAvailableRollingMonth || getCurrentYearMonth();
+  }, [rollingEndMonthInput, latestAvailableRollingMonth]);
+
+  const rolling12Months = useMemo(() => {
+    return buildRolling12MonthWindow(effectiveRollingEndMonth);
+  }, [effectiveRollingEndMonth]);
+
+  const rollingWindowMonthKeys = useMemo(() => {
+    return new Set((rolling12Months || []).map(item => item.key));
+  }, [rolling12Months]);
+
+  const rollingPeriodLabel = useMemo(() => {
+    if (!rolling12Months.length) return "-";
+    return `${rolling12Months[0].label} – ${rolling12Months[rolling12Months.length - 1].label}`;
+  }, [rolling12Months]);
+
+  const monthlyData = useMemo(() => {
+    const map = {};
+
+    filteredInvoicesForRollingWindow.forEach(inv => {
+      const yearMonth = String(inv.invoice_date || "").slice(0, 7);
+      if (!yearMonth || !rollingWindowMonthKeys.has(yearMonth)) return;
+      if (!map[yearMonth]) map[yearMonth] = { omsattning: 0, antal: 0 };
+      map[yearMonth].omsattning += exMoms(inv.total || inv.Total);
+      map[yearMonth].antal += 1;
+    });
+
+    return rolling12Months.map(item => ({
+      key: item.key,
+      month: item.label,
+      omsattning: map[item.key]?.omsattning || 0,
+      antal: map[item.key]?.antal || 0,
+    }));
+  }, [filteredInvoicesForRollingWindow, rolling12Months, rollingWindowMonthKeys]);
+
   const totalHours = useMemo(
     () => filteredTimeReports.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0),
     [filteredTimeReports]
@@ -983,43 +1091,37 @@ export default function DashboardClient({
       return map[key];
     };
 
-    filtered.forEach(inv => {
+    filteredInvoicesForRollingWindow.forEach(inv => {
       const entry = ensureEntry(inv.invoice_date);
       if (!entry) return;
       entry.omsattning += exMoms(inv.total || inv.Total);
     });
 
-    filteredTimeReports.forEach(row => {
+    filteredTimeReportsForRollingWindow.forEach(row => {
       const entry = ensureEntry(row.report_date);
       if (!entry) return;
       entry.timmar += parseFloat(row.hours) || 0;
     });
 
-    if (selectedYear) {
-      return Array.from({ length: 12 }, (_, i) => {
-        const month = String(i + 1).padStart(2, "0");
-        const key = `${selectedYear}-${month}`;
-        const row = map[key] || {
-          key,
-          month: `${MONTHS[i]} ${selectedYear}`,
+    return rolling12Months
+      .map(item => {
+        const row = map[item.key] || {
+          key: item.key,
+          month: item.label,
           omsattning: 0,
           timmar: 0,
         };
 
         return {
           ...row,
+          month: item.label,
           omsattningPerTimme: row.timmar > 0 ? row.omsattning / row.timmar : null,
         };
-      });
-    }
-
-    return Object.values(map)
-      .sort((a, b) => a.key.localeCompare(b.key))
+      })
       .map(row => ({
         ...row,
-        omsattningPerTimme: row.timmar > 0 ? row.omsattning / row.timmar : null,
       }));
-  }, [filtered, filteredTimeReports, selectedYear]);
+  }, [filteredInvoicesForRollingWindow, filteredTimeReportsForRollingWindow, rolling12Months]);
 
   const timeByEmployee = useMemo(() => {
     const map = {};
@@ -1924,6 +2026,34 @@ export default function DashboardClient({
 
           <div style={{position:"relative"}}>
             <input
+              type="month"
+              value={effectiveRollingEndMonth}
+              onChange={(e) => {
+                const raw = String(e.target.value || "").trim();
+                if (!raw) {
+                  setRollingEndMonthInput("");
+                  return;
+                }
+                if (/^\d{4}-\d{2}$/.test(raw)) {
+                  setRollingEndMonthInput(raw);
+                }
+              }}
+              style={{background:"#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:10, padding:"8px 34px 8px 16px", fontSize:14, minWidth:170}}
+              title="Välj slutmånad för rullande 12 månader"
+              aria-label="Slutmånad för rullande 12 månader"
+            />
+            {rollingEndMonthInput && (
+              <button
+                type="button"
+                onClick={() => { setRollingEndMonthInput(""); }}
+                aria-label="Rensa slutmånad"
+                style={{position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", border:"none", background:"transparent", color:"#6b8fa3", cursor:"pointer", fontSize:16, lineHeight:1, padding:0}}
+              >×</button>
+            )}
+          </div>
+
+          <div style={{position:"relative"}}>
+            <input
               list="customer-filter-options"
               value={customerInput}
               onFocus={(e) => e.target.select()}
@@ -2262,6 +2392,7 @@ export default function DashboardClient({
       {/* Monthly Chart */}
       <div style={{background:"#1a2e3b", borderRadius:16, padding:"24px", border:"1px solid #2a4a5e", marginBottom:24}}>
         <h2 style={{color:"#fff", fontWeight:700, fontSize:16, margin:"0 0 24px"}}>Omsättning per månad</h2>
+        <p style={{color:"#6b8fa3", fontSize:12, margin:"-12px 0 16px"}}>Rullande 12 månader: {rollingPeriodLabel}</p>
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={monthlyData} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke="#2a4a5e" vertical={false} />
@@ -2277,7 +2408,7 @@ export default function DashboardClient({
         <div style={{background:"#1a2e3b", borderRadius:16, padding:"24px", border:"1px solid #2a4a5e", marginBottom:24}}>
           <h2 style={{color:"#fff", fontWeight:700, fontSize:16, margin:"0 0 8px"}}>Omsättning per timme per månad</h2>
           <p style={{color:"#6b8fa3", fontSize:12, margin:"0 0 16px"}}>
-            Visas för vald kund: {selectedCustomerLabel}
+            Visas för vald kund: {selectedCustomerLabel} · Rullande 12 månader: {rollingPeriodLabel}
           </p>
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%", borderCollapse:"collapse"}}>
