@@ -104,6 +104,41 @@ async function fetchJsonWithRetry(url, options = {}, retries = 4) {
   throw new Error(`Misslyckades att hämta JSON från ${url}`);
 }
 
+async function fetchFortnoxCustomerCard(customerNumber, token, cookieStore, userId) {
+  const number = String(customerNumber || "").trim();
+  if (!number) return { ok: false, customer: null, token };
+
+  const url = `https://api.fortnox.se/3/customers/${encodeURIComponent(number)}`;
+  let activeToken = token;
+  let result = await fetchJsonWithRetry(url, {
+    headers: {
+      Authorization: `Bearer ${activeToken}`,
+      Accept: "application/json",
+    },
+    cache: "no-store",
+  }, 4);
+
+  if (!result?.ok || result?.data?.ErrorInformation) {
+    const newToken = await refreshToken(cookieStore, userId);
+    if (newToken) {
+      activeToken = newToken;
+      result = await fetchJsonWithRetry(url, {
+        headers: {
+          Authorization: `Bearer ${activeToken}`,
+          Accept: "application/json",
+        },
+        cache: "no-store",
+      }, 4);
+    }
+  }
+
+  return {
+    ok: !!result?.ok,
+    customer: result?.data?.Customer || null,
+    token: activeToken,
+  };
+}
+
 function normalizeOrgNumber(raw) {
   return String(raw || "").replace(/\s+/g, "").trim();
 }
@@ -215,42 +250,100 @@ async function runCrmSync(request, body = {}) {
         .filter(Boolean)
     ));
 
-    const existingMap = new Map();
-    if (organizationNumbers.length > 0) {
-      const { data: existingRows } = await supabaseServer
-        .from("crm_clients")
-        .select("id, organization_number, customer_number, fortnox_active, responsible_consultant, client_status, notes")
-        .in("organization_number", organizationNumbers);
+    const customerNumbers = Array.from(new Set(
+      allRows
+        .map(row => String(row?.CustomerNumber || "").trim())
+        .filter(Boolean)
+    ));
 
-      for (const row of existingRows || []) {
-        existingMap.set(String(row.organization_number), row);
+    const existingByOrgMap = new Map();
+    const existingByCustomerMap = new Map();
+
+    if (organizationNumbers.length > 0 || customerNumbers.length > 0) {
+      const existingRowsByOrg = organizationNumbers.length > 0
+        ? await supabaseServer
+          .from("crm_clients")
+          .select("id, organization_number, customer_number, fortnox_active, responsible_consultant, client_status, notes")
+          .in("organization_number", organizationNumbers)
+        : { data: [] };
+
+      const existingRowsByCustomer = customerNumbers.length > 0
+        ? await supabaseServer
+          .from("crm_clients")
+          .select("id, organization_number, customer_number, fortnox_active, responsible_consultant, client_status, notes")
+          .in("customer_number", customerNumbers)
+        : { data: [] };
+
+      const mergedExistingRows = [
+        ...(existingRowsByOrg?.data || []),
+        ...(existingRowsByCustomer?.data || []),
+      ];
+
+      for (const row of mergedExistingRows) {
+        const org = String(row.organization_number || "").trim();
+        const customer = String(row.customer_number || "").trim();
+        if (org) existingByOrgMap.set(org, row);
+        if (customer) existingByCustomerMap.set(customer, row);
       }
     }
 
     const toUpsertByOrgNumber = new Map();
     const skipped = [];
+    const customerCardCache = new Map();
 
     for (const row of allRows) {
-      const orgNumber = normalizeOrgNumber(row?.OrganisationNumber || row?.OrganizationNumber || row?.OrgNo);
+      const orgNumberFromList = normalizeOrgNumber(row?.OrganisationNumber || row?.OrganizationNumber || row?.OrgNo);
       const customerNumber = String(row?.CustomerNumber || "").trim();
       const companyName = String(row?.Name || row?.CustomerName || "").trim();
 
-      if (!orgNumber || !companyName) {
+      if (!companyName) {
         skipped.push({
           customer_number: String(row?.CustomerNumber || "").trim() || null,
           company_name: companyName || null,
-          reason: !orgNumber ? "saknar organisationsnummer" : "saknar företagsnamn",
+          reason: "saknar företagsnamn",
         });
         continue;
       }
 
-      const existing = existingMap.get(orgNumber);
-      const fortnoxActive = normalizeFortnoxActive(row);
-      const computedClientStatus = normalizeStatus(row);
+      const existing =
+        (orgNumberFromList ? existingByOrgMap.get(orgNumberFromList) : null) ||
+        (customerNumber ? existingByCustomerMap.get(customerNumber) : null) ||
+        null;
+
+      const resolvedOrgNumber =
+        orgNumberFromList ||
+        String(existing?.organization_number || "").trim() ||
+        (customerNumber ? `FNX-${customerNumber}` : "");
+
+      if (!resolvedOrgNumber) {
+        skipped.push({
+          customer_number: customerNumber || null,
+          company_name: companyName || null,
+          reason: "saknar organisationsnummer och kundnummer",
+        });
+        continue;
+      }
+
+      let fortnoxActive = normalizeFortnoxActive(row);
+      if (fortnoxActive === null && customerNumber) {
+        if (!customerCardCache.has(customerNumber)) {
+          const cardResult = await fetchFortnoxCustomerCard(customerNumber, token, cookieStore, userId);
+          token = cardResult.token || token;
+          customerCardCache.set(customerNumber, cardResult.customer || null);
+          await delay(80);
+        }
+
+        const customerCard = customerCardCache.get(customerNumber);
+        if (customerCard) {
+          fortnoxActive = normalizeFortnoxActive(customerCard);
+        }
+      }
+
+      const computedClientStatus = fortnoxActive === false ? "former" : "active";
       const preservedPaused = existing?.client_status === "paused";
       const payload = {
         company_name: companyName,
-        organization_number: orgNumber,
+        organization_number: resolvedOrgNumber,
         customer_number: customerNumber || existing?.customer_number || null,
         fortnox_active: fortnoxActive ?? (existing?.fortnox_active ?? null),
         client_status: preservedPaused ? "paused" : computedClientStatus,
@@ -261,7 +354,7 @@ async function runCrmSync(request, body = {}) {
       // Fortnox can return duplicate customer rows in some accounts.
       // Deduplicate by organization number to avoid ON CONFLICT touching
       // the same row multiple times in one upsert statement.
-      toUpsertByOrgNumber.set(orgNumber, payload);
+      toUpsertByOrgNumber.set(resolvedOrgNumber, payload);
     }
 
     const toUpsert = Array.from(toUpsertByOrgNumber.values());
