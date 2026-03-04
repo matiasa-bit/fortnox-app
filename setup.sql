@@ -157,6 +157,7 @@ ALTER TABLE time_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customer_costcenter_map ENABLE ROW LEVEL SECURITY;
 ALTER TABLE employee_mappings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contract_accruals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS customers ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies (för säkerhet)
 DROP POLICY IF EXISTS "Service role can do everything" ON tokens;
