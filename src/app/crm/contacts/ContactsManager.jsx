@@ -1,0 +1,192 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+
+const inputStyle = {
+  width: "100%",
+  background: "#0f1923",
+  color: "#fff",
+  border: "1px solid #2a4a5e",
+  borderRadius: 8,
+  padding: "9px 10px",
+  fontSize: 13,
+};
+
+function toForm(contact = {}) {
+  return {
+    name: String(contact?.name || ""),
+    role: String(contact?.role || ""),
+    email: String(contact?.email || ""),
+    phone: String(contact?.phone || ""),
+  };
+}
+
+export default function ContactsManager({ initialContacts = [] }) {
+  const router = useRouter();
+  const [creating, setCreating] = useState(false);
+  const [savingId, setSavingId] = useState(0);
+  const [error, setError] = useState("");
+  const [createForm, setCreateForm] = useState({ name: "", role: "", email: "", phone: "" });
+  const [editId, setEditId] = useState(0);
+  const [editForm, setEditForm] = useState({ name: "", role: "", email: "", phone: "" });
+
+  const contacts = useMemo(() => initialContacts || [], [initialContacts]);
+
+  async function createContact() {
+    if (creating) return;
+    setError("");
+    setCreating(true);
+
+    const res = await fetch("/api/crm/contacts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(createForm),
+    }).catch(() => null);
+
+    if (!res) {
+      setCreating(false);
+      setError("Kunde inte na servern.");
+      return;
+    }
+
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json?.ok) {
+      setCreating(false);
+      setError(json?.error || "Kunde inte skapa kontakt.");
+      return;
+    }
+
+    setCreateForm({ name: "", role: "", email: "", phone: "" });
+    setCreating(false);
+    router.refresh();
+  }
+
+  async function saveEdit(contactId) {
+    if (!contactId || savingId) return;
+    setError("");
+    setSavingId(contactId);
+
+    const res = await fetch(`/api/crm/contacts/${contactId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editForm),
+    }).catch(() => null);
+
+    if (!res) {
+      setSavingId(0);
+      setError("Kunde inte na servern.");
+      return;
+    }
+
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json?.ok) {
+      setSavingId(0);
+      setError(json?.error || "Kunde inte uppdatera kontakt.");
+      return;
+    }
+
+    setSavingId(0);
+    setEditId(0);
+    setEditForm({ name: "", role: "", email: "", phone: "" });
+    router.refresh();
+  }
+
+  return (
+    <>
+      <div style={{ background: "#223746", border: "1px solid #2a4a5e", borderRadius: 12, padding: 14, marginBottom: 16 }}>
+        <h3 style={{ margin: "0 0 10px", fontSize: 16 }}>Skapa ny kontakt</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+          <input placeholder="Namn *" value={createForm.name} onChange={e => setCreateForm(prev => ({ ...prev, name: e.target.value }))} style={inputStyle} />
+          <input placeholder="Roll" value={createForm.role} onChange={e => setCreateForm(prev => ({ ...prev, role: e.target.value }))} style={inputStyle} />
+          <input placeholder="E-post" value={createForm.email} onChange={e => setCreateForm(prev => ({ ...prev, email: e.target.value }))} style={inputStyle} />
+          <input placeholder="Telefon" value={createForm.phone} onChange={e => setCreateForm(prev => ({ ...prev, phone: e.target.value }))} style={inputStyle} />
+        </div>
+        <button
+          type="button"
+          disabled={creating}
+          onClick={createContact}
+          style={{ marginTop: 10, background: "#00c97a", color: "#0f1923", border: "none", borderRadius: 8, padding: "9px 12px", fontWeight: 700, cursor: "pointer" }}
+        >
+          {creating ? "Skapar..." : "Skapa kontakt"}
+        </button>
+      </div>
+
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ borderBottom: "1px solid #2a4a5e" }}>
+              {["Namn", "Roll", "E-post", "Telefon", ""].map(h => (
+                <th key={h || "actions"} style={{ textAlign: "left", color: "#6b8fa3", fontSize: 12, fontWeight: 600, padding: "0 10px 12px 0", textTransform: "uppercase", letterSpacing: 0.8 }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {contacts.map(contact => {
+              const isEditing = editId === Number(contact.id);
+              return (
+                <tr key={contact.id} style={{ borderBottom: "1px solid #1e3545" }}>
+                  <td style={{ padding: "10px 10px 10px 0", color: "#fff", fontWeight: 600, fontSize: 13 }}>
+                    {isEditing ? <input value={editForm.name} onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))} style={inputStyle} /> : (contact.name || "-")}
+                  </td>
+                  <td style={{ padding: "10px 10px 10px 0", color: "#dbe7ef", fontSize: 13 }}>
+                    {isEditing ? <input value={editForm.role} onChange={e => setEditForm(prev => ({ ...prev, role: e.target.value }))} style={inputStyle} /> : (contact.role || "-")}
+                  </td>
+                  <td style={{ padding: "10px 10px 10px 0", color: "#dbe7ef", fontSize: 13 }}>
+                    {isEditing ? <input value={editForm.email} onChange={e => setEditForm(prev => ({ ...prev, email: e.target.value }))} style={inputStyle} /> : (contact.email || "-")}
+                  </td>
+                  <td style={{ padding: "10px 10px 10px 0", color: "#dbe7ef", fontSize: 13 }}>
+                    {isEditing ? <input value={editForm.phone} onChange={e => setEditForm(prev => ({ ...prev, phone: e.target.value }))} style={inputStyle} /> : (contact.phone || "-")}
+                  </td>
+                  <td style={{ padding: "10px 0", textAlign: "right", whiteSpace: "nowrap" }}>
+                    {isEditing ? (
+                      <>
+                        <button
+                          type="button"
+                          disabled={savingId === Number(contact.id)}
+                          onClick={() => saveEdit(Number(contact.id))}
+                          style={{ background: "#2f7ef7", color: "#fff", border: "none", borderRadius: 8, padding: "8px 10px", fontWeight: 700, marginRight: 6, cursor: "pointer" }}
+                        >
+                          Spara
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditId(0);
+                            setEditForm({ name: "", role: "", email: "", phone: "" });
+                          }}
+                          style={{ background: "#233a49", color: "#fff", border: "1px solid #2a4a5e", borderRadius: 8, padding: "8px 10px", fontWeight: 700, cursor: "pointer" }}
+                        >
+                          Avbryt
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditId(Number(contact.id));
+                          setEditForm(toForm(contact));
+                        }}
+                        style={{ background: "#233a49", color: "#fff", border: "1px solid #2a4a5e", borderRadius: 8, padding: "8px 10px", fontWeight: 700, cursor: "pointer" }}
+                      >
+                        Redigera
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {contacts.length === 0 && (
+        <p style={{ marginTop: 12, color: "#8fb1c3", fontSize: 13 }}>Inga kontakter hittades.</p>
+      )}
+
+      {error && <p style={{ marginTop: 12, color: "#fda4af", fontSize: 13 }}>{error}</p>}
+    </>
+  );
+}
