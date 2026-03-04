@@ -1,5 +1,5 @@
 "use client";
-import { Fragment, useState, useMemo, useEffect } from "react";
+import { Fragment, useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 // no supabase import on client any more (fetches via server endpoint)
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
@@ -345,6 +345,8 @@ export default function DashboardClient({
   const [contractAccrualsData, setContractAccrualsData] = useState(() => (Array.isArray(contractAccruals) ? contractAccruals : []));
   const [contractAccrualsLoading, setContractAccrualsLoading] = useState(() => !Array.isArray(contractAccruals) || contractAccruals.length === 0);
   const [filtersHydrated, setFiltersHydrated] = useState(false);
+  const [syncingArticleRowsForGroupFilter, setSyncingArticleRowsForGroupFilter] = useState(false);
+  const articleGroupAutoSyncKeyRef = useRef("");
 
   useEffect(() => {
     try {
@@ -1017,6 +1019,15 @@ export default function DashboardClient({
     ));
   }, [filteredInvoicesForRollingWindow]);
 
+  const missingRollingInvoiceNumbersForGroupFilter = useMemo(() => {
+    if (selectedArticleGroupFilters.length === 0) return [];
+
+    return rollingInvoiceNumbers.filter(invoiceNumber => {
+      const rows = invoiceRows[invoiceNumber];
+      return !Array.isArray(rows) || rows.length === 0;
+    });
+  }, [selectedArticleGroupFilters, rollingInvoiceNumbers, invoiceRows]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -1059,6 +1070,72 @@ export default function DashboardClient({
       cancelled = true;
     };
   }, [rollingInvoiceNumbers, invoiceRows]);
+
+  useEffect(() => {
+    if (selectedArticleGroupFilters.length === 0) {
+      articleGroupAutoSyncKeyRef.current = "";
+      return;
+    }
+
+    if (missingRollingInvoiceNumbersForGroupFilter.length === 0) return;
+
+    const filterKey = [...selectedArticleGroupFilters].sort((a, b) => a.localeCompare(b, "sv-SE")).join("|");
+    const autoSyncKey = `${selectedCustomer}|${effectiveRollingEndMonth}|${filterKey}|${missingRollingInvoiceNumbersForGroupFilter.join(",")}`;
+    if (articleGroupAutoSyncKeyRef.current === autoSyncKey) return;
+    articleGroupAutoSyncKeyRef.current = autoSyncKey;
+
+    let cancelled = false;
+
+    const syncMissingRows = async () => {
+      setSyncingArticleRowsForGroupFilter(true);
+      try {
+        for (let round = 0; round < 5; round += 1) {
+          const res = await fetch("/api/admin/sync-invoice-rows", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              invoiceNumbers: missingRollingInvoiceNumbersForGroupFilter,
+              batchSize: 50,
+            }),
+          });
+
+          const payload = await res.json().catch(() => ({}));
+          if (!res.ok || payload?.ok === false) break;
+          if (!Number(payload?.syncedNow) || Number(payload?.remaining || 0) <= 0) break;
+        }
+
+        if (cancelled) return;
+
+        const loadRes = await fetch("/api/invoice-rows", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ invoiceNumbers: missingRollingInvoiceNumbersForGroupFilter }),
+          cache: "no-store",
+        });
+        const loadPayload = await loadRes.json().catch(() => ({}));
+        if (!loadRes.ok || loadPayload?.ok === false || cancelled) return;
+
+        const rowsByInvoice = loadPayload?.rowsByInvoice || {};
+        setInvoiceRows(prev => {
+          const next = { ...prev };
+          missingRollingInvoiceNumbersForGroupFilter.forEach(invoiceNumber => {
+            if (next[invoiceNumber] && next[invoiceNumber].length > 0) return;
+            next[invoiceNumber] = Array.isArray(rowsByInvoice[invoiceNumber]) ? rowsByInvoice[invoiceNumber] : (next[invoiceNumber] || []);
+          });
+          return next;
+        });
+      } catch {
+      } finally {
+        if (!cancelled) setSyncingArticleRowsForGroupFilter(false);
+      }
+    };
+
+    syncMissingRows();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedArticleGroupFilters, selectedCustomer, effectiveRollingEndMonth, missingRollingInvoiceNumbersForGroupFilter]);
 
   const filteredTimeReportsForRollingWindow = useMemo(() => {
     return customerScopedTimeReports.filter(row => {
@@ -2672,6 +2749,11 @@ export default function DashboardClient({
               {selectedArticleGroupFilters.length > 0 && (
                 <p style={{margin:"8px 0 0", color:"#6b8fa3", fontSize:11}}>
                   Aktivt urval: {selectedArticleGroupFilters.join(", ")}
+                </p>
+              )}
+              {selectedArticleGroupFilters.length > 0 && syncingArticleRowsForGroupFilter && (
+                <p style={{margin:"6px 0 0", color:"#3b9eff", fontSize:11}}>
+                  Hämtar artikelrader för äldre fakturor i perioden...
                 </p>
               )}
             </div>
