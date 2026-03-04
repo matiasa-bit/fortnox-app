@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync } from "fs";
 import { getCachedInvoices, getInvoiceRowsForInvoices, saveInvoiceRows, supabaseServer } from "@/lib/supabase";
 
 function delay(ms) {
@@ -42,8 +42,6 @@ async function refreshToken() {
 
     const data = await response.json();
     if (data.access_token) {
-      writeFileSync(".fortnox_token", data.access_token);
-      writeFileSync(".fortnox_refresh", data.refresh_token);
       return data.access_token;
     }
   } catch (err) {

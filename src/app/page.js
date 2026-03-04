@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync } from "fs";
 import DashboardClient from "./DashboardClient";
 import {
   saveToken,
@@ -77,13 +77,6 @@ async function refreshToken(userId) {
 
     const data = await response.json();
     if (data.access_token) {
-      try {
-        writeFileSync(".fortnox_token", data.access_token);
-        if (data.refresh_token) {
-          writeFileSync(".fortnox_refresh", data.refresh_token);
-        }
-      } catch {
-      }
       // Spara även i Supabase
       await saveToken(userId, data.access_token, data.refresh_token || refreshToken);
       return data.access_token;

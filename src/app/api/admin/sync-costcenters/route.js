@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync } from "fs";
 import {
   getCachedInvoices,
   getCustomerCostCenterMappings,
@@ -66,8 +66,6 @@ async function refreshToken(userId) {
 
     const data = await response.json();
     if (data.access_token) {
-      writeFileSync(".fortnox_token", data.access_token);
-      writeFileSync(".fortnox_refresh", data.refresh_token);
       return data.access_token;
     }
   } catch {

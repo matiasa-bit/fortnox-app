@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync } from "fs";
 
 function getToken() {
   try {
@@ -34,9 +34,7 @@ async function refreshToken() {
     });
 
     const data = await response.json().catch(() => null);
-    if (data?.access_token) {
-      writeFileSync(".fortnox_token", data.access_token);
-      if (data.refresh_token) writeFileSync(".fortnox_refresh", data.refresh_token);
+    if (data?.access_token) {      
       return data.access_token;
     }
   } catch {

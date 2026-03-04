@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync } from "fs";
+import { cookies } from "next/headers";
 import { saveInvoiceRows, supabaseServer } from "@/lib/supabase";
 
 function parseAmount(value) {
@@ -62,7 +63,15 @@ export async function GET(request, context) {
       return Response.json({ rows: cachedRows });
     }
 
-    let token = readFileSync(".fortnox_token", "utf8").trim();
+    const cookieStore = await cookies();
+    let token = cookieStore.get("fortnox_access_token")?.value || null;
+    if (!token) {
+      try {
+        token = readFileSync(".fortnox_token", "utf8").trim();
+      } catch {
+        token = null;
+      }
+    }
     if (!token) {
       return Response.json({ error: "Inte inloggad" }, { status: 401 });
     }
@@ -87,8 +96,6 @@ export async function GET(request, context) {
         });
         const d = await response.json();
         if (d.access_token) {
-          writeFileSync(".fortnox_token", d.access_token);
-          writeFileSync(".fortnox_refresh", d.refresh_token);
           return d.access_token;
         }
       } catch (e) {

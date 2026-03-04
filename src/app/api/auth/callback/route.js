@@ -55,14 +55,6 @@ export async function GET(request) {
 
   const res = NextResponse.redirect(new URL("/", request.url));
 
-  try {
-    const { writeFileSync } = await import("fs");
-    writeFileSync(".fortnox_token", data.access_token);
-    writeFileSync(".fortnox_refresh", data.refresh_token);
-  } catch (err) {
-    console.warn("Kunde inte skriva token till fil (förväntat i Vercel):", err?.message || err);
-  }
-
   res.cookies.set("fortnox_access_token", data.access_token, {
     httpOnly: true,
     sameSite: "lax",
