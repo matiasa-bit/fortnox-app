@@ -4,6 +4,13 @@ function isMissingCrmTable(error) {
   return error?.code === "PGRST205";
 }
 
+function formatCostCenterLabel(row = {}) {
+  const code = String(row?.cost_center || "").trim();
+  const name = String(row?.cost_center_name || "").trim();
+  if (code && name) return `${code} - ${name}`;
+  return code || name || null;
+}
+
 export async function getCrmClients(search = "") {
   const term = typeof search === "string" ? String(search || "").trim() : String(search?.search || "").trim();
   const consultant = typeof search === "object" ? String(search?.consultant || "").trim() : "";
@@ -114,8 +121,46 @@ export async function getCrmClients(search = "") {
 
   let clients = Array.from(dedupedClientsMap.values());
 
+  const customerNumbers = Array.from(new Set(
+    clients.map(row => String(row?.customer_number || "").trim()).filter(Boolean)
+  ));
+
+  const costCenterByCustomer = new Map();
+  if (customerNumbers.length > 0) {
+    const { data: costCenterRows, error: costCenterError } = await supabaseServer
+      .from("customer_costcenter_map")
+      .select("customer_number, cost_center, cost_center_name")
+      .in("customer_number", customerNumbers)
+      .limit(10000);
+
+    if (costCenterError) {
+      if (!isMissingCrmTable(costCenterError)) {
+        console.error("Fel vid hämtning av customer_costcenter_map:", costCenterError);
+      }
+    } else {
+      for (const row of costCenterRows || []) {
+        const number = String(row?.customer_number || "").trim();
+        if (!number) continue;
+        if (!costCenterByCustomer.has(number)) {
+          costCenterByCustomer.set(number, row);
+        }
+      }
+    }
+  }
+
+  clients = clients.map(row => {
+    const number = String(row?.customer_number || "").trim();
+    const costCenterRow = number ? costCenterByCustomer.get(number) : null;
+    return {
+      ...row,
+      cost_center: String(costCenterRow?.cost_center || "").trim() || null,
+      cost_center_name: String(costCenterRow?.cost_center_name || "").trim() || null,
+      cost_center_label: formatCostCenterLabel(costCenterRow),
+    };
+  });
+
   if (consultant) {
-    clients = clients.filter(row => String(row.responsible_consultant || "").trim() === consultant);
+    clients = clients.filter(row => String(row.cost_center_label || "").trim() === consultant);
   }
 
   if (status === "fortnox_active") {
@@ -129,7 +174,7 @@ export async function getCrmClients(search = "") {
   if (term) {
     const normalized = term.toLowerCase();
     clients = clients.filter(row => {
-      const haystack = [row.company_name, row.organization_number, row.customer_number]
+      const haystack = [row.company_name, row.organization_number, row.customer_number, row.cost_center, row.cost_center_name, row.cost_center_label]
         .map(value => String(value || "").toLowerCase())
         .join(" ");
       return haystack.includes(normalized);
@@ -173,20 +218,20 @@ export async function getCrmClients(search = "") {
 
 export async function getCrmConsultants() {
   const { data, error } = await supabaseServer
-    .from("crm_clients")
-    .select("responsible_consultant")
-    .limit(1000);
+    .from("customer_costcenter_map")
+    .select("cost_center, cost_center_name")
+    .limit(10000);
 
   if (error) {
     if (!isMissingCrmTable(error)) {
-      console.error("Fel vid hämtning av crm-konsulter:", error);
+      console.error("Fel vid hämtning av crm-kostnadsstallen:", error);
     }
     return [];
   }
 
   return Array.from(new Set(
     (data || [])
-      .map(row => String(row?.responsible_consultant || "").trim())
+      .map(row => formatCostCenterLabel(row))
       .filter(Boolean)
   )).sort((a, b) => a.localeCompare(b, "sv-SE"));
 }
