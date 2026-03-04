@@ -2874,6 +2874,8 @@ export default function DashboardClient({
                     const invNumber = String(inv.document_number || "").trim();
                     const isExpanded = modalExpandedInvoices.has(invNumber);
                     const isHovered = modalHoveredInvoice === invNumber;
+                    const balanceAmount = parseFloat(inv.balance || inv.Balance || 0) || 0;
+                    const isPaid = balanceAmount <= 0;
                     const dueDateRaw = String(inv.due_date || inv.DueDate || "").trim();
                     const invoiceDateRaw = String(inv.invoice_date || inv.InvoiceDate || "").trim();
                     const today = new Date();
@@ -2889,7 +2891,7 @@ export default function DashboardClient({
                     const dueDateLabel = dueDate && !Number.isNaN(dueDate.getTime())
                       ? `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}-${String(dueDate.getDate()).padStart(2, "0")}`
                       : "-";
-                    const isOverdue = !!(dueDate && !Number.isNaN(dueDate.getTime()) && dueDate < todayStart);
+                    const isOverdue = !!(!isPaid && dueDate && !Number.isNaN(dueDate.getTime()) && dueDate < todayStart);
 
                     return (
                     <Fragment key={`${inv.document_number || idx}-wrapper`}>
@@ -2902,6 +2904,15 @@ export default function DashboardClient({
                         <td style={{padding:"12px 16px 12px 0", color:"#fff", fontWeight:600, fontSize:14}}>
                           <div style={{display:"flex", alignItems:"center", gap:8}}>
                             <span>{inv.document_number || "-"}</span>
+                            {isPaid && (
+                              <span
+                                title="Faktura är betald"
+                                style={{display:"inline-flex", alignItems:"center", gap:6, color:"#7ee2ac", fontSize:11, fontWeight:700}}
+                              >
+                                <span style={{width:7, height:7, borderRadius:"50%", background:"#22c55e", boxShadow:"0 0 0 2px rgba(34,197,94,0.2)"}} />
+                                Betald
+                              </span>
+                            )}
                             {isOverdue && (
                               <span
                                 title="Förfallen faktura"
@@ -2931,7 +2942,7 @@ export default function DashboardClient({
                         </td>
                         {invoiceModal.mode === "unpaid" && (
                           <td style={{padding:"12px 0", color:"#ff8e8e", fontWeight:700, fontSize:14}}>
-                            {formatSEK(parseFloat(inv.balance || inv.Balance || 0) || 0)}
+                            {formatSEK(balanceAmount)}
                           </td>
                         )}
                         {invoiceModal.mode === "unpaid" && (
