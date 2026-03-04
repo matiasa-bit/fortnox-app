@@ -311,6 +311,7 @@ export default function DashboardClient({
   const [selectedCostcenter, setSelectedCostcenter] = useState("ALL");
   const [yearInput, setYearInput] = useState(DEFAULT_SELECTED_YEAR);
   const [rollingEndMonthInput, setRollingEndMonthInput] = useState("");
+  const [selectedArticleGroupFilters, setSelectedArticleGroupFilters] = useState([]);
   const [customerInput, setCustomerInput] = useState("");
   const [costcenterInput, setCostcenterInput] = useState("");
   const [groupInput, setGroupInput] = useState("");
@@ -360,6 +361,13 @@ export default function DashboardClient({
         if (typeof saved.selectedGroup === "string") setSelectedGroup(saved.selectedGroup);
         if (typeof saved.selectedCostcenter === "string") setSelectedCostcenter(saved.selectedCostcenter);
         if (typeof saved.rollingEndMonthInput === "string") setRollingEndMonthInput(saved.rollingEndMonthInput);
+        if (Array.isArray(saved.selectedArticleGroupFilters)) {
+          setSelectedArticleGroupFilters(
+            saved.selectedArticleGroupFilters
+              .map(value => String(value || "").trim())
+              .filter(Boolean)
+          );
+        }
 
         if (typeof saved.yearInput === "string") setYearInput(saved.yearInput);
         if (typeof saved.customerInput === "string") setCustomerInput(saved.customerInput);
@@ -381,6 +389,7 @@ export default function DashboardClient({
       selectedGroup,
       selectedCostcenter,
       rollingEndMonthInput,
+      selectedArticleGroupFilters,
       yearInput,
       customerInput,
       groupInput,
@@ -391,7 +400,7 @@ export default function DashboardClient({
       window.localStorage.setItem(DASHBOARD_FILTERS_STORAGE_KEY, JSON.stringify(payload));
     } catch {
     }
-  }, [filtersHydrated, selectedYear, selectedCustomer, selectedGroup, selectedCostcenter, rollingEndMonthInput, yearInput, customerInput, groupInput, costcenterInput]);
+  }, [filtersHydrated, selectedYear, selectedCustomer, selectedGroup, selectedCostcenter, rollingEndMonthInput, selectedArticleGroupFilters, yearInput, customerInput, groupInput, costcenterInput]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -1000,6 +1009,57 @@ export default function DashboardClient({
     });
   }, [data, selectedCustomer, selectedCostcenter, selectedGroup, customerNumberToCostCenter, customerNumbersForSelectedGroupAllMonths]);
 
+  const rollingInvoiceNumbers = useMemo(() => {
+    return Array.from(new Set(
+      filteredInvoicesForRollingWindow
+        .map(inv => String(inv.document_number || "").trim())
+        .filter(Boolean)
+    ));
+  }, [filteredInvoicesForRollingWindow]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const missingInvoiceNumbers = rollingInvoiceNumbers
+      .filter(invoiceNumber => invoiceRows[invoiceNumber] === undefined)
+      .slice(0, 200);
+
+    if (missingInvoiceNumbers.length === 0) return () => { cancelled = true; };
+
+    const loadInvoiceRowsFromDb = async () => {
+      try {
+        const res = await fetch("/api/invoice-rows", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ invoiceNumbers: missingInvoiceNumbers }),
+          cache: "no-store",
+        });
+
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok || payload?.ok === false) return;
+
+        if (!cancelled) {
+          const rowsByInvoice = payload?.rowsByInvoice || {};
+          setInvoiceRows(prev => {
+            const next = { ...prev };
+            missingInvoiceNumbers.forEach(invoiceNumber => {
+              if (next[invoiceNumber] !== undefined) return;
+              next[invoiceNumber] = Array.isArray(rowsByInvoice[invoiceNumber]) ? rowsByInvoice[invoiceNumber] : [];
+            });
+            return next;
+          });
+        }
+      } catch {
+      }
+    };
+
+    loadInvoiceRowsFromDb();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [rollingInvoiceNumbers, invoiceRows]);
+
   const filteredTimeReportsForRollingWindow = useMemo(() => {
     return customerScopedTimeReports.filter(row => {
       const cc = customerNumberToCostCenter.get(row.customer_number) || "";
@@ -1065,6 +1125,51 @@ export default function DashboardClient({
     return `${rolling12Months[0].label} – ${rolling12Months[rolling12Months.length - 1].label}`;
   }, [rolling12Months]);
 
+  const articleNumberToGroupName = useMemo(() => {
+    const map = new Map();
+    (articleGroupMappings || []).forEach(row => {
+      const articleNumber = String(row.article_number || "").trim();
+      const groupName = String(row.group_name || "").trim();
+      const isActive = row.active === false ? false : true;
+      if (!articleNumber || !groupName || !isActive) return;
+      map.set(articleNumber, groupName);
+    });
+    return map;
+  }, [articleGroupMappings]);
+
+  const articleGroupOptionsForRevenuePerHour = useMemo(() => {
+    const names = new Set();
+
+    filteredInvoicesForRollingWindow.forEach(inv => {
+      const invoiceNumber = String(inv.document_number || "").trim();
+      const cachedRows = invoiceRows[invoiceNumber];
+      const rows = Array.isArray(cachedRows) ? cachedRows : (inv.InvoiceRows || []);
+
+      rows.forEach(row => {
+        const articleNumber = String(row.ArticleNumber || row.article_number || row.ArticleNo || row.article_no || "").trim();
+        const groupName = articleNumberToGroupName.get(articleNumber);
+        if (groupName) names.add(groupName);
+      });
+    });
+
+    return Array.from(names).sort((a, b) => a.localeCompare(b, "sv-SE"));
+  }, [filteredInvoicesForRollingWindow, invoiceRows, articleNumberToGroupName]);
+
+  const selectedArticleGroupFilterSet = useMemo(() => {
+    return new Set(selectedArticleGroupFilters);
+  }, [selectedArticleGroupFilters]);
+
+  useEffect(() => {
+    if (selectedArticleGroupFilters.length === 0) return;
+
+    const available = new Set(articleGroupOptionsForRevenuePerHour);
+    setSelectedArticleGroupFilters(prev => {
+      const next = prev.filter(name => available.has(name));
+      if (next.length === prev.length) return prev;
+      return next;
+    });
+  }, [articleGroupOptionsForRevenuePerHour, selectedArticleGroupFilters.length]);
+
   const monthlyData = useMemo(() => {
     const map = {};
 
@@ -1091,6 +1196,8 @@ export default function DashboardClient({
 
   const monthlyRevenuePerHourData = useMemo(() => {
     const map = {};
+    const hasArticleGroupFilter = selectedArticleGroupFilters.length > 0;
+    const monthsWithGroupRevenue = new Set();
 
     const ensureEntry = (dateValue) => {
       const date = String(dateValue || "");
@@ -1113,15 +1220,38 @@ export default function DashboardClient({
       return map[key];
     };
 
-    filteredInvoicesForRollingWindow.forEach(inv => {
-      const entry = ensureEntry(inv.invoice_date);
-      if (!entry) return;
-      entry.omsattning += exMoms(inv.total || inv.Total);
-    });
+    if (hasArticleGroupFilter) {
+      filteredInvoicesForRollingWindow.forEach(inv => {
+        const invoiceNumber = String(inv.document_number || "").trim();
+        const cachedRows = invoiceRows[invoiceNumber];
+        const rows = Array.isArray(cachedRows) ? cachedRows : (inv.InvoiceRows || []);
+        if (!Array.isArray(rows) || rows.length === 0) return;
+
+        const entry = ensureEntry(inv.invoice_date);
+        if (!entry) return;
+
+        rows.forEach(row => {
+          const articleNumber = String(row.ArticleNumber || row.article_number || row.ArticleNo || row.article_no || "").trim();
+          const groupName = articleNumberToGroupName.get(articleNumber);
+          if (!groupName || !selectedArticleGroupFilterSet.has(groupName)) return;
+
+          const { total: rowTotal } = resolveInvoiceRowNumbers(row);
+          entry.omsattning += normalizeInvoiceRowAmount(rowTotal);
+          monthsWithGroupRevenue.add(entry.key);
+        });
+      });
+    } else {
+      filteredInvoicesForRollingWindow.forEach(inv => {
+        const entry = ensureEntry(inv.invoice_date);
+        if (!entry) return;
+        entry.omsattning += exMoms(inv.total || inv.Total);
+      });
+    }
 
     filteredTimeReportsForRollingWindow.forEach(row => {
       const entry = ensureEntry(row.report_date);
       if (!entry) return;
+      if (hasArticleGroupFilter && !monthsWithGroupRevenue.has(entry.key)) return;
       entry.timmar += parseFloat(row.hours) || 0;
     });
 
@@ -1143,7 +1273,23 @@ export default function DashboardClient({
       .map(row => ({
         ...row,
       }));
-  }, [filteredInvoicesForRollingWindow, filteredTimeReportsForRollingWindow, rolling12MonthsDescending]);
+  }, [filteredInvoicesForRollingWindow, filteredTimeReportsForRollingWindow, rolling12MonthsDescending, selectedArticleGroupFilters, selectedArticleGroupFilterSet, invoiceRows, articleNumberToGroupName]);
+
+  const effectiveTimeReportsForRevenuePerHour = useMemo(() => {
+    const hasArticleGroupFilter = selectedArticleGroupFilters.length > 0;
+    if (!hasArticleGroupFilter) return filteredTimeReportsForRollingWindow;
+
+    const allowedMonthKeys = new Set(
+      monthlyRevenuePerHourData
+        .filter(row => (parseFloat(row.omsattning) || 0) > 0)
+        .map(row => row.key)
+    );
+
+    return filteredTimeReportsForRollingWindow.filter(row => {
+      const key = String(row.report_date || "").slice(0, 7);
+      return allowedMonthKeys.has(key);
+    });
+  }, [selectedArticleGroupFilters, filteredTimeReportsForRollingWindow, monthlyRevenuePerHourData]);
 
   const monthlyRevenuePerHourSummary = useMemo(() => {
     const totalOmsattning = monthlyRevenuePerHourData.reduce((sum, row) => sum + (parseFloat(row.omsattning) || 0), 0);
@@ -1769,7 +1915,7 @@ export default function DashboardClient({
     const key = String(monthKey || "").trim();
     if (!/^\d{4}-\d{2}$/.test(key)) return;
 
-    const rows = filteredTimeReportsForRollingWindow
+    const rows = effectiveTimeReportsForRevenuePerHour
       .filter(row => String(row.report_date || "").startsWith(key))
       .sort((a, b) => {
         const dateDiff = String(b.report_date || "").localeCompare(String(a.report_date || ""));
@@ -1788,7 +1934,7 @@ export default function DashboardClient({
   };
 
   const openTimeEntriesForPeriod = () => {
-    const rows = filteredTimeReportsForRollingWindow
+    const rows = effectiveTimeReportsForRevenuePerHour
       .slice()
       .sort((a, b) => {
         const dateDiff = String(b.report_date || "").localeCompare(String(a.report_date || ""));
@@ -2484,6 +2630,52 @@ export default function DashboardClient({
           <p style={{color:"#6b8fa3", fontSize:12, margin:"0 0 16px"}}>
             Visas för vald kund: {selectedCustomerLabel} · Rullande 12 månader: {rollingPeriodLabel}
           </p>
+          {articleGroupOptionsForRevenuePerHour.length > 0 && (
+            <div style={{margin:"0 0 14px", padding:"10px 12px", border:"1px solid #2a4a5e", borderRadius:10, background:"#132635"}}>
+              <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginBottom:8, flexWrap:"wrap"}}>
+                <span style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8}}>Artikelgrupper</span>
+                <div style={{display:"flex", gap:10, alignItems:"center"}}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedArticleGroupFilters(articleGroupOptionsForRevenuePerHour)}
+                    style={{background:"transparent", border:"none", color:"#3b9eff", cursor:"pointer", fontSize:12, padding:0, textDecoration:"underline", textUnderlineOffset:2}}
+                  >Välj alla</button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedArticleGroupFilters([])}
+                    style={{background:"transparent", border:"none", color:"#6b8fa3", cursor:"pointer", fontSize:12, padding:0, textDecoration:"underline", textUnderlineOffset:2}}
+                  >Rensa</button>
+                </div>
+              </div>
+              <div style={{display:"flex", flexWrap:"wrap", gap:"8px 14px"}}>
+                {articleGroupOptionsForRevenuePerHour.map(groupName => {
+                  const checked = selectedArticleGroupFilterSet.has(groupName);
+                  return (
+                    <label key={`article-group-filter-${groupName}`} style={{display:"inline-flex", alignItems:"center", gap:6, color:checked ? "#dbe7ef" : "#6b8fa3", fontSize:12, cursor:"pointer"}}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          setSelectedArticleGroupFilters(prev => {
+                            const next = new Set(prev);
+                            if (e.target.checked) next.add(groupName);
+                            else next.delete(groupName);
+                            return Array.from(next);
+                          });
+                        }}
+                      />
+                      <span>{groupName}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              {selectedArticleGroupFilters.length > 0 && (
+                <p style={{margin:"8px 0 0", color:"#6b8fa3", fontSize:11}}>
+                  Aktivt urval: {selectedArticleGroupFilters.join(", ")}
+                </p>
+              )}
+            </div>
+          )}
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%", borderCollapse:"collapse"}}>
               <thead>
