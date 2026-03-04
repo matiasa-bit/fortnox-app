@@ -261,14 +261,23 @@ export async function POST(request) {
       }
 
       try {
-        const sharedCustomers = toUpsert.map(row => ({
-          customer_number: row.customer_number || row.organization_number,
-          name: row.company_name,
-        }));
+        const sharedCustomersMap = new Map();
+        toUpsert.forEach(row => {
+          const customerNumber = String(row.customer_number || row.organization_number || "").trim();
+          if (!customerNumber) return;
+          sharedCustomersMap.set(customerNumber, {
+            customer_number: customerNumber,
+            name: row.company_name,
+          });
+        });
 
-        await supabaseServer
-          .from("customers")
-          .upsert(sharedCustomers, { onConflict: "customer_number" });
+        const sharedCustomers = Array.from(sharedCustomersMap.values());
+
+        if (sharedCustomers.length > 0) {
+          await supabaseServer
+            .from("customers")
+            .upsert(sharedCustomers, { onConflict: "customer_number" });
+        }
       } catch {
       }
     }
