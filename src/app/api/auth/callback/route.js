@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { saveToken } from "@/lib/supabase";
 
 export async function GET(request) {
   const cookieStore = await cookies();
@@ -53,6 +54,9 @@ export async function GET(request) {
     return new Response(`Kunde inte hämta token: ${JSON.stringify(data)}`, { status: 400 });
   }
 
+  const userId = cookieStore.get("user_id")?.value || "default_user";
+  await saveToken(userId, data.access_token, data.refresh_token || "");
+
   const res = NextResponse.redirect(new URL("/", request.url));
 
   res.cookies.set("fortnox_access_token", data.access_token, {
@@ -78,6 +82,14 @@ export async function GET(request) {
     sameSite: "lax",
     secure: true,
     path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+  res.cookies.set("user_id", userId, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: true,
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
   });
   res.cookies.delete("fortnox_oauth_state");
   res.cookies.delete("fortnox_redirect_uri");

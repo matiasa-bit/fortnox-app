@@ -16,6 +16,8 @@ import {
   getArticleGroupMappings,
 } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 // Delay mellan API-anrop för att undvika rate-limiting
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -216,11 +218,15 @@ async function getAllInvoices(token, userId) {
   }
 }
 
-async function getToken() {
+async function getToken(userId) {
   try {
     const cookieStore = await cookies();
     const tokenFromCookie = cookieStore.get("fortnox_access_token")?.value;
     if (tokenFromCookie) return tokenFromCookie;
+
+    const tokenFromDb = await getTokenFromDb(userId || "default_user");
+    if (tokenFromDb) return tokenFromDb;
+
     return readFileSync(".fortnox_token", "utf8").trim();
   } catch {
     return null;
@@ -565,9 +571,9 @@ async function getDashboardDataFromDbCached(fromDate) {
 export default async function Home() {
   const cookieStore = await cookies();
   const isLoggedIn = cookieStore.get("fortnox_auth")?.value;
-  const token = await getToken();
-  const allowSharedView = process.env.ALLOW_SHARED_VIEW_WITHOUT_LOGIN === "true";
   const userId = cookieStore.get("user_id")?.value || "default_user"; // använd user_id från cookies eller default
+  const token = await getToken(userId);
+  const allowSharedView = process.env.ALLOW_SHARED_VIEW_WITHOUT_LOGIN === "true";
 
   if (!token || (!isLoggedIn && !allowSharedView)) {
     return (
