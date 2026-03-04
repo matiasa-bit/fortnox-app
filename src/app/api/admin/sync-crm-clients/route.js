@@ -188,6 +188,106 @@ function normalizeFortnoxActive(row = {}) {
   return null;
 }
 
+function firstNonEmpty(...values) {
+  for (const value of values) {
+    const text = String(value ?? "").trim();
+    if (text) return text;
+  }
+  return "";
+}
+
+function toTomt(value) {
+  const text = String(value ?? "").trim();
+  return text || "tomt";
+}
+
+function extractFortnoxContact(customer = {}) {
+  const yourReference = firstNonEmpty(
+    customer?.YourReference,
+    customer?.yourReference,
+    customer?.Reference,
+    customer?.reference
+  );
+  const phone = firstNonEmpty(
+    customer?.Phone1,
+    customer?.Phone,
+    customer?.phone,
+    customer?.Mobile,
+    customer?.mobile
+  );
+  const email = firstNonEmpty(
+    customer?.Email,
+    customer?.EmailAddress,
+    customer?.email,
+    customer?.emailAddress
+  );
+
+  return {
+    name: toTomt(yourReference),
+    role: "Fortnox - Er referens",
+    phone: toTomt(phone),
+    email: toTomt(email),
+  };
+}
+
+async function upsertFortnoxContactsForClients(rows = []) {
+  const normalized = rows
+    .map(row => ({
+      client_id: Number(row?.client_id),
+      name: String(row?.name || "tomt").trim() || "tomt",
+      role: "Fortnox - Er referens",
+      email: String(row?.email || "tomt").trim() || "tomt",
+      phone: String(row?.phone || "tomt").trim() || "tomt",
+      notes: "Autoskapat fran Fortnox",
+    }))
+    .filter(row => Number.isFinite(row.client_id));
+
+  if (normalized.length === 0) return;
+
+  const clientIds = Array.from(new Set(normalized.map(row => row.client_id)));
+  const { data: existingRows } = await supabaseServer
+    .from("crm_contacts")
+    .select("id, client_id")
+    .in("client_id", clientIds)
+    .eq("role", "Fortnox - Er referens");
+
+  const existingByClient = new Map();
+  for (const row of existingRows || []) {
+    const clientId = Number(row?.client_id);
+    const id = Number(row?.id);
+    if (Number.isFinite(clientId) && Number.isFinite(id) && !existingByClient.has(clientId)) {
+      existingByClient.set(clientId, id);
+    }
+  }
+
+  for (const row of normalized) {
+    const existingId = existingByClient.get(row.client_id);
+    if (Number.isFinite(existingId)) {
+      await supabaseServer
+        .from("crm_contacts")
+        .update({
+          name: row.name,
+          role: row.role,
+          email: row.email,
+          phone: row.phone,
+          notes: row.notes,
+        })
+        .eq("id", existingId);
+    } else {
+      await supabaseServer
+        .from("crm_contacts")
+        .insert({
+          client_id: row.client_id,
+          name: row.name,
+          role: row.role,
+          email: row.email,
+          phone: row.phone,
+          notes: row.notes,
+        });
+    }
+  }
+}
+
 async function runCrmSync(request, body = {}) {
   try {
     const cookieStore = await cookies();
@@ -334,6 +434,7 @@ async function runCrmSync(request, body = {}) {
     const toUpsertByOrgNumber = new Map();
     const skipped = [];
     const customerCardCache = new Map();
+    const fortnoxContactByCustomerNumber = new Map();
 
     for (const row of allRows) {
       const orgNumberFromList = normalizeOrgNumber(row?.OrganisationNumber || row?.OrganizationNumber || row?.OrgNo);
@@ -386,6 +487,7 @@ async function runCrmSync(request, body = {}) {
 
         const customerCard = customerCardCache.get(customerNumber);
         if (customerCard) {
+          fortnoxContactByCustomerNumber.set(customerNumber, extractFortnoxContact(customerCard));
           fortnoxActive = normalizeFortnoxActive(customerCard);
           if (fortnoxActive === null) {
             detailStatusesStillUnknown += 1;
@@ -446,6 +548,34 @@ async function runCrmSync(request, body = {}) {
           await supabaseServer
             .from("customers")
             .upsert(sharedCustomers, { onConflict: "customer_number" });
+        }
+      } catch {
+      }
+
+      try {
+        const contactCustomerNumbers = Array.from(fortnoxContactByCustomerNumber.keys());
+        if (contactCustomerNumbers.length > 0) {
+          const { data: clientRows } = await supabaseServer
+            .from("crm_clients")
+            .select("id, customer_number")
+            .in("customer_number", contactCustomerNumbers)
+            .limit(5000);
+
+          const contactsToSave = [];
+          for (const row of clientRows || []) {
+            const clientId = Number(row?.id);
+            const customerNumber = String(row?.customer_number || "").trim();
+            const contact = fortnoxContactByCustomerNumber.get(customerNumber);
+            if (!Number.isFinite(clientId) || !contact) continue;
+            contactsToSave.push({
+              client_id: clientId,
+              name: contact.name,
+              email: contact.email,
+              phone: contact.phone,
+            });
+          }
+
+          await upsertFortnoxContactsForClients(contactsToSave);
         }
       } catch {
       }

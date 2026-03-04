@@ -35,6 +35,85 @@ function normalizeOrgNumber(raw) {
   return String(raw || "").replace(/\s+/g, "").trim();
 }
 
+function firstNonEmpty(...values) {
+  for (const value of values) {
+    const text = String(value ?? "").trim();
+    if (text) return text;
+  }
+  return "";
+}
+
+function toTomt(value) {
+  const text = String(value ?? "").trim();
+  return text || "tomt";
+}
+
+function extractFortnoxContact(customer = {}) {
+  const yourReference = firstNonEmpty(
+    customer?.YourReference,
+    customer?.yourReference,
+    customer?.Reference,
+    customer?.reference
+  );
+  const phone = firstNonEmpty(
+    customer?.Phone1,
+    customer?.Phone,
+    customer?.phone,
+    customer?.Mobile,
+    customer?.mobile
+  );
+  const email = firstNonEmpty(
+    customer?.Email,
+    customer?.EmailAddress,
+    customer?.email,
+    customer?.emailAddress
+  );
+
+  return {
+    name: toTomt(yourReference),
+    role: "Fortnox - Er referens",
+    phone: toTomt(phone),
+    email: toTomt(email),
+  };
+}
+
+async function upsertFortnoxContact(clientId, contact) {
+  const { data: existingRows } = await supabaseServer
+    .from("crm_contacts")
+    .select("id")
+    .eq("client_id", clientId)
+    .eq("role", "Fortnox - Er referens")
+    .limit(1);
+
+  const existingId = Number(existingRows?.[0]?.id);
+  const payload = {
+    client_id: clientId,
+    name: String(contact?.name || "tomt").trim() || "tomt",
+    role: "Fortnox - Er referens",
+    email: String(contact?.email || "tomt").trim() || "tomt",
+    phone: String(contact?.phone || "tomt").trim() || "tomt",
+    notes: "Autoskapat fran Fortnox",
+  };
+
+  if (Number.isFinite(existingId)) {
+    await supabaseServer
+      .from("crm_contacts")
+      .update({
+        name: payload.name,
+        role: payload.role,
+        email: payload.email,
+        phone: payload.phone,
+        notes: payload.notes,
+      })
+      .eq("id", existingId);
+    return;
+  }
+
+  await supabaseServer
+    .from("crm_contacts")
+    .insert(payload);
+}
+
 async function getToken(cookieStore, userId) {
   const tokenFromCookie = cookieStore.get("fortnox_access_token")?.value;
   if (tokenFromCookie) return tokenFromCookie;
@@ -205,6 +284,8 @@ export async function POST(request) {
       return Response.json({ ok: false, error: "Kunde inte lasa kundkort fran Fortnox" }, { status: 502 });
     }
 
+    const fortnoxContact = extractFortnoxContact(customer);
+
     const companyName = String(customer?.Name || client.company_name || "").trim();
     const resolvedOrgNumber =
       normalizeOrgNumber(customer?.OrganisationNumber || customer?.OrganizationNumber || customer?.OrgNo) ||
@@ -240,6 +321,12 @@ export async function POST(request) {
         },
       ], { onConflict: "customer_number" });
 
+    try {
+      await upsertFortnoxContact(clientId, fortnoxContact);
+    } catch {
+      // Contact sync should not block the primary customer sync.
+    }
+
     return Response.json({
       ok: true,
       clientId,
@@ -247,6 +334,7 @@ export async function POST(request) {
       customer_number: payload.customer_number,
       organization_number: payload.organization_number,
       fortnox_active: payload.fortnox_active,
+      fortnox_contact: fortnoxContact,
     });
   } catch (error) {
     return Response.json({ ok: false, error: error?.message || "Okant fel vid enkelkund-sync" }, { status: 500 });
