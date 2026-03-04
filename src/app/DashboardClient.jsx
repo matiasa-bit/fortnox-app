@@ -1455,17 +1455,12 @@ export default function DashboardClient({
     const hasArticleGroupFilter = selectedArticleGroupFilters.length > 0;
     if (!hasArticleGroupFilter) return filteredTimeReportsForRollingWindow;
 
-    const allowedMonthKeys = new Set(
-      monthlyRevenuePerHourData
-        .filter(row => (parseFloat(row.omsattning) || 0) > 0)
-        .map(row => row.key)
-    );
-
     return filteredTimeReportsForRollingWindow.filter(row => {
-      const key = String(row.report_date || "").slice(0, 7);
-      return allowedMonthKeys.has(key);
+      const timeArticleNumber = normalizeArticleNumber(row.article_number);
+      const timeGroupName = articleNumberToGroupName.get(timeArticleNumber);
+      return !!(timeGroupName && selectedArticleGroupFilterSet.has(timeGroupName));
     });
-  }, [selectedArticleGroupFilters, filteredTimeReportsForRollingWindow, monthlyRevenuePerHourData]);
+  }, [selectedArticleGroupFilters, filteredTimeReportsForRollingWindow, articleNumberToGroupName, selectedArticleGroupFilterSet]);
 
   const monthlyRevenuePerHourSummary = useMemo(() => {
     const totalOmsattning = monthlyRevenuePerHourData.reduce((sum, row) => sum + (parseFloat(row.omsattning) || 0), 0);
@@ -2250,7 +2245,8 @@ export default function DashboardClient({
     }
 
     if (!res.ok || data?.ok === false) {
-      throw new Error(data?.error || `HTTP ${res.status}`);
+      const message = [data?.error, data?.tip].filter(Boolean).join(" ").trim();
+      throw new Error(message || `HTTP ${res.status}`);
     }
 
     return data;
@@ -2342,7 +2338,10 @@ export default function DashboardClient({
       );
       window.location.reload();
     } catch (err) {
-      const message = err?.message || "Okänt fel";
+      let message = err?.message || "Okänt fel";
+      if (message.toLowerCase().includes("ingen fortnox-token")) {
+        message += " Gå till 'Återaktivera Fortnox' eller öppna /api/auth/login och logga in igen.";
+      }
       setFullSyncStatus(`Full sync stoppad: ${message}`);
       alert(`Full sync misslyckades: ${message}`);
       console.error(err);
@@ -3675,22 +3674,26 @@ export default function DashboardClient({
               <table style={{width:"100%", borderCollapse:"collapse"}}>
                 <thead>
                   <tr style={{borderBottom:"1px solid #2a4a5e"}}>
-                    {["Datum", "Kund", "Projekt", "Aktivitet", "Timmar", "Beskrivning"].map(h => (
+                    {["Datum", "Kund", "Projekt", "Aktivitet", "Konsult", "Timmar", "Beskrivning"].map(h => (
                       <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {timeEntriesModal.rows.map((row, idx) => (
-                    <tr key={`${timeEntriesModal.employeeKey}-${row.report_date || ""}-${idx}`} style={{borderBottom:"1px solid #1e3545"}}>
-                      <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:13}}>{row.report_date || "-"}</td>
-                      <td style={{padding:"12px 16px 12px 0", color:"#fff", fontSize:13}}>{row.customer_number ? `${row.customer_number} - ${row.customer_name || ""}` : (row.customer_name || "-")}</td>
-                      <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.project_name || "-"}</td>
-                      <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.activity || "-"}</td>
-                      <td style={{padding:"12px 16px 12px 0", color:"#1db3a7", fontWeight:700, fontSize:13}}>{(parseFloat(row.hours) || 0).toFixed(1)}</td>
-                      <td style={{padding:"12px 0", color:"#6b8fa3", fontSize:13}}>{row.description ? `📝 ${row.description}` : "-"}</td>
-                    </tr>
-                  ))}
+                  {timeEntriesModal.rows.map((row, idx) => {
+                    const consultantName = String(row.employee_name || row.employee_id || "").trim();
+                    return (
+                      <tr key={`${timeEntriesModal.employeeKey}-${row.report_date || ""}-${idx}`} style={{borderBottom:"1px solid #1e3545"}}>
+                        <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:13}}>{row.report_date || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#fff", fontSize:13}}>{row.customer_number ? `${row.customer_number} - ${row.customer_name || ""}` : (row.customer_name || "-")}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.project_name || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.activity || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:13}}>{consultantName || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#1db3a7", fontWeight:700, fontSize:13}}>{(parseFloat(row.hours) || 0).toFixed(1)}</td>
+                        <td style={{padding:"12px 0", color:"#6b8fa3", fontSize:13}}>{row.description ? `📝 ${row.description}` : "-"}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

@@ -1,11 +1,18 @@
+import { cookies } from "next/headers";
 import { readFileSync } from "fs";
-import { saveTimeReports } from "@/lib/supabase";
+import { getTokenFromDb, saveTimeReports, saveToken, supabaseServer } from "@/lib/supabase";
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function getToken() {
+async function getToken(cookieStore, userId) {
+  const tokenFromCookie = cookieStore.get("fortnox_access_token")?.value;
+  if (tokenFromCookie) return tokenFromCookie;
+
+  const tokenFromDb = await getTokenFromDb(userId);
+  if (tokenFromDb) return tokenFromDb;
+
   try {
     return readFileSync(".fortnox_token", "utf8").trim();
   } catch {
@@ -13,9 +20,33 @@ function getToken() {
   }
 }
 
-async function refreshToken() {
+async function getRefreshToken(cookieStore, userId) {
+  const refreshFromCookie = cookieStore.get("fortnox_refresh_token")?.value;
+  if (refreshFromCookie) return refreshFromCookie;
+
   try {
-    const refreshToken = readFileSync(".fortnox_refresh", "utf8").trim();
+    const { data } = await supabaseServer
+      .from("tokens")
+      .select("refresh_token")
+      .eq("user_id", userId)
+      .single();
+
+    if (data?.refresh_token) return data.refresh_token;
+  } catch {
+  }
+
+  try {
+    return readFileSync(".fortnox_refresh", "utf8").trim();
+  } catch {
+    return null;
+  }
+}
+
+async function refreshToken(cookieStore, userId) {
+  try {
+    const refreshToken = await getRefreshToken(cookieStore, userId);
+    if (!refreshToken) return null;
+
     const credentials = Buffer.from(
       `${process.env.FORTNOX_CLIENT_ID}:${process.env.FORTNOX_CLIENT_SECRET}`
     ).toString("base64");
@@ -34,6 +65,7 @@ async function refreshToken() {
 
     const data = await response.json();
     if (data.access_token) {
+      await saveToken(userId, data.access_token, data.refresh_token || refreshToken);
       return data.access_token;
     }
   } catch (err) {
@@ -194,7 +226,7 @@ function extractApiRows(data = {}, preferredKeys = []) {
   return { rows: [], collectionKey: null };
 }
 
-async function fetchFortnoxWithRefresh(url, token) {
+async function fetchFortnoxWithRefresh(url, token, cookieStore, userId) {
   let activeToken = token;
   let result = await fetchJsonWithRetry(
     url,
@@ -213,7 +245,7 @@ async function fetchFortnoxWithRefresh(url, token) {
     (result && result.ok === false && Number(result.status) === 401);
 
   if (shouldRefresh) {
-    const newToken = await refreshToken();
+    const newToken = await refreshToken(cookieStore, userId);
     if (!newToken) {
       return {
         ok: false,
@@ -327,10 +359,19 @@ function mapTimeRow(row = {}, idx = 0) {
 }
 
 export async function POST(request) {
-  let token = getToken();
+  const cookieStore = await cookies();
+  const userId = cookieStore.get("user_id")?.value || "default_user";
+  let token = await getToken(cookieStore, userId);
 
   if (!token) {
-    return Response.json({ ok: false, error: "Ingen Fortnox-token. Logga in igen." }, { status: 401 });
+    return Response.json(
+      {
+        ok: false,
+        error: "Ingen Fortnox-token. Logga in igen.",
+        tip: "Klicka 'Återaktivera Fortnox' i appen eller öppna /api/auth/login.",
+      },
+      { status: 401 }
+    );
   }
 
   const body = await request.json().catch(() => ({}));
@@ -363,7 +404,7 @@ export async function POST(request) {
 
     for (const endpoint of candidatesToTry) {
       const url = buildFortnoxUrl(endpoint, page, fromDate);
-      const attempt = await fetchFortnoxWithRefresh(url, token);
+      const attempt = await fetchFortnoxWithRefresh(url, token, cookieStore, userId);
       token = attempt.token || token;
 
       if (isNoSuchRouteError(attempt?.data)) {
@@ -410,14 +451,21 @@ export async function POST(request) {
     }
 
     if (!result?.ok) {
+      const status = Number(result?.status || 0) || 502;
+      const errorMessage =
+        result?.data?.ErrorInformation?.message ||
+        result?.data?.ErrorInformation?.Message ||
+        result?.data?.message ||
+        "Kunde inte hämta tidsredovisning från Fortnox";
+
       return Response.json(
         {
           ok: false,
-          error: result?.data?.ErrorInformation?.Message || result?.data?.message || "Kunde inte hämta tidsredovisning från Fortnox",
+          error: `${errorMessage} (HTTP ${status})`,
           fortnox: result?.data || null,
           endpoint: selectedEndpoint,
         },
-        { status: result?.status || 502 }
+        { status }
       );
     }
 
