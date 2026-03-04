@@ -2540,50 +2540,6 @@ export default function DashboardClient({
         </div>
       )}
 
-      <div style={{background:"#1a2e3b", borderRadius:16, padding:"24px", border:"1px solid #2a4a5e", marginBottom:24}}>
-        <h2 style={{color:"#fff", fontWeight:700, fontSize:16, margin:"0 0 8px"}}>
-          {selectedCostcenter !== "ALL"
-            ? `Sålda artiklar – ${selectedCostcenterLabel} (${articleData.length})`
-            : `Sålda artiklar (${articleData.length})`}
-        </h2>
-        {selectedCostcenter !== "ALL" && articleData.length === 0 && (
-          <p style={{color:"#6b8fa3", fontSize:12, margin:"0 0 14px"}}>Inga artikelrader i cache för urvalet. Klicka på "Sync artiklar" för att fylla databasen.</p>
-        )}
-        <div style={{overflowX:"auto"}}>
-          <table style={{width:"100%", borderCollapse:"collapse"}}>
-            <thead>
-              <tr style={{borderBottom:"1px solid #2a4a5e"}}>
-                {["Artikelnr","Benämning","Omsättning ex. moms","Antal","Mängd","Andel"].map(h => (
-                  <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-                {articleData.slice(0, 20).map((a) => (
-                <tr key={a.key} style={{borderBottom:"1px solid #1e3545"}}>
-                  <td style={{padding:"14px 16px 14px 0", color:"#dbe7ef", fontSize:14, minWidth:120}}>{a.articleNumber || "-"}</td>
-                  <td style={{padding:"14px 16px 14px 0", color:"#fff", fontWeight:500, fontSize:14, maxWidth:300, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}} title={a.name}>{a.name}</td>
-                  <td style={{padding:"14px 16px 14px 0", color:"#00c97a", fontWeight:700, fontSize:14}}>{formatSEK(a.omsattning)}</td>
-                  <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{a.antal}</td>
-                  <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{a.quantity.toFixed(1)}</td>
-                  <td style={{padding:"14px 0", minWidth:120}}>
-                    <div style={{display:"flex", alignItems:"center", gap:8}}>
-                      <div style={{flex:1, height:6, background:"#2a4a5e", borderRadius:3, overflow:"hidden"}}>
-                        <div style={{width:`${totalOmsattning > 0 ? (a.omsattning/totalOmsattning*100) : 0}%`, height:"100%", background:"#3b9eff", borderRadius:3}} />
-                      </div>
-                      <span style={{color:"#6b8fa3", fontSize:12, minWidth:36}}>{totalOmsattning > 0 ? Math.round(a.omsattning/totalOmsattning*100) : 0}%</span>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {articleData.length > 20 && (
-          <p style={{color:"#6b8fa3", fontSize:12, marginTop:16}}>+ {articleData.length - 20} fler artiklar</p>
-        )}
-      </div>
-
       {invoiceModal && (
         <div
           onClick={() => { setInvoiceModal(null); setModalExpandedInvoices(new Set()); }}
