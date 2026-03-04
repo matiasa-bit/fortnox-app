@@ -1038,6 +1038,10 @@ export default function DashboardClient({
     return new Set((rolling12Months || []).map(item => item.key));
   }, [rolling12Months]);
 
+  const rolling12MonthsDescending = useMemo(() => {
+    return [...rolling12Months].reverse();
+  }, [rolling12Months]);
+
   const rollingPeriodLabel = useMemo(() => {
     if (!rolling12Months.length) return "-";
     return `${rolling12Months[0].label} – ${rolling12Months[rolling12Months.length - 1].label}`;
@@ -1054,13 +1058,13 @@ export default function DashboardClient({
       map[yearMonth].antal += 1;
     });
 
-    return rolling12Months.map(item => ({
+    return rolling12MonthsDescending.map(item => ({
       key: item.key,
       month: item.label,
       omsattning: map[item.key]?.omsattning || 0,
       antal: map[item.key]?.antal || 0,
     }));
-  }, [filteredInvoicesForRollingWindow, rolling12Months, rollingWindowMonthKeys]);
+  }, [filteredInvoicesForRollingWindow, rolling12MonthsDescending, rollingWindowMonthKeys]);
 
   const totalHours = useMemo(
     () => filteredTimeReports.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0),
@@ -1103,7 +1107,7 @@ export default function DashboardClient({
       entry.timmar += parseFloat(row.hours) || 0;
     });
 
-    return rolling12Months
+    return rolling12MonthsDescending
       .map(item => {
         const row = map[item.key] || {
           key: item.key,
@@ -1121,7 +1125,7 @@ export default function DashboardClient({
       .map(row => ({
         ...row,
       }));
-  }, [filteredInvoicesForRollingWindow, filteredTimeReportsForRollingWindow, rolling12Months]);
+  }, [filteredInvoicesForRollingWindow, filteredTimeReportsForRollingWindow, rolling12MonthsDescending]);
 
   const timeByEmployee = useMemo(() => {
     const map = {};
