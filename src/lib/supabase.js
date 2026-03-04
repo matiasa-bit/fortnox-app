@@ -6,14 +6,39 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
 console.log("[supabase.js] url/anon/service", supabaseUrl, supabaseAnonKey ? "(key present)" : "(no anon key)", supabaseServiceKey ? "(service key present)" : "(no service key)");
 
+function createNoopQueryResult() {
+  return { data: [], error: null, count: 0 };
+}
+
+function createNoopQueryBuilder() {
+  const result = createNoopQueryResult();
+
+  return {
+    select: () => createNoopQueryBuilder(),
+    eq: () => createNoopQueryBuilder(),
+    gte: () => createNoopQueryBuilder(),
+    in: () => createNoopQueryBuilder(),
+    order: () => createNoopQueryBuilder(),
+    range: () => Promise.resolve(result),
+    limit: () => createNoopQueryBuilder(),
+    upsert: async () => ({ data: [], error: null }),
+    single: async () => ({ data: null, error: null }),
+    maybeSingle: async () => ({ data: null, error: null }),
+    then: (resolve) => Promise.resolve(result).then(resolve),
+  };
+}
+
+function createNoopSupabaseClient() {
+  return {
+    from: () => createNoopQueryBuilder(),
+    auth: { signIn: async () => null },
+  };
+}
+
 // Klient för browser/client-side
 export const supabase = (supabaseUrl && supabaseAnonKey)
   ? createClient(supabaseUrl, supabaseAnonKey)
-  : {
-      // stubbed interface to avoid crashes when keys missing
-      from: () => ({ select: async () => ({ data: [], error: null }) }),
-      auth: { signIn: async () => null },
-    };
+  : createNoopSupabaseClient();
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn("Supabase URL or anon key is missing. Make sure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in .env.local.");
@@ -21,9 +46,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Klient för server-side (med högre behörigheter)
 export const supabaseServer = (supabaseUrl && supabaseServiceKey)
   ? createClient(supabaseUrl, supabaseServiceKey)
-  : {
-      from: () => ({ select: async () => ({ data: [], error: null }) }),
-    };
+  : createNoopSupabaseClient();
 
 if (!supabaseServiceKey) {
   console.warn("Supabase service role key missing. Some server-side calls may fail.");
