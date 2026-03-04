@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCrmClients, getCrmConsultants } from "@/lib/crm";
+import CrmClientsFilters from "@/app/crm/clients/CrmClientsFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -7,7 +8,7 @@ export default async function CrmClientsPage({ searchParams }) {
   const params = await searchParams;
   const query = String(params?.q || "").trim();
   const consultant = String(params?.consultant || "").trim();
-  const status = String(params?.status || "").trim();
+  const status = String(params?.status || "fortnox_active").trim() || "fortnox_active";
 
   const [clients, consultants] = await Promise.all([
     getCrmClients({ search: query, consultant, status }),
@@ -31,41 +32,12 @@ export default async function CrmClientsPage({ searchParams }) {
         </Link>
       </div>
 
-      <form action="/crm/clients" method="get" style={{ marginBottom: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <input
-          type="text"
-          name="q"
-          defaultValue={query}
-          placeholder="Sök bolagsnamn, org.nr eller kundnummer"
-          style={{ flex: 1, minWidth: 260, background: "#0f1923", color: "#fff", border: "1px solid #2a4a5e", borderRadius: 10, padding: "10px 12px", fontSize: 14 }}
-        />
-
-        <select
-          name="consultant"
-          defaultValue={consultant}
-          style={{ background: "#0f1923", color: "#fff", border: "1px solid #2a4a5e", borderRadius: 10, padding: "10px 12px", fontSize: 14, minWidth: 190 }}
-        >
-          <option value="">Alla kostnadsstallen</option>
-          {consultants.map(name => (
-            <option key={name} value={name}>{name}</option>
-          ))}
-        </select>
-
-        <select
-          name="status"
-          defaultValue={status}
-          style={{ background: "#0f1923", color: "#fff", border: "1px solid #2a4a5e", borderRadius: 10, padding: "10px 12px", fontSize: 14, minWidth: 140 }}
-        >
-          <option value="">Alla Fortnox-statusar</option>
-          <option value="fortnox_active">Aktiv</option>
-          <option value="fortnox_inactive">Inaktiv</option>
-          <option value="fortnox_unknown">Okand</option>
-        </select>
-
-        <button type="submit" style={{ background: "#2f7ef7", color: "#fff", border: "none", borderRadius: 10, padding: "10px 14px", fontWeight: 700, cursor: "pointer" }}>
-          Sök
-        </button>
-      </form>
+      <CrmClientsFilters
+        initialQuery={query}
+        initialConsultant={consultant}
+        initialStatus={status}
+        consultants={consultants}
+      />
 
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
