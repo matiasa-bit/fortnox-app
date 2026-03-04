@@ -1314,8 +1314,6 @@ export default function DashboardClient({
   const monthlyRevenuePerHourData = useMemo(() => {
     const map = {};
     const hasArticleGroupFilter = selectedArticleGroupFilters.length > 0;
-    const monthlySelectedGroupRevenue = new Map();
-    const monthlyMappedGroupRevenue = new Map();
 
     const ensureEntry = (dateValue) => {
       const date = String(dateValue || "");
@@ -1351,23 +1349,11 @@ export default function DashboardClient({
         rows.forEach(row => {
           const articleNumber = normalizeArticleNumber(row.ArticleNumber || row.article_number || row.ArticleNo || row.article_no);
           const groupName = articleNumberToGroupName.get(articleNumber);
+          if (!groupName || !selectedArticleGroupFilterSet.has(groupName)) return;
+
           const { total: rowTotal } = resolveInvoiceRowNumbers(row);
           const rowAmount = normalizeInvoiceRowAmount(rowTotal);
-
-          if (!groupName) return;
-
-          monthlyMappedGroupRevenue.set(
-            entry.key,
-            (monthlyMappedGroupRevenue.get(entry.key) || 0) + rowAmount
-          );
-
-          if (selectedArticleGroupFilterSet.has(groupName)) {
-            entry.omsattning += rowAmount;
-            monthlySelectedGroupRevenue.set(
-              entry.key,
-              (monthlySelectedGroupRevenue.get(entry.key) || 0) + rowAmount
-            );
-          }
+          entry.omsattning += rowAmount;
         });
       });
     } else {
@@ -1388,21 +1374,11 @@ export default function DashboardClient({
         return;
       }
 
-      const selectedRevenue = monthlySelectedGroupRevenue.get(entry.key) || 0;
-      if (selectedRevenue <= 0) return;
-
       const timeArticleNumber = normalizeArticleNumber(row.article_number);
       const timeGroupName = articleNumberToGroupName.get(timeArticleNumber);
       if (timeGroupName && selectedArticleGroupFilterSet.has(timeGroupName)) {
         entry.timmar += hours;
-        return;
       }
-
-      const mappedRevenue = monthlyMappedGroupRevenue.get(entry.key) || 0;
-      if (selectedRevenue <= 0 || mappedRevenue <= 0) return;
-
-      const ratio = Math.max(0, Math.min(1, selectedRevenue / mappedRevenue));
-      entry.timmar += hours * ratio;
     });
 
     return rolling12MonthsDescending
