@@ -109,21 +109,34 @@ function normalizeOrgNumber(raw) {
 }
 
 function normalizeStatus(row = {}) {
-  const activeRaw = row?.Active ?? row?.active;
-  const inactiveRaw = row?.Inactive ?? row?.inactive;
-
-  if (inactiveRaw === true || activeRaw === false) return "former";
+  const fortnoxActive = normalizeFortnoxActive(row);
+  if (fortnoxActive === false) return "former";
   return "active";
 }
 
-function normalizeFortnoxActive(row = {}) {
-  const activeRaw = row?.Active ?? row?.active;
-  const inactiveRaw = row?.Inactive ?? row?.inactive;
+function parseBooleanLike(value) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") {
+    if (value === 1) return true;
+    if (value === 0) return false;
+  }
 
-  if (inactiveRaw === true) return false;
-  if (activeRaw === false) return false;
-  if (inactiveRaw === false) return true;
-  if (activeRaw === true) return true;
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return null;
+
+  if (["true", "1", "yes", "ja", "active"].includes(normalized)) return true;
+  if (["false", "0", "no", "nej", "inactive"].includes(normalized)) return false;
+  return null;
+}
+
+function normalizeFortnoxActive(row = {}) {
+  const activeValue = parseBooleanLike(row?.Active ?? row?.active);
+  const inactiveValue = parseBooleanLike(row?.Inactive ?? row?.inactive);
+
+  if (inactiveValue === true) return false;
+  if (activeValue === false) return false;
+  if (inactiveValue === false) return true;
+  if (activeValue === true) return true;
   return null;
 }
 
@@ -233,12 +246,15 @@ export async function POST(request) {
       }
 
       const existing = existingMap.get(orgNumber);
+      const fortnoxActive = normalizeFortnoxActive(row);
+      const computedClientStatus = normalizeStatus(row);
+      const preservedPaused = existing?.client_status === "paused";
       const payload = {
         company_name: companyName,
         organization_number: orgNumber,
         customer_number: customerNumber || existing?.customer_number || null,
-        fortnox_active: normalizeFortnoxActive(row),
-        client_status: existing?.client_status || normalizeStatus(row),
+        fortnox_active: fortnoxActive ?? (existing?.fortnox_active ?? null),
+        client_status: preservedPaused ? "paused" : computedClientStatus,
         responsible_consultant: existing?.responsible_consultant || null,
         notes: existing?.notes || null,
       };
