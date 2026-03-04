@@ -2657,7 +2657,20 @@ export default function DashboardClient({
                         onMouseEnter={() => setModalHoveredInvoice(invNumber)}
                         onMouseLeave={() => setModalHoveredInvoice(null)}
                       >
-                        <td style={{padding:"12px 16px 12px 0", color:"#fff", fontWeight:600, fontSize:14}}>{inv.document_number || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#fff", fontWeight:600, fontSize:14}}>
+                          <div style={{display:"flex", alignItems:"center", gap:8}}>
+                            <span>{inv.document_number || "-"}</span>
+                            {isOverdue && (
+                              <span
+                                title="Förfallen faktura"
+                                style={{display:"inline-flex", alignItems:"center", gap:6, color:"#ff8e8e", fontSize:11, fontWeight:700}}
+                              >
+                                <span style={{width:7, height:7, borderRadius:"50%", background:"#ff6b6b", boxShadow:"0 0 0 2px rgba(255,107,107,0.2)"}} />
+                                Förfallen
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         {invoiceModal.mode === "unpaid" && (
                           <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:14}}>
                             {(() => {
