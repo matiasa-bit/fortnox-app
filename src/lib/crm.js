@@ -4,6 +4,38 @@ const CRM_CLIENTS_FETCH_LIMIT = 10000;
 const CUSTOMERS_FETCH_LIMIT = 20000;
 const CRM_CLIENTS_RESULT_LIMIT = 10000;
 
+async function fetchAllRowsPaged({ table, columns, orderBy, maxRows }) {
+  const pageSize = 1000;
+  const maxAllowed = Math.max(pageSize, Number(maxRows || pageSize));
+  const rows = [];
+  let from = 0;
+
+  while (from < maxAllowed) {
+    const to = Math.min(from + pageSize - 1, maxAllowed - 1);
+    const query = supabaseServer
+      .from(table)
+      .select(columns)
+      .order(orderBy, { ascending: true })
+      .range(from, to);
+
+    const { data, error } = await query;
+    if (error) {
+      return { data: rows, error };
+    }
+
+    const batch = data || [];
+    rows.push(...batch);
+
+    if (batch.length < pageSize) {
+      break;
+    }
+
+    from += pageSize;
+  }
+
+  return { data: rows, error: null };
+}
+
 function isMissingCrmTable(error) {
   return error?.code === "PGRST205";
 }
@@ -21,16 +53,18 @@ export async function getCrmClients(search = "") {
   const status = typeof search === "object" ? String(search?.status || "").trim() : "";
 
   const [{ data: crmRows, error }, { data: customerRows, error: customerError }] = await Promise.all([
-    supabaseServer
-      .from("crm_clients")
-      .select("id, company_name, organization_number, customer_number, fortnox_active, client_status, responsible_consultant")
-      .order("company_name", { ascending: true })
-      .limit(CRM_CLIENTS_FETCH_LIMIT),
-    supabaseServer
-      .from("customers")
-      .select("customer_number, name")
-      .order("name", { ascending: true })
-      .limit(CUSTOMERS_FETCH_LIMIT),
+    fetchAllRowsPaged({
+      table: "crm_clients",
+      columns: "id, company_name, organization_number, customer_number, fortnox_active, client_status, responsible_consultant",
+      orderBy: "company_name",
+      maxRows: CRM_CLIENTS_FETCH_LIMIT,
+    }),
+    fetchAllRowsPaged({
+      table: "customers",
+      columns: "customer_number, name",
+      orderBy: "name",
+      maxRows: CUSTOMERS_FETCH_LIMIT,
+    }),
   ]);
 
   if (error) {
