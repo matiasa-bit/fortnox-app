@@ -571,6 +571,7 @@ export default function DashboardClient({
       customer_name: String(row.customer_name || row.CustomerName || "").trim(),
       project_name: String(row.project_name || row.ProjectName || "").trim(),
       activity: String(row.activity || row.Activity || "").trim(),
+      article_number: String(row.article_number || row.ArticleNumber || row.ArticleNo || row.Article || "").trim(),
       hours: parseFloat(row.hours || row.Hours || 0) || 0,
       description: String(row.description || row.Description || "").trim(),
       updated_at: String(row.updated_at || row.UpdatedAt || "").trim(),
@@ -1379,6 +1380,13 @@ export default function DashboardClient({
 
       const hours = parseFloat(row.hours) || 0;
       if (!hasArticleGroupFilter) {
+        entry.timmar += hours;
+        return;
+      }
+
+      const timeArticleNumber = String(row.article_number || "").trim();
+      const timeGroupName = articleNumberToGroupName.get(timeArticleNumber);
+      if (timeGroupName && selectedArticleGroupFilterSet.has(timeGroupName)) {
         entry.timmar += hours;
         return;
       }
