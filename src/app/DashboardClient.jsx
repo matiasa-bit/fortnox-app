@@ -1071,6 +1071,54 @@ export default function DashboardClient({
     };
   }, [rollingInvoiceNumbers, invoiceRows]);
 
+  const filteredTimeReportsForRollingWindow = useMemo(() => {
+    return customerScopedTimeReports.filter(row => {
+      const cc = customerNumberToCostCenter.get(row.customer_number) || "";
+      const mappedEmployeeFilterEnabled = timeCostcenterFilterMode?.mode === "employee";
+      const mappedByNameFilterEnabled = timeCostcenterFilterMode?.mode === "employee-name-fallback";
+      const effectiveEmployeeIds = mappedEmployeeFilterEnabled
+        ? employeeIdsForSelectedCostcenter
+        : (mappedByNameFilterEnabled ? timeCostcenterFilterMode?.employeeIds : null);
+      const isMappedEmployee = !!(effectiveEmployeeIds && effectiveEmployeeIds.has(row.employee_id));
+      const isCollaboratorOnCostcenterCustomer = mappedEmployeeFilterEnabled && customerNumbersForSelectedCostcenter?.has(row.customer_number);
+      const costcenterMatch = selectedCostcenter === "ALL"
+        ? true
+        : mappedEmployeeFilterEnabled
+          ? (isMappedEmployee || isCollaboratorOnCostcenterCustomer)
+          : mappedByNameFilterEnabled
+            ? isMappedEmployee
+            : cc === selectedCostcenter;
+      const groupMatch = selectedGroup === "ALL" || row.employee_group === selectedGroup;
+      const hasHours = row.hours > 0;
+      return costcenterMatch && groupMatch && hasHours;
+    });
+  }, [customerScopedTimeReports, selectedCostcenter, selectedGroup, customerNumberToCostCenter, employeeIdsForSelectedCostcenter, customerNumbersForSelectedCostcenter, timeCostcenterFilterMode]);
+
+  const latestAvailableRollingMonth = useMemo(() => {
+    const months = [];
+
+    filteredInvoicesForRollingWindow.forEach(inv => {
+      const yearMonth = String(inv.invoice_date || "").slice(0, 7);
+      if (/^\d{4}-\d{2}$/.test(yearMonth)) months.push(yearMonth);
+    });
+
+    filteredTimeReportsForRollingWindow.forEach(row => {
+      const yearMonth = String(row.report_date || "").slice(0, 7);
+      if (/^\d{4}-\d{2}$/.test(yearMonth)) months.push(yearMonth);
+    });
+
+    if (months.length === 0) return "";
+    months.sort((a, b) => a.localeCompare(b));
+    return months[months.length - 1];
+  }, [filteredInvoicesForRollingWindow, filteredTimeReportsForRollingWindow]);
+
+  const effectiveRollingEndMonth = useMemo(() => {
+    if (/^\d{4}-\d{2}$/.test(String(rollingEndMonthInput || ""))) {
+      return rollingEndMonthInput;
+    }
+    return latestAvailableRollingMonth || getCurrentYearMonth();
+  }, [rollingEndMonthInput, latestAvailableRollingMonth]);
+
   useEffect(() => {
     if (selectedArticleGroupFilters.length === 0) {
       articleGroupAutoSyncKeyRef.current = "";
@@ -1136,54 +1184,6 @@ export default function DashboardClient({
       cancelled = true;
     };
   }, [selectedArticleGroupFilters, selectedCustomer, effectiveRollingEndMonth, missingRollingInvoiceNumbersForGroupFilter]);
-
-  const filteredTimeReportsForRollingWindow = useMemo(() => {
-    return customerScopedTimeReports.filter(row => {
-      const cc = customerNumberToCostCenter.get(row.customer_number) || "";
-      const mappedEmployeeFilterEnabled = timeCostcenterFilterMode?.mode === "employee";
-      const mappedByNameFilterEnabled = timeCostcenterFilterMode?.mode === "employee-name-fallback";
-      const effectiveEmployeeIds = mappedEmployeeFilterEnabled
-        ? employeeIdsForSelectedCostcenter
-        : (mappedByNameFilterEnabled ? timeCostcenterFilterMode?.employeeIds : null);
-      const isMappedEmployee = !!(effectiveEmployeeIds && effectiveEmployeeIds.has(row.employee_id));
-      const isCollaboratorOnCostcenterCustomer = mappedEmployeeFilterEnabled && customerNumbersForSelectedCostcenter?.has(row.customer_number);
-      const costcenterMatch = selectedCostcenter === "ALL"
-        ? true
-        : mappedEmployeeFilterEnabled
-          ? (isMappedEmployee || isCollaboratorOnCostcenterCustomer)
-          : mappedByNameFilterEnabled
-            ? isMappedEmployee
-            : cc === selectedCostcenter;
-      const groupMatch = selectedGroup === "ALL" || row.employee_group === selectedGroup;
-      const hasHours = row.hours > 0;
-      return costcenterMatch && groupMatch && hasHours;
-    });
-  }, [customerScopedTimeReports, selectedCostcenter, selectedGroup, customerNumberToCostCenter, employeeIdsForSelectedCostcenter, customerNumbersForSelectedCostcenter, timeCostcenterFilterMode]);
-
-  const latestAvailableRollingMonth = useMemo(() => {
-    const months = [];
-
-    filteredInvoicesForRollingWindow.forEach(inv => {
-      const yearMonth = String(inv.invoice_date || "").slice(0, 7);
-      if (/^\d{4}-\d{2}$/.test(yearMonth)) months.push(yearMonth);
-    });
-
-    filteredTimeReportsForRollingWindow.forEach(row => {
-      const yearMonth = String(row.report_date || "").slice(0, 7);
-      if (/^\d{4}-\d{2}$/.test(yearMonth)) months.push(yearMonth);
-    });
-
-    if (months.length === 0) return "";
-    months.sort((a, b) => a.localeCompare(b));
-    return months[months.length - 1];
-  }, [filteredInvoicesForRollingWindow, filteredTimeReportsForRollingWindow]);
-
-  const effectiveRollingEndMonth = useMemo(() => {
-    if (/^\d{4}-\d{2}$/.test(String(rollingEndMonthInput || ""))) {
-      return rollingEndMonthInput;
-    }
-    return latestAvailableRollingMonth || getCurrentYearMonth();
-  }, [rollingEndMonthInput, latestAvailableRollingMonth]);
 
   const rolling12Months = useMemo(() => {
     return buildRolling12MonthWindow(effectiveRollingEndMonth);
