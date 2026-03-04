@@ -56,7 +56,9 @@ async function fetchJsonWithRetry(url, options = {}, retries = 3) {
 
 async function refreshToken(userId) {
   try {
-    const refreshToken = readFileSync(".fortnox_refresh", "utf8").trim();
+    const cookieStore = await cookies();
+    const refreshFromCookie = cookieStore.get("fortnox_refresh_token")?.value;
+    const refreshToken = refreshFromCookie || readFileSync(".fortnox_refresh", "utf8").trim();
     const credentials = Buffer.from(
       `${process.env.FORTNOX_CLIENT_ID}:${process.env.FORTNOX_CLIENT_SECRET}`
     ).toString("base64");
@@ -75,10 +77,15 @@ async function refreshToken(userId) {
 
     const data = await response.json();
     if (data.access_token) {
-      writeFileSync(".fortnox_token", data.access_token);
-      writeFileSync(".fortnox_refresh", data.refresh_token);
+      try {
+        writeFileSync(".fortnox_token", data.access_token);
+        if (data.refresh_token) {
+          writeFileSync(".fortnox_refresh", data.refresh_token);
+        }
+      } catch {
+      }
       // Spara även i Supabase
-      await saveToken(userId, data.access_token, data.refresh_token);
+      await saveToken(userId, data.access_token, data.refresh_token || refreshToken);
       return data.access_token;
     }
   } catch (err) {
@@ -216,8 +223,11 @@ async function getAllInvoices(token, userId) {
   }
 }
 
-function getToken() {
+async function getToken() {
   try {
+    const cookieStore = await cookies();
+    const tokenFromCookie = cookieStore.get("fortnox_access_token")?.value;
+    if (tokenFromCookie) return tokenFromCookie;
     return readFileSync(".fortnox_token", "utf8").trim();
   } catch {
     return null;
@@ -562,7 +572,7 @@ async function getDashboardDataFromDbCached(fromDate) {
 export default async function Home() {
   const cookieStore = await cookies();
   const isLoggedIn = cookieStore.get("fortnox_auth")?.value;
-  const token = getToken();
+  const token = await getToken();
   const allowSharedView = process.env.ALLOW_SHARED_VIEW_WITHOUT_LOGIN === "true";
   const userId = cookieStore.get("user_id")?.value || "default_user"; // använd user_id från cookies eller default
 

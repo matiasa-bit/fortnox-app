@@ -53,11 +53,34 @@ export async function GET(request) {
     return new Response(`Kunde inte hämta token: ${JSON.stringify(data)}`, { status: 400 });
   }
 
-  const { writeFileSync } = await import("fs");
-  writeFileSync(".fortnox_token", data.access_token);
-  writeFileSync(".fortnox_refresh", data.refresh_token);
-
   const res = NextResponse.redirect(new URL("/", request.url));
+
+  try {
+    const { writeFileSync } = await import("fs");
+    writeFileSync(".fortnox_token", data.access_token);
+    writeFileSync(".fortnox_refresh", data.refresh_token);
+  } catch (err) {
+    console.warn("Kunde inte skriva token till fil (förväntat i Vercel):", err?.message || err);
+  }
+
+  res.cookies.set("fortnox_access_token", data.access_token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: true,
+    path: "/",
+    maxAge: 60 * 60 * 12,
+  });
+
+  if (data.refresh_token) {
+    res.cookies.set("fortnox_refresh_token", data.refresh_token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: true,
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    });
+  }
+
   res.cookies.set("fortnox_auth", "1", {
     httpOnly: true,
     sameSite: "lax",
