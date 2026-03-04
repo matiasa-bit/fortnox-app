@@ -172,19 +172,34 @@ function parseBooleanLike(value) {
   const normalized = String(value ?? "").trim().toLowerCase();
   if (!normalized) return null;
 
-  if (["true", "1", "yes", "ja", "active"].includes(normalized)) return true;
-  if (["false", "0", "no", "nej", "inactive"].includes(normalized)) return false;
+  if (["true", "1", "yes", "ja", "active", "aktiv", "y", "j"].includes(normalized)) return true;
+  if (["false", "0", "no", "nej", "inactive", "inaktiv", "n"].includes(normalized)) return false;
   return null;
 }
 
 function normalizeFortnoxActive(row = {}) {
   const activeValue = parseBooleanLike(row?.Active ?? row?.active);
   const inactiveValue = parseBooleanLike(row?.Inactive ?? row?.inactive);
+  const notActiveValue = parseBooleanLike(row?.NotActive ?? row?.notActive);
+
+  const statusValue = String(
+    row?.Status ?? row?.status ?? row?.CustomerStatus ?? row?.customerStatus ?? ""
+  ).trim().toLowerCase();
 
   if (inactiveValue === true) return false;
   if (activeValue === false) return false;
+  if (notActiveValue === true) return false;
   if (inactiveValue === false) return true;
   if (activeValue === true) return true;
+  if (notActiveValue === false) return true;
+
+  if (statusValue.includes("inaktiv") || statusValue.includes("inactive") || statusValue.includes("not active")) {
+    return false;
+  }
+  if (statusValue.includes("aktiv") || statusValue.includes("active")) {
+    return true;
+  }
+
   return null;
 }
 
