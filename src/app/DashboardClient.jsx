@@ -88,6 +88,10 @@ function normalizeCustomerNumber(raw) {
   if (!raw) return "";
   return String(raw).trim();
 }
+function normalizeArticleNumber(raw) {
+  if (!raw) return "";
+  return String(raw).replace(/\s+/g, "").trim().toUpperCase();
+}
 
 function normalizeSearchText(value) {
   return String(value || "")
@@ -1241,7 +1245,7 @@ export default function DashboardClient({
   const articleNumberToGroupName = useMemo(() => {
     const map = new Map();
     (articleGroupMappings || []).forEach(row => {
-      const articleNumber = String(row.article_number || "").trim();
+      const articleNumber = normalizeArticleNumber(row.article_number);
       const groupName = String(row.group_name || "").trim();
       const isActive = row.active === false ? false : true;
       if (!articleNumber || !groupName || !isActive) return;
@@ -1259,7 +1263,7 @@ export default function DashboardClient({
       const rows = Array.isArray(cachedRows) ? cachedRows : (inv.InvoiceRows || []);
 
       rows.forEach(row => {
-        const articleNumber = String(row.ArticleNumber || row.article_number || row.ArticleNo || row.article_no || "").trim();
+        const articleNumber = normalizeArticleNumber(row.ArticleNumber || row.article_number || row.ArticleNo || row.article_no);
         const groupName = articleNumberToGroupName.get(articleNumber);
         if (groupName) names.add(groupName);
       });
@@ -1345,7 +1349,7 @@ export default function DashboardClient({
         if (!entry) return;
 
         rows.forEach(row => {
-          const articleNumber = String(row.ArticleNumber || row.article_number || row.ArticleNo || row.article_no || "").trim();
+          const articleNumber = normalizeArticleNumber(row.ArticleNumber || row.article_number || row.ArticleNo || row.article_no);
           const groupName = articleNumberToGroupName.get(articleNumber);
           const { total: rowTotal } = resolveInvoiceRowNumbers(row);
           const rowAmount = normalizeInvoiceRowAmount(rowTotal);
@@ -1384,7 +1388,7 @@ export default function DashboardClient({
         return;
       }
 
-      const timeArticleNumber = String(row.article_number || "").trim();
+      const timeArticleNumber = normalizeArticleNumber(row.article_number);
       const timeGroupName = articleNumberToGroupName.get(timeArticleNumber);
       if (timeGroupName && selectedArticleGroupFilterSet.has(timeGroupName)) {
         entry.timmar += hours;
@@ -1937,7 +1941,7 @@ export default function DashboardClient({
     if (!Array.isArray(rows) || rows.length === 0) return false;
 
     return rows.some(row => {
-      const articleNumber = String(row.ArticleNumber || row.article_number || row.ArticleNo || row.article_no || "").trim();
+    const articleNumber = normalizeArticleNumber(row.ArticleNumber || row.article_number || row.ArticleNo || row.article_no);
       const groupName = articleNumberToGroupName.get(articleNumber);
       return !!(groupName && selectedArticleGroupFilterSet.has(groupName));
     });

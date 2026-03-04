@@ -398,7 +398,7 @@ export async function getCachedTimeReports(fromDate = "2025-01-01") {
       const to = from + chunkSize - 1;
       const { data, error } = await supabaseServer
         .from("time_reports")
-        .select("report_date, employee_id, employee_name, customer_number, customer_name, project_name, activity, hours, description, updated_at")
+        .select("report_date, employee_id, employee_name, customer_number, customer_name, project_name, activity, article_number, hours, description, updated_at")
         .gte("report_date", fromDate)
         .order("report_date", { ascending: false })
         .range(from, to);
