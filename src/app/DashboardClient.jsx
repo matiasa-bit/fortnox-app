@@ -373,6 +373,8 @@ export default function DashboardClient({
   const [syncingTimeReports, setSyncingTimeReports] = useState(false);
   const [syncingCostcenters, setSyncingCostcenters] = useState(false);
   const [syncingContracts, setSyncingContracts] = useState(false);
+  const [syncingFullData, setSyncingFullData] = useState(false);
+  const [fullSyncStatus, setFullSyncStatus] = useState("");
   const [timeReportsData, setTimeReportsData] = useState(() => (Array.isArray(timeReports) ? timeReports : []));
   const [timeReportsLoading, setTimeReportsLoading] = useState(() => !Array.isArray(timeReports) || timeReports.length === 0);
   const [contractAccrualsData, setContractAccrualsData] = useState(() => (Array.isArray(contractAccruals) ? contractAccruals : []));
@@ -2168,6 +2170,123 @@ export default function DashboardClient({
     return null;
   };
 
+  const postSyncJson = async (url, body) => {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body || {}),
+    });
+
+    const raw = await res.text();
+    let data = {};
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch {
+      data = { error: raw ? raw.slice(0, 280) : "Tomt svar från servern" };
+    }
+
+    if (!res.ok || data?.ok === false) {
+      throw new Error(data?.error || `HTTP ${res.status}`);
+    }
+
+    return data;
+  };
+
+  const runFullSync = async () => {
+    setSyncingFullData(true);
+    setFullSyncStatus("Startar full sync...");
+
+    try {
+      const summary = {
+        timeSaved: 0,
+        articlesSaved: 0,
+        contractsSaved: 0,
+        invoiceRowsSynced: 0,
+        invoiceRowsRemaining: 0,
+        costcenterSynced: 0,
+        costcenterRemaining: 0,
+      };
+
+      setFullSyncStatus("Synkar tidsredovisning (stort uttag)...");
+      const timeResult = await postSyncJson("/api/admin/sync-time-reports", {
+        fromDate: "2025-01-01",
+        maxPages: 100,
+      });
+      summary.timeSaved = Number(timeResult?.saved || 0);
+
+      setFullSyncStatus("Synkar artikelregister...");
+      const articleRegistryResult = await postSyncJson("/api/admin/sync-article-registry", {
+        maxPages: 200,
+      });
+      summary.articlesSaved = Number(articleRegistryResult?.saved || 0);
+
+      setFullSyncStatus("Synkar kundavtal...");
+      const contractResult = await postSyncJson("/api/admin/sync-contract-accruals", {
+        maxPages: 50,
+      });
+      summary.contractsSaved = Number(contractResult?.saved || 0);
+
+      setFullSyncStatus("Synkar artikelrader på fakturor (flera rundor)...");
+      let invoiceRounds = 0;
+      let invoiceRemaining = Infinity;
+      while (invoiceRounds < 50 && invoiceRemaining > 0) {
+        invoiceRounds += 1;
+        const invoiceRowsResult = await postSyncJson("/api/admin/sync-invoice-rows", {
+          fromDate: "2025-01-01",
+          batchSize: 50,
+        });
+
+        const syncedNow = Number(invoiceRowsResult?.syncedNow || 0);
+        const remainingNow = Number(invoiceRowsResult?.remaining || 0);
+        summary.invoiceRowsSynced += syncedNow;
+        invoiceRemaining = remainingNow;
+        summary.invoiceRowsRemaining = remainingNow;
+
+        setFullSyncStatus(`Synkar artikelrader... runda ${invoiceRounds} (synkade ${summary.invoiceRowsSynced}, kvar ${remainingNow})`);
+
+        if (syncedNow === 0) break;
+      }
+
+      setFullSyncStatus("Synkar kostnadsställen (flera rundor)...");
+      let costcenterRounds = 0;
+      let costcenterRemaining = Infinity;
+      while (costcenterRounds < 30 && costcenterRemaining > 0) {
+        costcenterRounds += 1;
+        const costcenterResult = await postSyncJson("/api/admin/sync-costcenters", {
+          batchSize: 50,
+        });
+
+        const syncedNow = Number(costcenterResult?.syncedNow || 0);
+        const remainingNow = Number(costcenterResult?.remaining || 0);
+        summary.costcenterSynced += syncedNow;
+        costcenterRemaining = remainingNow;
+        summary.costcenterRemaining = remainingNow;
+
+        setFullSyncStatus(`Synkar kostnadsställen... runda ${costcenterRounds} (synkade ${summary.costcenterSynced}, kvar ${remainingNow})`);
+
+        if (syncedNow === 0) break;
+      }
+
+      setFullSyncStatus("Full sync klar. Laddar om...");
+      alert(
+        `Full sync klar:\n` +
+        `• Tid sparad: ${summary.timeSaved}\n` +
+        `• Artikelregister sparad: ${summary.articlesSaved}\n` +
+        `• Kundavtal sparade: ${summary.contractsSaved}\n` +
+        `• Artikelrader synkade: ${summary.invoiceRowsSynced} (kvar: ${summary.invoiceRowsRemaining})\n` +
+        `• Kostnadsställen synkade: ${summary.costcenterSynced} (kvar: ${summary.costcenterRemaining})`
+      );
+      window.location.reload();
+    } catch (err) {
+      const message = err?.message || "Okänt fel";
+      setFullSyncStatus(`Full sync stoppad: ${message}`);
+      alert(`Full sync misslyckades: ${message}`);
+      console.error(err);
+    } finally {
+      setSyncingFullData(false);
+    }
+  };
+
   return (
     <main style={{minHeight:"100vh", background:"linear-gradient(135deg, #0f1923 0%, #1a2e3b 100%)", padding:"32px", fontFamily:"system-ui, sans-serif"}}>
       
@@ -2196,6 +2315,12 @@ export default function DashboardClient({
           >
             Byråvy
           </Link>
+          <button
+            onClick={runFullSync}
+            style={{background:'#f59e0b', color:'#0f1923', padding:'8px 12px', borderRadius:8, border:'none', cursor:'pointer', fontWeight:700}}
+            disabled={syncingFullData}
+            title="Kör stor hämtning av tillgänglig data från Fortnox"
+          >{syncingFullData ? 'Kör full sync...' : 'Full sync alla moduler'}</button>
           <button
             onClick={async () => {
               setSyncingTimeReports(true);
@@ -2370,6 +2495,9 @@ export default function DashboardClient({
           >
             Återaktivera Fortnox
           </button>
+          {fullSyncStatus && (
+            <span style={{color:'#6b8fa3', fontSize:12, alignSelf:'center'}}>{fullSyncStatus}</span>
+          )}
           <div style={{position:"relative"}}>
             <input
               list="year-filter-options"
