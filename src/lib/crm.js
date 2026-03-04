@@ -34,7 +34,28 @@ export async function getCrmClients(search = "") {
   }
 
   const crmClients = crmRows || [];
-  const customers = customerRows || [];
+  const customersRaw = customerRows || [];
+
+  // customers table can contain duplicate customer_number rows; keep one row per number.
+  const customerByNumber = new Map();
+  customersRaw.forEach(row => {
+    const customerNumber = String(row?.customer_number || "").trim();
+    if (!customerNumber) return;
+
+    if (!customerByNumber.has(customerNumber)) {
+      customerByNumber.set(customerNumber, {
+        customer_number: customerNumber,
+        name: String(row?.name || "").trim() || null,
+      });
+      return;
+    }
+
+    const existing = customerByNumber.get(customerNumber);
+    if (!existing?.name && row?.name) {
+      existing.name = String(row.name).trim() || existing.name;
+    }
+  });
+  const customers = Array.from(customerByNumber.values());
 
   const crmByCustomerNumber = new Map();
   crmClients.forEach(row => {
@@ -79,7 +100,19 @@ export async function getCrmClients(search = "") {
     merged.push(row);
   });
 
-  let clients = merged;
+  const dedupedClientsMap = new Map();
+  merged.forEach(row => {
+    const id = Number(row?.id);
+    const key = Number.isFinite(id)
+      ? `id:${id}`
+      : `noid:${String(row?.customer_number || "").trim()}::${String(row?.organization_number || "").trim()}::${String(row?.company_name || "").trim().toLowerCase()}`;
+
+    if (!dedupedClientsMap.has(key)) {
+      dedupedClientsMap.set(key, row);
+    }
+  });
+
+  let clients = Array.from(dedupedClientsMap.values());
 
   if (consultant) {
     clients = clients.filter(row => String(row.responsible_consultant || "").trim() === consultant);
