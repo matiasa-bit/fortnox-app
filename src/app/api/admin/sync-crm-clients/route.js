@@ -10,8 +10,12 @@ async function getToken(cookieStore, userId) {
   const tokenFromCookie = cookieStore.get("fortnox_access_token")?.value;
   if (tokenFromCookie) return tokenFromCookie;
 
-  const tokenFromDb = await getTokenFromDb(userId);
-  if (tokenFromDb) return tokenFromDb;
+  try {
+    const tokenFromDb = await getTokenFromDb(userId);
+    if (tokenFromDb) return tokenFromDb;
+  } catch (error) {
+    console.error("Kunde inte hamta Fortnox-token fran DB:", error);
+  }
 
   try {
     return readFileSync(".fortnox_token", "utf8").trim();
@@ -77,10 +81,18 @@ async function refreshToken(cookieStore, userId) {
 
 async function fetchJsonWithRetry(url, options = {}, retries = 4) {
   let attempt = 0;
+  let lastError = null;
 
   while (attempt < retries) {
     attempt += 1;
-    const res = await fetch(url, options);
+    let res;
+    try {
+      res = await fetch(url, options);
+    } catch (fetchError) {
+      lastError = fetchError;
+      await delay(600 * attempt);
+      continue;
+    }
 
     if (res.status === 429) {
       const retryAfter = parseInt(res.headers.get("Retry-After") || "2", 10) * 1000;
@@ -101,7 +113,8 @@ async function fetchJsonWithRetry(url, options = {}, retries = 4) {
     }
   }
 
-  throw new Error(`Misslyckades att hämta JSON från ${url}`);
+  const reason = String(lastError?.message || "okant natverksfel");
+  throw new Error(`Misslyckades att hamta JSON fran ${url} (${reason})`);
 }
 
 async function fetchFortnoxCustomerCard(customerNumber, token, cookieStore, userId) {
@@ -444,7 +457,17 @@ async function runCrmSync(request, body = {}) {
     });
   } catch (error) {
     console.error("CRM-kundsync misslyckades:", error);
-    return Response.json({ ok: false, error: error?.message || "Okänt fel vid CRM-kundsync" }, { status: 500 });
+    const message = String(error?.message || "Okant fel vid CRM-kundsync");
+    const isNetworkFailure = message.toLowerCase().includes("fetch failed") || message.toLowerCase().includes("natverksfel");
+    return Response.json(
+      {
+        ok: false,
+        error: isNetworkFailure
+          ? "Kunde inte na Fortnox/Supabase just nu (natverksfel). Forsok igen om 30-60 sekunder."
+          : message,
+      },
+      { status: 500 }
+    );
   }
 }
 
