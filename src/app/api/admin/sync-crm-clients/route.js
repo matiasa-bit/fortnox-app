@@ -196,7 +196,7 @@ export async function POST(request) {
     if (organizationNumbers.length > 0) {
       const { data: existingRows } = await supabaseServer
         .from("crm_clients")
-        .select("id, organization_number, responsible_consultant, client_status, notes")
+        .select("id, organization_number, customer_number, responsible_consultant, client_status, notes")
         .in("organization_number", organizationNumbers);
 
       for (const row of existingRows || []) {
@@ -204,11 +204,12 @@ export async function POST(request) {
       }
     }
 
-    const toUpsert = [];
+    const toUpsertByOrgNumber = new Map();
     const skipped = [];
 
     for (const row of allRows) {
       const orgNumber = normalizeOrgNumber(row?.OrganisationNumber || row?.OrganizationNumber || row?.OrgNo);
+      const customerNumber = String(row?.CustomerNumber || "").trim();
       const companyName = String(row?.Name || row?.CustomerName || "").trim();
 
       if (!orgNumber || !companyName) {
@@ -221,14 +222,22 @@ export async function POST(request) {
       }
 
       const existing = existingMap.get(orgNumber);
-      toUpsert.push({
+      const payload = {
         company_name: companyName,
         organization_number: orgNumber,
+        customer_number: customerNumber || existing?.customer_number || null,
         client_status: existing?.client_status || normalizeStatus(row),
         responsible_consultant: existing?.responsible_consultant || null,
         notes: existing?.notes || null,
-      });
+      };
+
+      // Fortnox can return duplicate customer rows in some accounts.
+      // Deduplicate by organization number to avoid ON CONFLICT touching
+      // the same row multiple times in one upsert statement.
+      toUpsertByOrgNumber.set(orgNumber, payload);
     }
+
+    const toUpsert = Array.from(toUpsertByOrgNumber.values());
 
     if (toUpsert.length > 0) {
       const { error } = await supabaseServer
@@ -241,7 +250,7 @@ export async function POST(request) {
 
       try {
         const sharedCustomers = toUpsert.map(row => ({
-          customer_number: row.organization_number,
+          customer_number: row.customer_number || row.organization_number,
           name: row.company_name,
         }));
 
