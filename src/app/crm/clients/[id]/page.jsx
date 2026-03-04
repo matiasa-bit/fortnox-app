@@ -31,6 +31,9 @@ export default async function CrmClientProfilePage({ params }) {
             <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>{client.company_name}</h2>
             <p style={{ margin: "6px 0 0", color: "#8fb1c3", fontSize: 13 }}>Org.nr: {client.organization_number || "-"}</p>
             <p style={{ margin: "4px 0 0", color: "#8fb1c3", fontSize: 13 }}>Kundnummer: {client.customer_number || "-"}</p>
+            <p style={{ margin: "4px 0 0", color: "#8fb1c3", fontSize: 13 }}>
+              Fortnox: {client.fortnox_active === true ? "Aktiv" : client.fortnox_active === false ? "Inaktiv" : "-"}
+            </p>
           </div>
           <Link
             href={`/crm/clients/${client.id}/edit`}

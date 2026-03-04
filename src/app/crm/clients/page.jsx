@@ -71,7 +71,7 @@ export default async function CrmClientsPage({ searchParams }) {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid #2a4a5e" }}>
-              {["Företagsnamn", "Org.nr", "Kundnummer", "Ansvarig konsult", "Status", "Senaste aktivitet"].map(h => (
+              {["Företagsnamn", "Org.nr", "Kundnummer", "Fortnox", "Ansvarig konsult", "Status", "Senaste aktivitet"].map(h => (
                 <th key={h} style={{ textAlign: "left", color: "#6b8fa3", fontSize: 12, fontWeight: 600, padding: "0 10px 12px 0", textTransform: "uppercase", letterSpacing: 0.8 }}>{h}</th>
               ))}
             </tr>
@@ -100,6 +100,22 @@ export default async function CrmClientsPage({ searchParams }) {
                     <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.customer_number || "-"}</Link>
                   ) : (
                     <div style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.customer_number || "-"}</div>
+                  )}
+                </td>
+                <td style={{ color: "#dbe7ef", fontWeight: 700 }}>
+                  {client.id ? (
+                    <Link
+                      href={`/crm/clients/${client.id}`}
+                      style={{
+                        ...cellLinkStyle,
+                        color: client.fortnox_active === true ? "#00c97a" : client.fortnox_active === false ? "#fda4af" : "#94a3b8",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {client.fortnox_active === true ? "Aktiv" : client.fortnox_active === false ? "Inaktiv" : "-"}
+                    </Link>
+                  ) : (
+                    <div style={{ ...cellLinkStyle, color: "#94a3b8", fontWeight: 700 }}>-</div>
                   )}
                 </td>
                 <td style={{ color: "#dbe7ef" }}>

@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS crm_clients (
   company_name TEXT NOT NULL,
   organization_number TEXT NOT NULL,
   customer_number TEXT,
+  fortnox_active BOOLEAN,
   industry TEXT,
   revenue NUMERIC(14,2),
   employees INTEGER,
@@ -17,7 +18,8 @@ CREATE TABLE IF NOT EXISTS crm_clients (
 );
 
 ALTER TABLE IF EXISTS crm_clients
-  ADD COLUMN IF NOT EXISTS customer_number TEXT;
+  ADD COLUMN IF NOT EXISTS customer_number TEXT,
+  ADD COLUMN IF NOT EXISTS fortnox_active BOOLEAN;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_crm_clients_orgnr_unique ON crm_clients(organization_number);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_crm_clients_customer_number_unique ON crm_clients(customer_number) WHERE customer_number IS NOT NULL;

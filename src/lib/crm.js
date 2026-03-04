@@ -12,7 +12,7 @@ export async function getCrmClients(search = "") {
   const [{ data: crmRows, error }, { data: customerRows, error: customerError }] = await Promise.all([
     supabaseServer
       .from("crm_clients")
-      .select("id, company_name, organization_number, customer_number, client_status, responsible_consultant")
+      .select("id, company_name, organization_number, customer_number, fortnox_active, client_status, responsible_consultant")
       .order("company_name", { ascending: true })
       .limit(2000),
     supabaseServer
@@ -65,6 +65,7 @@ export async function getCrmClients(search = "") {
       company_name: String(customer.name || "").trim() || `Kund ${customerNumber}`,
       organization_number: null,
       customer_number: customerNumber,
+      fortnox_active: null,
       client_status: null,
       responsible_consultant: null,
       last_activity_date: null,

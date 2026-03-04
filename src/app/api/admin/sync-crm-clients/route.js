@@ -116,6 +116,17 @@ function normalizeStatus(row = {}) {
   return "active";
 }
 
+function normalizeFortnoxActive(row = {}) {
+  const activeRaw = row?.Active ?? row?.active;
+  const inactiveRaw = row?.Inactive ?? row?.inactive;
+
+  if (inactiveRaw === true) return false;
+  if (activeRaw === false) return false;
+  if (inactiveRaw === false) return true;
+  if (activeRaw === true) return true;
+  return null;
+}
+
 export async function POST(request) {
   try {
     const cookieStore = await cookies();
@@ -196,7 +207,7 @@ export async function POST(request) {
     if (organizationNumbers.length > 0) {
       const { data: existingRows } = await supabaseServer
         .from("crm_clients")
-        .select("id, organization_number, customer_number, responsible_consultant, client_status, notes")
+        .select("id, organization_number, customer_number, fortnox_active, responsible_consultant, client_status, notes")
         .in("organization_number", organizationNumbers);
 
       for (const row of existingRows || []) {
@@ -226,6 +237,7 @@ export async function POST(request) {
         company_name: companyName,
         organization_number: orgNumber,
         customer_number: customerNumber || existing?.customer_number || null,
+        fortnox_active: normalizeFortnoxActive(row),
         client_status: existing?.client_status || normalizeStatus(row),
         responsible_consultant: existing?.responsible_consultant || null,
         notes: existing?.notes || null,
