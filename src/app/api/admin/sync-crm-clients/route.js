@@ -140,7 +140,7 @@ function normalizeFortnoxActive(row = {}) {
   return null;
 }
 
-export async function POST(request) {
+async function runCrmSync(request, body = {}) {
   try {
     const cookieStore = await cookies();
     const userId = cookieStore.get("user_id")?.value || "default_user";
@@ -150,7 +150,6 @@ export async function POST(request) {
       return Response.json({ ok: false, error: "Ingen Fortnox-token. Klicka 'Återaktivera Fortnox'." }, { status: 401 });
     }
 
-    const body = await request.json().catch(() => ({}));
     const maxPages = Math.max(1, Math.min(100, Number(body?.maxPages || 10)));
 
     let page = 1;
@@ -310,4 +309,15 @@ export async function POST(request) {
     console.error("CRM-kundsync misslyckades:", error);
     return Response.json({ ok: false, error: error?.message || "Okänt fel vid CRM-kundsync" }, { status: 500 });
   }
+}
+
+export async function POST(request) {
+  const body = await request.json().catch(() => ({}));
+  return runCrmSync(request, body);
+}
+
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const maxPages = Number(searchParams.get("maxPages") || 10);
+  return runCrmSync(request, { maxPages });
 }
