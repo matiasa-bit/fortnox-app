@@ -56,12 +56,10 @@ export default async function CrmClientsPage({ searchParams }) {
           defaultValue={status}
           style={{ background: "#0f1923", color: "#fff", border: "1px solid #2a4a5e", borderRadius: 10, padding: "10px 12px", fontSize: 14, minWidth: 140 }}
         >
-          <option value="">Alla statusar</option>
-          <option value="active">active</option>
-          <option value="paused">paused</option>
-          <option value="former">former</option>
-          <option value="fortnox_active">Fortnox: aktiv</option>
-          <option value="fortnox_inactive">Fortnox: inaktiv</option>
+          <option value="">Alla Fortnox-statusar</option>
+          <option value="fortnox_active">Aktiv</option>
+          <option value="fortnox_inactive">Inaktiv</option>
+          <option value="fortnox_unknown">Okand</option>
         </select>
 
         <button type="submit" style={{ background: "#2f7ef7", color: "#fff", border: "none", borderRadius: 10, padding: "10px 14px", fontWeight: 700, cursor: "pointer" }}>
@@ -73,7 +71,7 @@ export default async function CrmClientsPage({ searchParams }) {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid #2a4a5e" }}>
-              {["Företagsnamn", "Org.nr", "Kundnummer", "Fortnox", "Ansvarig konsult", "Status", "Senaste aktivitet"].map(h => (
+              {["Företagsnamn", "Org.nr", "Kundnummer", "Fortnox", "Ansvarig konsult", "Senaste aktivitet"].map(h => (
                 <th key={h} style={{ textAlign: "left", color: "#6b8fa3", fontSize: 12, fontWeight: 600, padding: "0 10px 12px 0", textTransform: "uppercase", letterSpacing: 0.8 }}>{h}</th>
               ))}
             </tr>
@@ -132,13 +130,6 @@ export default async function CrmClientsPage({ searchParams }) {
                         Skapa CRM-profil
                       </Link>
                     </div>
-                  )}
-                </td>
-                <td style={{ color: client.client_status === "active" ? "#00c97a" : client.client_status === "paused" ? "#f59e0b" : "#94a3b8", fontWeight: 700 }}>
-                  {client.id ? (
-                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "inherit", fontWeight: 700 }}>{client.client_status || "-"}</Link>
-                  ) : (
-                    <div style={{ ...cellLinkStyle, color: "#94a3b8", fontWeight: 700 }}>-</div>
                   )}
                 </td>
                 <td style={{ color: "#8fb1c3" }}>
