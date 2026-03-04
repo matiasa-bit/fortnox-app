@@ -128,6 +128,7 @@ function normalizeContractStatusForFilter(value) {
 function isClosedContractRow(row = {}) {
   const statusRaw = row?.status || row?.Status || row?.raw_data?.Status || row?.raw_data?.State || row?.raw_data?.ContractStatus;
   const status = normalizeContractStatusForFilter(statusRaw);
+  const isExplicitlyActive = status === "active" || status === "aktiv";
 
   if (
     status.includes("avslut") ||
@@ -138,6 +139,18 @@ function isClosedContractRow(row = {}) {
     status.includes("terminated")
   ) {
     return true;
+  }
+
+  const endDateValue = String(row?.end_date || row?.raw_data?.EndDate || row?.raw_data?.ToDate || "").trim();
+  if (endDateValue && !isExplicitlyActive) {
+    const endDate = new Date(endDateValue);
+    if (!Number.isNaN(endDate.getTime())) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (endDate < today) {
+        return true;
+      }
+    }
   }
 
   const raw = row?.raw_data || {};
