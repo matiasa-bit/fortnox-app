@@ -541,6 +541,26 @@ export default function DashboardClient({
     });
   }, [timeReportsData, employeeMappingById]);
 
+  const normalizedTimeReportsByCustomer = useMemo(() => {
+    const map = new Map();
+
+    normalizedTimeReports.forEach(row => {
+      const customerNumber = String(row.customer_number || "").trim();
+      if (!customerNumber) return;
+      if (!map.has(customerNumber)) {
+        map.set(customerNumber, []);
+      }
+      map.get(customerNumber).push(row);
+    });
+
+    return map;
+  }, [normalizedTimeReports]);
+
+  const customerScopedTimeReports = useMemo(() => {
+    if (selectedCustomer === "ALL") return normalizedTimeReports;
+    return normalizedTimeReportsByCustomer.get(selectedCustomer) || [];
+  }, [selectedCustomer, normalizedTimeReports, normalizedTimeReportsByCustomer]);
+
   const latestTimeSyncLabel = useMemo(() => {
     const latest = normalizedTimeReports
       .map(row => String(row.updated_at || "").trim())
@@ -945,9 +965,8 @@ export default function DashboardClient({
   }, [articleData, articleGroupMappings]);
 
   const filteredTimeReports = useMemo(() => {
-    return normalizedTimeReports.filter(row => {
+    return customerScopedTimeReports.filter(row => {
       const yearMatch = !selectedYear || row.report_date.startsWith(selectedYear);
-      const customerMatch = selectedCustomer === "ALL" || row.customer_number === selectedCustomer;
       const cc = customerNumberToCostCenter.get(row.customer_number) || "";
       const mappedEmployeeFilterEnabled = timeCostcenterFilterMode?.mode === "employee";
       const mappedByNameFilterEnabled = timeCostcenterFilterMode?.mode === "employee-name-fallback";
@@ -965,9 +984,9 @@ export default function DashboardClient({
             : cc === selectedCostcenter;
       const groupMatch = selectedGroup === "ALL" || row.employee_group === selectedGroup;
       const hasHours = row.hours > 0;
-      return yearMatch && customerMatch && costcenterMatch && groupMatch && hasHours;
+      return yearMatch && costcenterMatch && groupMatch && hasHours;
     });
-  }, [normalizedTimeReports, selectedYear, selectedCustomer, selectedCostcenter, selectedGroup, customerNumberToCostCenter, employeeIdsForSelectedCostcenter, customerNumbersForSelectedCostcenter, timeCostcenterFilterMode]);
+  }, [customerScopedTimeReports, selectedYear, selectedCostcenter, selectedGroup, customerNumberToCostCenter, employeeIdsForSelectedCostcenter, customerNumbersForSelectedCostcenter, timeCostcenterFilterMode]);
 
   const filteredInvoicesForRollingWindow = useMemo(() => {
     return data.filter(inv => {
@@ -982,8 +1001,7 @@ export default function DashboardClient({
   }, [data, selectedCustomer, selectedCostcenter, selectedGroup, customerNumberToCostCenter, customerNumbersForSelectedGroupAllMonths]);
 
   const filteredTimeReportsForRollingWindow = useMemo(() => {
-    return normalizedTimeReports.filter(row => {
-      const customerMatch = selectedCustomer === "ALL" || row.customer_number === selectedCustomer;
+    return customerScopedTimeReports.filter(row => {
       const cc = customerNumberToCostCenter.get(row.customer_number) || "";
       const mappedEmployeeFilterEnabled = timeCostcenterFilterMode?.mode === "employee";
       const mappedByNameFilterEnabled = timeCostcenterFilterMode?.mode === "employee-name-fallback";
@@ -1001,9 +1019,9 @@ export default function DashboardClient({
             : cc === selectedCostcenter;
       const groupMatch = selectedGroup === "ALL" || row.employee_group === selectedGroup;
       const hasHours = row.hours > 0;
-      return customerMatch && costcenterMatch && groupMatch && hasHours;
+      return costcenterMatch && groupMatch && hasHours;
     });
-  }, [normalizedTimeReports, selectedCustomer, selectedCostcenter, selectedGroup, customerNumberToCostCenter, employeeIdsForSelectedCostcenter, customerNumbersForSelectedCostcenter, timeCostcenterFilterMode]);
+  }, [customerScopedTimeReports, selectedCostcenter, selectedGroup, customerNumberToCostCenter, employeeIdsForSelectedCostcenter, customerNumbersForSelectedCostcenter, timeCostcenterFilterMode]);
 
   const latestAvailableRollingMonth = useMemo(() => {
     const months = [];
