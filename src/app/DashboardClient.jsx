@@ -1675,7 +1675,7 @@ export default function DashboardClient({
                 const res = await fetch('/api/admin/sync-contract-accruals', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ maxPages: 40 }),
+                  body: JSON.stringify({ maxPages: 6 }),
                 });
                 const raw = await res.text();
                 let data = {};

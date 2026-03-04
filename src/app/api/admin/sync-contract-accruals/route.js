@@ -206,7 +206,7 @@ export async function POST(request) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const maxPages = Math.max(1, Math.min(200, Number(body?.maxPages || 40)));
+    const maxPages = Math.max(1, Math.min(50, Number(body?.maxPages || 6)));
 
     let page = 1;
     let hasMore = true;
@@ -278,62 +278,13 @@ export async function POST(request) {
 
       const rows = extractRows(result?.data);
 
-      let rowsForMapping = rows;
-      if (endpoint === "contracts" && rows.length > 0) {
-        const detailedRows = [];
-
-        for (const row of rows) {
-          const contractNumber = String(
-            pickFirst(row, ["ContractNumber", "Number", "ContractNo", "DocumentNumber"]) || ""
-          ).trim();
-
-          if (!contractNumber) {
-            detailedRows.push(row);
-            continue;
-          }
-
-          const detailUrl = `https://api.fortnox.se/3/contracts/${encodeURIComponent(contractNumber)}`;
-          let detailResult = await fetchJsonWithRetry(detailUrl, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
-            cache: "no-store",
-          }, 4);
-
-          if (!detailResult?.ok && (detailResult?.status === 401 || detailResult?.status === 403)) {
-            const newToken = await refreshToken(cookieStore, userId);
-            if (newToken) {
-              token = newToken;
-              detailResult = await fetchJsonWithRetry(detailUrl, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  Accept: "application/json",
-                },
-                cache: "no-store",
-              }, 4);
-            }
-          }
-
-          if (detailResult?.ok) {
-            const detailed = extractSingleContract(detailResult?.data);
-            detailedRows.push(detailed && typeof detailed === "object" ? detailed : row);
-          } else {
-            detailedRows.push(row);
-          }
-
-          await delay(80);
-        }
-
-        rowsForMapping = detailedRows;
-      }
+      const rowsForMapping = rows;
 
       endpointFetched += rows.length;
       endpointMapped.push(...mapRows(rowsForMapping));
 
       endpointHasMore = rows.length === 500;
       endpointPage++;
-      await delay(140);
     }
 
     return {
