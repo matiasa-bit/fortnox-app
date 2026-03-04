@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 async function getCounts() {
   const [clients, contacts, services, activities, docs] = await Promise.all([
-    supabaseServer.from("crm_clients").select("id", { count: "exact", head: true }),
+    supabaseServer.from("crm_clients").select("id", { count: "exact", head: true }).eq("fortnox_active", true),
     supabaseServer.from("crm_contacts").select("id", { count: "exact", head: true }),
     supabaseServer.from("crm_services").select("id", { count: "exact", head: true }),
     supabaseServer.from("crm_activities").select("id", { count: "exact", head: true }),
@@ -25,7 +25,7 @@ export default async function CrmDashboardPage() {
   const counts = await getCounts();
 
   const cards = [
-    { label: "Klienter", value: counts.clients, color: "#00c97a" },
+    { label: "Aktiva klienter", value: counts.clients, color: "#00c97a" },
     { label: "Kontakter", value: counts.contacts, color: "#3b9eff" },
     { label: "Tjänster", value: counts.services, color: "#f59e0b" },
     { label: "Aktiviteter", value: counts.activities, color: "#1db3a7" },
