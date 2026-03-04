@@ -568,12 +568,53 @@ async function getDashboardDataFromDbCached(fromDate) {
   return data;
 }
 
-export default async function Home() {
+export default async function Home({ searchParams }) {
   const cookieStore = await cookies();
+  const hasAppAuth = cookieStore.get("app_auth")?.value === "1";
   const isLoggedIn = cookieStore.get("fortnox_auth")?.value;
   const userId = cookieStore.get("user_id")?.value || "default_user"; // använd user_id från cookies eller default
   const token = await getToken(userId);
   const allowSharedView = process.env.ALLOW_SHARED_VIEW_WITHOUT_LOGIN === "true";
+
+  const appAuthParam = searchParams?.appAuth;
+  const appAuthFailed = Array.isArray(appAuthParam) ? appAuthParam.includes("failed") : appAuthParam === "failed";
+
+  if (!hasAppAuth) {
+    return (
+      <main className="min-h-screen flex items-center justify-center" style={{background: "linear-gradient(135deg, #0f1923 0%, #1a2e3b 100%)"}}>
+        <div className="w-full max-w-md rounded-2xl p-8" style={{background: "rgba(15,25,35,0.75)", border: "1px solid rgba(255,255,255,0.12)"}}>
+          <h1 className="text-3xl font-bold text-white mb-2 text-center">Fortnox Dashboard</h1>
+          <p className="text-gray-300 mb-6 text-center">Logga in med användarnamn och lösenord</p>
+          <form action="/api/app-auth/login" method="post" className="space-y-4">
+            <input
+              name="username"
+              type="text"
+              placeholder="Användarnamn"
+              className="w-full px-4 py-3 rounded-lg text-white"
+              style={{background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.16)"}}
+              required
+            />
+            <input
+              name="password"
+              type="password"
+              placeholder="Lösenord"
+              className="w-full px-4 py-3 rounded-lg text-white"
+              style={{background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.16)"}}
+              required
+            />
+            {appAuthFailed ? <p className="text-sm text-red-300">Fel användarnamn eller lösenord.</p> : null}
+            <button
+              type="submit"
+              className="w-full px-6 py-3 rounded-xl text-white font-semibold"
+              style={{background: "linear-gradient(135deg, #00c97a, #00a862)", boxShadow: "0 8px 24px rgba(0,201,122,0.3)"}}
+            >
+              Logga in
+            </button>
+          </form>
+        </div>
+      </main>
+    );
+  }
 
   if (!token || (!isLoggedIn && !allowSharedView)) {
     return (
@@ -611,18 +652,29 @@ export default async function Home() {
   const freshContractAccruals = await getCachedContractAccruals();
 
   return (
-    <DashboardClient
-      invoices={invoices}
-      customers={customerMappings}
-      initialInvoiceRows={invoiceRows}
-      articleCacheStatus={articleCacheStatus}
-      articleRegistry={articleRegistry}
-      articleRegistryStatus={articleRegistryStatus}
-      timeReports={timeReports}
-      timeReportsFromDate={fromDate}
-      employeeMappings={employeeMappings}
-      articleGroupMappings={articleGroupMappings}
-      contractAccruals={freshContractAccruals.length > 0 ? freshContractAccruals : contractAccruals}
-    />
+    <>
+      <form action="/api/app-auth/logout" method="post" style={{position: "fixed", top: 12, right: 12, zIndex: 50}}>
+        <button
+          type="submit"
+          className="px-3 py-2 rounded-lg text-xs font-semibold text-white"
+          style={{background: "rgba(15,25,35,0.75)", border: "1px solid rgba(255,255,255,0.25)"}}
+        >
+          Logga ut
+        </button>
+      </form>
+      <DashboardClient
+        invoices={invoices}
+        customers={customerMappings}
+        initialInvoiceRows={invoiceRows}
+        articleCacheStatus={articleCacheStatus}
+        articleRegistry={articleRegistry}
+        articleRegistryStatus={articleRegistryStatus}
+        timeReports={timeReports}
+        timeReportsFromDate={fromDate}
+        employeeMappings={employeeMappings}
+        articleGroupMappings={articleGroupMappings}
+        contractAccruals={freshContractAccruals.length > 0 ? freshContractAccruals : contractAccruals}
+      />
+    </>
   );
 }

@@ -24,6 +24,10 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - `ALLOW_SHARED_VIEW_WITHOUT_LOGIN` (default: `false`)
 	- `true`: Tillåter läsning av dashboard/byråvy utan individuell Fortnox-cookie (bra för tillfällig demo-delning).
 	- `false`: Normal inloggning krävs.
+- `APP_LOGIN_USERNAME` (default: `admin`)
+	- Användarnamn för enkel app-inloggning innan Fortnox-login.
+- `APP_LOGIN_PASSWORD` (default: `fortnox123`)
+	- Lösenord för enkel app-inloggning innan Fortnox-login.
 
 ## Tillfällig delning
 
@@ -42,6 +46,8 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 	- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 	- `SUPABASE_SERVICE_ROLE_KEY`
 	- `ALLOW_SHARED_VIEW_WITHOUT_LOGIN=false`
+	- `APP_LOGIN_USERNAME`
+	- `APP_LOGIN_PASSWORD`
 3. Lägg exakt samma redirect URI i Fortnox Developer Portal.
 4. Redeploy och testa loginflödet via Vercel-domänen.
 
