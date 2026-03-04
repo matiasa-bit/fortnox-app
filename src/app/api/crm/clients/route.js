@@ -21,6 +21,7 @@ function normalizeClientPayload(input = {}) {
   return {
     company_name: String(input.company_name || "").trim(),
     organization_number: String(input.organization_number || "").trim(),
+    customer_number: parseNullableString(input.customer_number),
     industry: parseNullableString(input.industry),
     revenue: parseNullableNumber(input.revenue),
     employees: parseNullableInteger(input.employees),
@@ -56,11 +57,12 @@ export async function POST(request) {
   }
 
   try {
+    const sharedCustomerNumber = String(payload.customer_number || payload.organization_number || "").trim();
     await supabaseServer
       .from("customers")
       .upsert([
         {
-          customer_number: payload.organization_number,
+          customer_number: sharedCustomerNumber,
           name: payload.company_name,
         },
       ], { onConflict: "customer_number" });

@@ -30,6 +30,7 @@ export default async function CrmClientProfilePage({ params }) {
           <div>
             <h2 style={{ margin: 0, fontSize: 22 }}>{client.company_name}</h2>
             <p style={{ margin: "6px 0 0", color: "#8fb1c3", fontSize: 13 }}>Org.nr: {client.organization_number || "-"}</p>
+            <p style={{ margin: "4px 0 0", color: "#8fb1c3", fontSize: 13 }}>Kundnummer: {client.customer_number || "-"}</p>
           </div>
           <Link href={`/crm/clients/${client.id}/edit`} style={{ color: "#3b9eff", textDecoration: "none", fontSize: 13 }}>Redigera klient</Link>
         </div>

@@ -2378,6 +2378,12 @@ export default function DashboardClient({
           >
             Byråvy
           </Link>
+          <Link
+            href="/crm/clients"
+            style={{background:"#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:10, padding:"8px 12px", fontSize:14, textDecoration:"none"}}
+          >
+            CRM
+          </Link>
           <button
             onClick={runFullSync}
             style={{background:'#f59e0b', color:'#0f1923', padding:'8px 12px', borderRadius:8, border:'none', cursor:'pointer', fontWeight:700}}

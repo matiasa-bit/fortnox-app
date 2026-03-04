@@ -25,6 +25,7 @@ export default function ClientForm({ mode, initialClient, clientId }) {
   const [form, setForm] = useState({
     company_name: toInputValue(initialClient?.company_name),
     organization_number: toInputValue(initialClient?.organization_number),
+    customer_number: toInputValue(initialClient?.customer_number),
     industry: toInputValue(initialClient?.industry),
     revenue: toInputValue(initialClient?.revenue),
     employees: toInputValue(initialClient?.employees),
@@ -88,6 +89,11 @@ export default function ClientForm({ mode, initialClient, clientId }) {
         <label>
           <div style={{ marginBottom: 6, color: "#dbe7ef", fontSize: 13 }}>Org.nr *</div>
           <input required value={form.organization_number} onChange={e => updateField("organization_number", e.target.value)} style={inputStyle} />
+        </label>
+
+        <label>
+          <div style={{ marginBottom: 6, color: "#dbe7ef", fontSize: 13 }}>Kundnummer (gamla appen/Fortnox)</div>
+          <input value={form.customer_number} onChange={e => updateField("customer_number", e.target.value)} style={inputStyle} />
         </label>
 
         <label>

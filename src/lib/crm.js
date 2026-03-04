@@ -9,26 +9,19 @@ export async function getCrmClients(search = "") {
   const consultant = typeof search === "object" ? String(search?.consultant || "").trim() : "";
   const status = typeof search === "object" ? String(search?.status || "").trim() : "";
 
-  let query = supabaseServer
-    .from("crm_clients")
-    .select("id, company_name, organization_number, client_status, responsible_consultant")
-    .order("company_name", { ascending: true })
-    .limit(500);
+  const [{ data: crmRows, error }, { data: customerRows, error: customerError }] = await Promise.all([
+    supabaseServer
+      .from("crm_clients")
+      .select("id, company_name, organization_number, customer_number, client_status, responsible_consultant")
+      .order("company_name", { ascending: true })
+      .limit(2000),
+    supabaseServer
+      .from("customers")
+      .select("customer_number, name")
+      .order("name", { ascending: true })
+      .limit(5000),
+  ]);
 
-  if (consultant) {
-    query = query.eq("responsible_consultant", consultant);
-  }
-
-  if (["active", "paused", "former"].includes(status)) {
-    query = query.eq("client_status", status);
-  }
-
-  if (term) {
-    const escaped = term.replace(/,/g, "\\,");
-    query = query.or(`company_name.ilike.%${escaped}%,organization_number.ilike.%${escaped}%`);
-  }
-
-  const { data, error } = await query;
   if (error) {
     if (!isMissingCrmTable(error)) {
       console.error("Fel vid hämtning av crm_clients:", error);
@@ -36,7 +29,80 @@ export async function getCrmClients(search = "") {
     return [];
   }
 
-  const clients = data || [];
+  if (customerError) {
+    console.error("Fel vid hämtning av customers:", customerError);
+  }
+
+  const crmClients = crmRows || [];
+  const customers = customerRows || [];
+
+  const crmByCustomerNumber = new Map();
+  crmClients.forEach(row => {
+    const key = String(row.customer_number || "").trim();
+    if (key && !crmByCustomerNumber.has(key)) crmByCustomerNumber.set(key, row);
+  });
+
+  const merged = [];
+  const seenCrmIds = new Set();
+
+  customers.forEach(customer => {
+    const customerNumber = String(customer.customer_number || "").trim();
+    if (!customerNumber) return;
+
+    const matched = crmByCustomerNumber.get(customerNumber);
+    if (matched) {
+      seenCrmIds.add(Number(matched.id));
+      merged.push({
+        ...matched,
+        customer_number: customerNumber,
+        company_name: matched.company_name || String(customer.name || "").trim() || matched.company_name,
+      });
+      return;
+    }
+
+    merged.push({
+      id: null,
+      company_name: String(customer.name || "").trim() || `Kund ${customerNumber}`,
+      organization_number: null,
+      customer_number: customerNumber,
+      client_status: null,
+      responsible_consultant: null,
+      last_activity_date: null,
+      source: "customers",
+    });
+  });
+
+  crmClients.forEach(row => {
+    const id = Number(row.id);
+    if (Number.isFinite(id) && seenCrmIds.has(id)) return;
+    merged.push(row);
+  });
+
+  let clients = merged;
+
+  if (consultant) {
+    clients = clients.filter(row => String(row.responsible_consultant || "").trim() === consultant);
+  }
+
+  if (["active", "paused", "former"].includes(status)) {
+    clients = clients.filter(row => String(row.client_status || "").trim() === status);
+  }
+
+  if (term) {
+    const normalized = term.toLowerCase();
+    clients = clients.filter(row => {
+      const haystack = [row.company_name, row.organization_number, row.customer_number]
+        .map(value => String(value || "").toLowerCase())
+        .join(" ");
+      return haystack.includes(normalized);
+    });
+  }
+
+  clients = clients
+    .slice()
+    .sort((a, b) => String(a.company_name || "").localeCompare(String(b.company_name || ""), "sv-SE"))
+    .slice(0, 500);
+
   const clientIds = clients.map(row => row.id).filter(id => Number.isFinite(Number(id)));
 
   if (clientIds.length === 0) {

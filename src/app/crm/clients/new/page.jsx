@@ -1,6 +1,12 @@
 import ClientForm from "@/app/crm/clients/ClientForm";
 
-export default function CrmCreateClientPage() {
+export default async function CrmCreateClientPage({ searchParams }) {
+  const params = await searchParams;
+  const initialClient = {
+    company_name: String(params?.company_name || "").trim() || null,
+    customer_number: String(params?.customer_number || "").trim() || null,
+  };
+
   return (
     <section style={{ background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 14, padding: 18 }}>
       <h2 style={{ margin: "0 0 10px", fontSize: 18 }}>Skapa klient</h2>
@@ -8,7 +14,7 @@ export default function CrmCreateClientPage() {
         Fyll i grunduppgifter för den nya klienten.
       </p>
 
-      <ClientForm mode="create" />
+      <ClientForm mode="create" initialClient={initialClient} />
     </section>
   );
 }
