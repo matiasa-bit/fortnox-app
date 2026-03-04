@@ -34,21 +34,21 @@ export default async function CrmDashboardPage() {
 
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 22 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 16, marginBottom: 24 }}>
         {cards.map(card => (
-          <div key={card.label} style={{ background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 14, padding: "18px 16px" }}>
-            <p style={{ margin: "0 0 8px", color: "#6b8fa3", fontSize: 12, textTransform: "uppercase", fontWeight: 700 }}>{card.label}</p>
+          <div key={card.label} style={{ background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 16, padding: "20px 18px" }}>
+            <p style={{ margin: "0 0 8px", color: "#6b8fa3", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 700 }}>{card.label}</p>
             <p style={{ margin: 0, color: card.color, fontSize: 28, fontWeight: 800 }}>{card.value}</p>
           </div>
         ))}
       </div>
 
-      <div style={{ background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 14, padding: 18 }}>
-        <h2 style={{ margin: "0 0 10px", fontSize: 18 }}>Kom igång</h2>
+      <div style={{ background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 16, padding: 24 }}>
+        <h2 style={{ margin: "0 0 12px", fontSize: 20, fontWeight: 700 }}>Kom igång</h2>
         <ul style={{ margin: 0, paddingLeft: 18, color: "#dbe7ef", lineHeight: 1.7 }}>
-          <li>Skapa första klienten via <Link href="/crm/clients/new" style={{ color: "#3b9eff" }}>Ny klient</Link>.</li>
-          <li>Hantera klienter i <Link href="/crm/clients" style={{ color: "#3b9eff" }}>Klientlistan</Link>.</li>
-          <li>Följ händelser i <Link href="/crm/activity" style={{ color: "#3b9eff" }}>Aktivitetsloggen</Link>.</li>
+          <li>Skapa första klienten via <Link href="/crm/clients/new" style={{ color: "#3b9eff", textUnderlineOffset: 2 }}>Ny klient</Link>.</li>
+          <li>Hantera klienter i <Link href="/crm/clients" style={{ color: "#3b9eff", textUnderlineOffset: 2 }}>Klientlistan</Link>.</li>
+          <li>Följ händelser i <Link href="/crm/activity" style={{ color: "#3b9eff", textUnderlineOffset: 2 }}>Aktivitetsloggen</Link>.</li>
         </ul>
       </div>
     </div>
