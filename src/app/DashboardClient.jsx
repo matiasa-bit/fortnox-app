@@ -6,7 +6,6 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 
 const MONTHS = ["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt","Nov","Dec"];
 const INVOICE_ROWS_ARE_EX_VAT = process.env.NEXT_PUBLIC_INVOICE_ROWS_ARE_EX_VAT !== "false";
-const DEFAULT_SELECTED_YEAR = "2026";
 const DASHBOARD_FILTERS_STORAGE_KEY = "fortnox-dashboard-filters-v1";
 
 function getCurrentYearMonth() {
@@ -2233,7 +2232,7 @@ export default function DashboardClient({
         {[
           { label:"Total omsättning", value: formatSEK(totalOmsattning), color:"#00c97a" },
           { label:"Antal fakturor", value: totalFakturor, color:"#3b9eff", onClick: openAllInvoices, overdueCount: overdueInvoicesCount },
-          { label:"Timmar (tid)", value: totalHours.toFixed(1), color:"#1db3a7" },
+          { label:"Timmar (tid)", value: totalHours.toFixed(1), color:"#1db3a7", onClick: openTimeEntriesForPeriod },
           { label:"Obetalda fakturor", value: obetalda, color:"#ff6b6b", onClick: openUnpaidInvoices },
           { label:"Avtalsvärde", value: contractAccrualsLoading ? "Laddar avtal..." : (contractValueForCurrentSelection > 0 ? formatSEK(contractValueForCurrentSelection) : (hasContractsForCurrentSelection ? formatSEK(0) : "Inga avtal hittade")), color:"#f59e0b" },
         ].map(card => (
