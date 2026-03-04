@@ -1756,6 +1756,15 @@ export default function DashboardClient({
             style={{background:'#2f7ef7', color:'#fff', padding:'8px 12px', borderRadius:8, border:'none', cursor:'pointer'}}
             disabled={syncingCostcenters}
           >{syncingCostcenters ? 'Synkar kostnadsställen...' : 'Sync kostnadsställen'}</button>
+          <button
+            onClick={() => {
+              window.location.href = '/api/auth/login';
+            }}
+            style={{background:'#16a34a', color:'#fff', padding:'8px 12px', borderRadius:8, border:'none', cursor:'pointer'}}
+            title="Återaktivera Fortnox-anslutning"
+          >
+            Återaktivera Fortnox
+          </button>
           <div style={{position:"relative"}}>
             <input
               list="year-filter-options"
