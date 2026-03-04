@@ -190,16 +190,24 @@ async function runCrmSync(request, body = {}) {
     let page = 1;
     let hasMore = true;
     const allRows = [];
+    let syncWarning = null;
 
     while (hasMore && page <= maxPages) {
       const url = `https://api.fortnox.se/3/customers?limit=500&page=${page}`;
-      let result = await fetchJsonWithRetry(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-        cache: "no-store",
-      }, 4);
+      let result;
+      try {
+        result = await fetchJsonWithRetry(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+          cache: "no-store",
+        }, 4);
+      } catch (fetchError) {
+        syncWarning = `Delvis sync: kunde inte läsa Fortnox-sida ${page}. ${String(fetchError?.message || "")}`.trim();
+        console.error("CRM-kundsync: kunde inte hämta kundsida", page, fetchError);
+        break;
+      }
 
       if (!result?.ok && (result?.status === 401 || result?.status === 403)) {
         const newToken = await refreshToken(cookieStore, userId);
@@ -208,14 +216,22 @@ async function runCrmSync(request, body = {}) {
         }
 
         token = newToken;
-        result = await fetchJsonWithRetry(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-          cache: "no-store",
-        }, 4);
+        try {
+          result = await fetchJsonWithRetry(url, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+            cache: "no-store",
+          }, 4);
+        } catch (fetchError) {
+          syncWarning = `Delvis sync: kunde inte läsa Fortnox-sida ${page} efter token-refresh. ${String(fetchError?.message || "")}`.trim();
+          console.error("CRM-kundsync: kunde inte hämta kundsida efter refresh", page, fetchError);
+          break;
+        }
       }
+
+      if (syncWarning) break;
 
       if (!result?.ok) {
         return Response.json({ ok: false, error: `Fortnox-svar ${result?.status || "okänt"} vid hämtning av kunder.` }, { status: 502 });
@@ -228,14 +244,22 @@ async function runCrmSync(request, body = {}) {
         }
 
         token = newToken;
-        result = await fetchJsonWithRetry(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-          cache: "no-store",
-        }, 4);
+        try {
+          result = await fetchJsonWithRetry(url, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+            cache: "no-store",
+          }, 4);
+        } catch (fetchError) {
+          syncWarning = `Delvis sync: kunde inte läsa Fortnox-sida ${page} efter ErrorInformation-refresh. ${String(fetchError?.message || "")}`.trim();
+          console.error("CRM-kundsync: kunde inte hämta kundsida efter ErrorInformation-refresh", page, fetchError);
+          break;
+        }
       }
+
+      if (syncWarning) break;
 
       const rows = result?.data?.Customers || [];
       allRows.push(...rows);
@@ -400,6 +424,7 @@ async function runCrmSync(request, body = {}) {
       fetched: allRows.length,
       upserted: toUpsert.length,
       ...fortnoxStatusSummary,
+      warning: syncWarning,
       skipped: skipped.length,
       skippedRows: skipped.slice(0, 20),
       pagesFetched: Math.max(0, page - 1),
