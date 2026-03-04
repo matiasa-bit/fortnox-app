@@ -1388,6 +1388,9 @@ export default function DashboardClient({
         return;
       }
 
+      const selectedRevenue = monthlySelectedGroupRevenue.get(entry.key) || 0;
+      if (selectedRevenue <= 0) return;
+
       const timeArticleNumber = normalizeArticleNumber(row.article_number);
       const timeGroupName = articleNumberToGroupName.get(timeArticleNumber);
       if (timeGroupName && selectedArticleGroupFilterSet.has(timeGroupName)) {
@@ -1395,7 +1398,6 @@ export default function DashboardClient({
         return;
       }
 
-      const selectedRevenue = monthlySelectedGroupRevenue.get(entry.key) || 0;
       const mappedRevenue = monthlyMappedGroupRevenue.get(entry.key) || 0;
       if (selectedRevenue <= 0 || mappedRevenue <= 0) return;
 
