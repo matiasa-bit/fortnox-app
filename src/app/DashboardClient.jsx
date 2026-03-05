@@ -3893,7 +3893,7 @@ export default function DashboardClient({
                   <tr style={{borderBottom:"1px solid #2a4a5e"}}>
                     {[
                       "Faktura",
-                      ...(invoiceModal.mode === "unpaid" ? ["Kund"] : []),
+                      ...((invoiceModal.mode === "unpaid" || (invoiceModal.mode === "all" && invoiceModal.customerNumber === null)) ? ["Kund"] : []),
                       "Datum",
                       "Förfallodag",
                       "Omsättning ex. moms",
@@ -3959,7 +3959,7 @@ export default function DashboardClient({
                             )}
                           </div>
                         </td>
-                        {invoiceModal.mode === "unpaid" && (
+                        {(invoiceModal.mode === "unpaid" || (invoiceModal.mode === "all" && invoiceModal.customerNumber === null)) && (
                           <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:14}}>
                             {(() => {
                               const customerNumber = String(inv.customer_number || inv.CustomerNumber || "").trim();
