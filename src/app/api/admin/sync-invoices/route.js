@@ -72,12 +72,11 @@ async function refreshAccessToken(cookieStore, userId) {
   return null;
 }
 
-async function fetchInvoicePageFromFortnox(token, invoiceType, page, fromDate) {
+async function fetchInvoicePageFromFortnox(token, page, fromDate) {
   const params = new URLSearchParams({
     limit: "500",
     page: String(page),
     fromdate: fromDate,
-    invoicetype: invoiceType,
   });
 
   let retries = 3;
@@ -113,43 +112,35 @@ export async function POST(request) {
   const fromDate = String(body?.fromDate || "2025-01-01").slice(0, 10);
 
   const allInvoices = [];
-  const debugInfo = [];
+  let page = 1;
+  let hasMore = true;
 
-  for (const invoiceType of ["INVOICE", "CREDIT"]) {
-    let page = 1;
-    let hasMore = true;
+  while (hasMore) {
+    let { data, ok, status } = await fetchInvoicePageFromFortnox(token, page, fromDate);
 
-    while (hasMore) {
-      let { data, ok, status } = await fetchInvoicePageFromFortnox(token, invoiceType, page, fromDate);
-
-      if (data?.ErrorInformation) {
-        const newToken = await refreshAccessToken(cookieStore, userId);
-        if (newToken) {
-          token = newToken;
-          const retry = await fetchInvoicePageFromFortnox(token, invoiceType, page, fromDate);
-          data = retry.data;
-          ok = retry.ok;
-          status = retry.status;
-        }
+    if (data?.ErrorInformation) {
+      const newToken = await refreshAccessToken(cookieStore, userId);
+      if (newToken) {
+        token = newToken;
+        const retry = await fetchInvoicePageFromFortnox(token, page, fromDate);
+        data = retry.data;
+        ok = retry.ok;
+        status = retry.status;
       }
-
-      if (!ok || data?.ErrorInformation) {
-        const errMsg = data?.ErrorInformation?.message || `HTTP ${status}`;
-        console.warn(`Avbryter ${invoiceType} sida ${page}:`, errMsg);
-        debugInfo.push({ invoiceType, page, error: errMsg });
-        break;
-      }
-
-      const batch = Array.isArray(data?.Invoices) ? data.Invoices : [];
-      if (page === 1) {
-        debugInfo.push({ invoiceType, page1Keys: Object.keys(data || {}), batchLength: batch.length });
-      }
-      allInvoices.push(...batch);
-      hasMore = batch.length === 500;
-      page++;
-
-      if (hasMore) await delay(200);
     }
+
+    if (!ok || data?.ErrorInformation) {
+      const errMsg = data?.ErrorInformation?.message || `HTTP ${status}`;
+      console.warn(`Avbryter sida ${page}:`, errMsg);
+      return Response.json({ ok: false, error: errMsg, page, saved: 0 }, { status: 500 });
+    }
+
+    const batch = Array.isArray(data?.Invoices) ? data.Invoices : [];
+    allInvoices.push(...batch);
+    hasMore = batch.length === 500;
+    page++;
+
+    if (hasMore) await delay(200);
   }
 
   // Dedup by document number
@@ -175,5 +166,5 @@ export async function POST(request) {
     await saveInvoices(toSave);
   }
 
-  return Response.json({ ok: true, saved: toSave.length, fromDate, debug: debugInfo });
+  return Response.json({ ok: true, saved: toSave.length, fromDate });
 }

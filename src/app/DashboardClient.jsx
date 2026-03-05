@@ -2561,8 +2561,7 @@ export default function DashboardClient({
                 if (!res.ok || data.ok === false) {
                   alert(`Fel vid sync fakturor: ${data.error || 'okänt'}`);
                 } else {
-                  const debugStr = data.debug?.length ? `\nDebug: ${JSON.stringify(data.debug)}` : '';
-                  alert(`Fakturor synkade! Sparade: ${data.saved}${debugStr}`);
+                  alert(`Fakturor synkade! Sparade: ${data.saved}`);
                   if (data.saved > 0) window.location.reload();
                 }
               } catch (err) {
