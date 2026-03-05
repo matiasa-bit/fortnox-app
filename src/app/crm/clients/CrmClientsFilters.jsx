@@ -23,23 +23,26 @@ const selectStyle = {
   fontSize: 14,
 };
 
-export default function CrmClientsFilters({ initialQuery = "", initialConsultant = "", initialStatus = "fortnox_active", consultants = [] }) {
+export default function CrmClientsFilters({ initialQuery = "", initialConsultant = "", initialStatus = "fortnox_active", consultants = [], initialTag = "", allTags = [] }) {
   const router = useRouter();
   const pathname = usePathname();
   const hasInteractedRef = useRef(false);
   const [query, setQuery] = useState(initialQuery);
   const [consultant, setConsultant] = useState(initialConsultant);
   const [status, setStatus] = useState(initialStatus || "fortnox_active");
+  const [tag, setTag] = useState(initialTag);
 
   function buildHref(nextValues) {
     const params = new URLSearchParams();
     const nextQuery = String(nextValues?.query || "").trim();
     const nextConsultant = String(nextValues?.consultant || "").trim();
     const nextStatus = String(nextValues?.status || "").trim();
+    const nextTag = String(nextValues?.tag || "").trim();
 
     if (nextQuery) params.set("q", nextQuery);
     if (nextConsultant) params.set("consultant", nextConsultant);
     if (nextStatus) params.set("status", nextStatus);
+    if (nextTag) params.set("tag", nextTag);
 
     const queryString = params.toString();
     return queryString ? `${pathname}?${queryString}` : pathname;
@@ -59,7 +62,7 @@ export default function CrmClientsFilters({ initialQuery = "", initialConsultant
     if (!hasInteractedRef.current) return;
 
     const timer = setTimeout(() => {
-      navigate({ query, consultant, status });
+      navigate({ query, consultant, status, tag });
     }, 350);
 
     return () => clearTimeout(timer);
@@ -93,7 +96,7 @@ export default function CrmClientsFilters({ initialQuery = "", initialConsultant
           const nextConsultant = e.target.value;
           hasInteractedRef.current = true;
           setConsultant(nextConsultant);
-          navigate({ query, consultant: nextConsultant, status });
+          navigate({ query, consultant: nextConsultant, status, tag });
         }}
         style={{ ...selectStyle, minWidth: 190 }}
       >
@@ -110,7 +113,7 @@ export default function CrmClientsFilters({ initialQuery = "", initialConsultant
           const nextStatus = e.target.value;
           hasInteractedRef.current = true;
           setStatus(nextStatus);
-          navigate({ query, consultant, status: nextStatus });
+          navigate({ query, consultant, status: nextStatus, tag });
         }}
         style={{ ...selectStyle, minWidth: 170 }}
       >
@@ -119,6 +122,25 @@ export default function CrmClientsFilters({ initialQuery = "", initialConsultant
         <option value="fortnox_unknown">Okand</option>
         <option value="">Alla Fortnox-statusar</option>
       </select>
+
+      {allTags.length > 0 && (
+        <select
+          name="tag"
+          value={tag}
+          onChange={e => {
+            const nextTag = e.target.value;
+            hasInteractedRef.current = true;
+            setTag(nextTag);
+            navigate({ query, consultant, status, tag: nextTag });
+          }}
+          style={{ ...selectStyle, minWidth: 150 }}
+        >
+          <option value="">Alla taggar</option>
+          {allTags.map(t => (
+            <option key={t.id} value={String(t.id)}>{t.name}</option>
+          ))}
+        </select>
+      )}
     </form>
   );
 }

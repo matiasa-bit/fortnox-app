@@ -4,6 +4,7 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") || "active";
   const consultant = searchParams.get("consultant") || "";
+  const tag = searchParams.get("tag") || "";
 
   try {
     // Get all client IDs matching status filter
@@ -46,6 +47,20 @@ export async function GET(request) {
       filteredClients = filteredClients.filter(c =>
         consultantNumbers.has(String(c.customer_number || "").trim())
       );
+    }
+
+    // Filter by tag if provided
+    if (tag) {
+      const tagId = Number(tag);
+      if (Number.isFinite(tagId)) {
+        const { data: tagRows } = await supabaseServer
+          .from("crm_client_tags")
+          .select("client_id")
+          .eq("tag_id", tagId)
+          .limit(10000);
+        const taggedIds = new Set((tagRows || []).map(r => Number(r.client_id)));
+        filteredClients = filteredClients.filter(c => taggedIds.has(Number(c.id)));
+      }
     }
 
     const clientIds = filteredClients.map(c => Number(c.id)).filter(Boolean);

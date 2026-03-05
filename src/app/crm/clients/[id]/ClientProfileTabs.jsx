@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 const cardStyle = { background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 14, padding: 16 };
@@ -46,6 +46,44 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const [clientTags, setClientTags] = useState([]);
+  const [allTags, setAllTags] = useState([]);
+  const [selectedTagId, setSelectedTagId] = useState("");
+  const [tagsLoading, setTagsLoading] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/crm/clients/${clientId}/tags`).then(r => r.json()).then(d => setClientTags(d?.tags || [])).catch(() => {});
+    fetch("/api/crm/tags").then(r => r.json()).then(d => setAllTags(d?.tags || [])).catch(() => {});
+  }, [clientId]);
+
+  async function addTag(tagId) {
+    if (!tagId || tagsLoading) return;
+    setTagsLoading(true);
+    const res = await fetch(`/api/crm/clients/${clientId}/tags`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tagId: Number(tagId) }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data.ok) {
+      const tag = allTags.find(t => t.id === Number(tagId));
+      if (tag) setClientTags(prev => [...prev, tag]);
+      setSelectedTagId("");
+    }
+    setTagsLoading(false);
+  }
+
+  async function removeTag(tagId) {
+    setTagsLoading(true);
+    await fetch(`/api/crm/clients/${clientId}/tags`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tagId }),
+    });
+    setClientTags(prev => prev.filter(t => t.id !== tagId));
+    setTagsLoading(false);
+  }
+
   const [contactForm, setContactForm] = useState({ name: "", role: "", email: "", phone: "" });
   const [selectedContactId, setSelectedContactId] = useState("");
   const [editingContactId, setEditingContactId] = useState(null);
@@ -55,10 +93,11 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
 
   const tabs = useMemo(() => ([
     { key: "contacts", label: `Kontaktpersoner (${contacts.length})` },
+    { key: "tags", label: `Taggar (${clientTags.length})` },
     { key: "services", label: `Tjänster (${services.length})` },
     { key: "activity", label: `Aktivitetslogg (${activities.length})` },
     { key: "documents", label: `Dokumentlänkar (${documents.length})` },
-  ]), [contacts.length, services.length, activities.length, documents.length]);
+  ]), [contacts.length, clientTags.length, services.length, activities.length, documents.length]);
 
   async function submit(path, payload, onSuccess, method = "POST") {
     if (saving) return;
@@ -239,6 +278,82 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
               </table>
             )}
           </div>
+        </div>
+      )}
+
+      {activeTab === "tags" && (
+        <div style={cardStyle}>
+          <h3 style={{ margin: "0 0 14px", fontSize: 16 }}>Taggar</h3>
+
+          {/* Tilldelade taggar */}
+          {clientTags.length > 0 && (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+              {clientTags.map(tag => (
+                <span
+                  key={tag.id}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    background: tag.color + "22",
+                    color: tag.color,
+                    border: `1px solid ${tag.color}55`,
+                    borderRadius: 20,
+                    padding: "4px 10px",
+                    fontSize: 13,
+                    fontWeight: 600,
+                  }}
+                >
+                  {tag.name}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(tag.id)}
+                    disabled={tagsLoading}
+                    style={{ background: "none", border: "none", color: tag.color, cursor: "pointer", padding: 0, fontSize: 14, lineHeight: 1 }}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Lägg till tagg */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "center" }}>
+            <select
+              value={selectedTagId}
+              onChange={e => setSelectedTagId(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">Välj tagg att lägga till...</option>
+              {allTags.filter(t => !clientTags.some(ct => ct.id === t.id)).map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+            <button
+              type="button"
+              disabled={!selectedTagId || tagsLoading}
+              onClick={() => addTag(selectedTagId)}
+              style={{
+                background: !selectedTagId || tagsLoading ? "#5a6f82" : "#2f7ef7",
+                color: "#fff",
+                border: "none",
+                borderRadius: 8,
+                padding: "9px 12px",
+                fontWeight: 700,
+                cursor: !selectedTagId || tagsLoading ? "not-allowed" : "pointer",
+              }}
+            >
+              Lägg till
+            </button>
+          </div>
+
+          {allTags.length === 0 && (
+            <p style={{ margin: "12px 0 0", color: "#6b8fa3", fontSize: 13 }}>
+              Inga taggar skapade ännu. Gå till{" "}
+              <a href="/crm/settings" style={{ color: "#3b9eff" }}>CRM-inställningar</a> för att skapa taggar.
+            </p>
+          )}
         </div>
       )}
 

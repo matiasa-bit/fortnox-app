@@ -51,6 +51,7 @@ export async function getCrmClients(search = "") {
   const term = typeof search === "string" ? String(search || "").trim() : String(search?.search || "").trim();
   const consultant = typeof search === "object" ? String(search?.consultant || "").trim() : "";
   const status = typeof search === "object" ? String(search?.status || "").trim() : "";
+  const tag = typeof search === "object" ? String(search?.tag || "").trim() : "";
 
   const [{ data: crmRows, error }, { data: customerRows, error: customerError }] = await Promise.all([
     fetchAllRowsPaged({
@@ -207,6 +208,19 @@ export async function getCrmClients(search = "") {
     clients = clients.filter(row => row.fortnox_active === false);
   } else if (status === "fortnox_unknown") {
     clients = clients.filter(row => row.fortnox_active !== true && row.fortnox_active !== false);
+  }
+
+  if (tag) {
+    const tagId = Number(tag);
+    if (Number.isFinite(tagId)) {
+      const { data: tagRows } = await supabaseServer
+        .from("crm_client_tags")
+        .select("client_id")
+        .eq("tag_id", tagId)
+        .limit(10000);
+      const taggedIds = new Set((tagRows || []).map(r => Number(r.client_id)));
+      clients = clients.filter(row => taggedIds.has(Number(row.id)));
+    }
   }
 
   if (term) {

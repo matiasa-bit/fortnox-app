@@ -29,7 +29,9 @@ const STATUS_OPTIONS = [
 export default function MailComposerPage() {
   const [statusFilter, setStatusFilter] = useState("active");
   const [consultantFilter, setConsultantFilter] = useState("");
+  const [tagFilter, setTagFilter] = useState("");
   const [consultants, setConsultants] = useState([]);
+  const [allTags, setAllTags] = useState([]);
   const [recipients, setRecipients] = useState([]);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [loadingRecipients, setLoadingRecipients] = useState(false);
@@ -41,11 +43,15 @@ export default function MailComposerPage() {
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
 
-  // Load consultants once
+  // Load consultants and tags once
   useEffect(() => {
     fetch("/api/crm/consultants")
       .then(r => r.json())
       .then(d => setConsultants(d?.consultants || []))
+      .catch(() => {});
+    fetch("/api/crm/tags")
+      .then(r => r.json())
+      .then(d => setAllTags(d?.tags || []))
       .catch(() => {});
   }, []);
 
@@ -59,6 +65,7 @@ export default function MailComposerPage() {
 
     const params = new URLSearchParams({ status: statusFilter });
     if (consultantFilter) params.set("consultant", consultantFilter);
+    if (tagFilter) params.set("tag", tagFilter);
 
     fetch(`/api/crm/mail/recipients?${params}`)
       .then(r => r.json())
@@ -73,7 +80,7 @@ export default function MailComposerPage() {
       .finally(() => { if (!cancelled) setLoadingRecipients(false); });
 
     return () => { cancelled = true; };
-  }, [statusFilter, consultantFilter]);
+  }, [statusFilter, consultantFilter, tagFilter]);
 
   const selectedRecipients = useMemo(
     () => recipients.filter(r => selectedIds.has(r.contact_id)),
@@ -127,7 +134,7 @@ export default function MailComposerPage() {
       {/* Mottagarfilter */}
       <div style={cardStyle}>
         <h3 style={{ margin: "0 0 14px", fontSize: 15, fontWeight: 700 }}>1. Välj mottagare</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 14 }}>
           <div>
             <label style={labelStyle}>Kundstatus</label>
             <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={inputStyle}>
@@ -139,6 +146,13 @@ export default function MailComposerPage() {
             <select value={consultantFilter} onChange={e => setConsultantFilter(e.target.value)} style={inputStyle}>
               <option value="">Alla</option>
               {consultants.map(c => <option key={c.label} value={c.label}>{c.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Tagg</label>
+            <select value={tagFilter} onChange={e => setTagFilter(e.target.value)} style={inputStyle}>
+              <option value="">Alla taggar</option>
+              {allTags.map(t => <option key={t.id} value={String(t.id)}>{t.name}</option>)}
             </select>
           </div>
         </div>

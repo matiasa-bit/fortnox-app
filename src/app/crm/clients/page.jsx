@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCrmClients, getCrmConsultants } from "@/lib/crm";
+import { supabaseServer } from "@/lib/supabase";
 import CrmClientsFilters from "@/app/crm/clients/CrmClientsFilters";
 
 export const dynamic = "force-dynamic";
@@ -9,11 +10,14 @@ export default async function CrmClientsPage({ searchParams }) {
   const query = String(params?.q || "").trim();
   const consultant = String(params?.consultant || "").trim();
   const status = String(params?.status || "fortnox_active").trim() || "fortnox_active";
+  const tag = String(params?.tag || "").trim();
 
-  const [clients, consultants] = await Promise.all([
-    getCrmClients({ search: query, consultant, status }),
+  const [clients, consultants, tagsResult] = await Promise.all([
+    getCrmClients({ search: query, consultant, status, tag }),
     getCrmConsultants(),
+    supabaseServer.from("crm_tags").select("id, name, color").order("name"),
   ]);
+  const allTags = tagsResult?.data || [];
 
   const cellLinkStyle = {
     display: "block",
@@ -37,6 +41,8 @@ export default async function CrmClientsPage({ searchParams }) {
         initialConsultant={consultant}
         initialStatus={status}
         consultants={consultants}
+        initialTag={tag}
+        allTags={allTags}
       />
 
       <div style={{ overflowX: "auto" }}>

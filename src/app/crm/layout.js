@@ -22,6 +22,22 @@ export default function CrmLayout({ children }) {
           <div style={{ display: "flex", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
             <SyncCrmCustomersButton />
             <Link
+              href="/crm/settings"
+              title="CRM-inställningar"
+              style={{
+                background: "#1a2e3b",
+                color: "#fff",
+                border: "1px solid #2a4a5e",
+                borderRadius: 10,
+                padding: "8px 12px",
+                fontSize: 16,
+                textDecoration: "none",
+                lineHeight: 1,
+              }}
+            >
+              ⚙
+            </Link>
+            <Link
               href="/"
               style={{
                 background: "#1a2e3b",
