@@ -3,6 +3,7 @@ import { render } from "@react-email/components";
 import NewsletterTemplate from "@/emails/NewsletterTemplate";
 import SimpleTemplate from "@/emails/SimpleTemplate";
 
+export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function POST(request) {
