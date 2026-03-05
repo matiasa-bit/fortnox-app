@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { renderAsync } from "@react-email/components";
+import { render } from "@react-email/components";
 import NewsletterTemplate from "@/emails/NewsletterTemplate";
 import SimpleTemplate from "@/emails/SimpleTemplate";
 
@@ -32,7 +32,7 @@ export async function POST(request) {
     // Resend free tier: max 100/day. Send one at a time to control errors.
     for (const recipient of validRecipients) {
       try {
-        const html = await renderAsync(
+        const html = await render(
           TemplateComponent({
             subject,
             body: bodyText,
