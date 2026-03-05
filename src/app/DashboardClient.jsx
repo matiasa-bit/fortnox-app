@@ -1550,7 +1550,16 @@ export default function DashboardClient({
     const requireCustomerHours = selectedCostcenter !== "ALL";
     const map = {};
 
+    const mappedIds = employeeIdsForSelectedCostcenter && employeeIdsForSelectedCostcenter.size > 0
+      ? employeeIdsForSelectedCostcenter
+      : null;
+
     filteredTimeReports.forEach(row => {
+      // When a costcenter is selected, only count hours for the mapped consultant(s)
+      if (requireCustomerHours && mappedIds) {
+        const empId = String(row.employee_id || "").trim();
+        if (!empId || !mappedIds.has(empId)) return;
+      }
       const month = String(row.report_date || "").slice(0, 7);
       if (!month.startsWith(year)) return;
       if (!map[month]) map[month] = { month, hours: 0, internalHours: 0, absenceHours: 0, rows: 0 };
@@ -2187,17 +2196,30 @@ export default function DashboardClient({
     let rows;
     let titleSuffix = "";
 
+    const mappedIds = employeeIdsForSelectedCostcenter && employeeIdsForSelectedCostcenter.size > 0
+      ? employeeIdsForSelectedCostcenter
+      : null;
+
     if (mode === "customer") {
       rows = filteredTimeReports.filter(row => {
         if (!String(row.report_date || "").startsWith(key)) return false;
+        if (mappedIds) {
+          const empId = String(row.employee_id || "").trim();
+          if (!empId || !mappedIds.has(empId)) return false;
+        }
         const isInternal = String(row.customer_number || "").trim() === "1";
         return !isInternal && !isAbsenceTimeRow(row);
       });
       titleSuffix = " – kundtimmar";
     } else if (mode === "absence") {
-      rows = filteredTimeReports.filter(row =>
-        String(row.report_date || "").startsWith(key) && isAbsenceTimeRow(row)
-      );
+      rows = filteredTimeReports.filter(row => {
+        if (!String(row.report_date || "").startsWith(key)) return false;
+        if (mappedIds) {
+          const empId = String(row.employee_id || "").trim();
+          if (!empId || !mappedIds.has(empId)) return false;
+        }
+        return isAbsenceTimeRow(row);
+      });
       titleSuffix = " – frånvaro";
     } else if (mode === "internal") {
       const relevantIds = employeeIdsForSelectedCostcenter && employeeIdsForSelectedCostcenter.size > 0
