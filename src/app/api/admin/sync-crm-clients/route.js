@@ -485,11 +485,10 @@ async function runCrmSync(request, body = {}) {
       }
 
       let fortnoxActive = normalizeFortnoxActive(row);
-      const hasSavedFortnoxStatus = existing?.fortnox_active === true || existing?.fortnox_active === false;
-
-      // Only spend detail lookups on customers that still lack saved status.
-      // Otherwise we keep re-querying the same customers on every run.
-      if (fortnoxActive === null && customerNumber && !hasSavedFortnoxStatus) {
+      // If list endpoint does not provide explicit active/inactive we must fetch
+      // customer card regardless of previously saved value; otherwise a customer
+      // that was re-activated can stay incorrectly marked as inactive forever.
+      if (fortnoxActive === null && customerNumber) {
         if (detailLookups >= maxDetailLookups) {
           skippedDetailLookups += 1;
         } else if (!customerCardCache.has(customerNumber)) {
