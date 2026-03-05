@@ -3,13 +3,12 @@ import { render } from "@react-email/components";
 import NewsletterTemplate from "@/emails/NewsletterTemplate";
 import SimpleTemplate from "@/emails/SimpleTemplate";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "noreply@saldoredo.se";
-const SENDER_NAME = process.env.RESEND_SENDER_NAME || "Saldoredo";
-
 export const maxDuration = 60;
 
 export async function POST(request) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "noreply@saldoredo.se";
+  const SENDER_NAME = process.env.RESEND_SENDER_NAME || "Saldoredo";
   try {
     const body = await request.json().catch(() => ({}));
     const { recipients = [], subject, templateId = "simple", bodyText = "" } = body;
