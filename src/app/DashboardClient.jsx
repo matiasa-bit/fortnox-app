@@ -2971,7 +2971,7 @@ export default function DashboardClient({
             <table style={{width:"100%", borderCollapse:"collapse"}}>
               <thead>
                 <tr style={{borderBottom:"1px solid #2a4a5e"}}>
-                  {["Månad", selectedCostcenter !== "ALL" ? "Kundtimmar" : "Timmar", ...(selectedCostcenter !== "ALL" ? ["Frånvaro", "Interna timmar (kund 1)"] : []), "Rader"].map(h => (
+                  {["Månad", selectedCostcenter !== "ALL" ? "Kundtimmar" : "Timmar", ...(selectedCostcenter !== "ALL" ? ["Frånvaro", "Interna timmar (kund 1)", "Totalt"] : []), "Rader"].map(h => (
                     <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
                   ))}
                 </tr>
@@ -3018,6 +3018,13 @@ export default function DashboardClient({
                           ) : "-"}
                         </td>
                       )}
+                      {selectedCostcenter !== "ALL" && (
+                        <td style={{padding:"10px 16px 10px 0", color:"#fff", fontWeight:700, fontSize:14}}>
+                          {(r.hours + r.absenceHours + r.internalHours) > 0
+                            ? (r.hours + r.absenceHours + r.internalHours).toFixed(1)
+                            : "-"}
+                        </td>
+                      )}
                       <td style={{padding:"10px 0", color:"#6b8fa3", fontSize:14}}>{r.rows > 0 ? r.rows : "-"}</td>
                     </tr>
                   );
@@ -3038,6 +3045,9 @@ export default function DashboardClient({
                       )}
                       {selectedCostcenter !== "ALL" && (
                         <td style={{padding:"12px 16px 4px 0", color:"#f59e0b", fontWeight:700, fontSize:14}}>{totInternal > 0 ? totInternal.toFixed(1) : "-"}</td>
+                      )}
+                      {selectedCostcenter !== "ALL" && (
+                        <td style={{padding:"12px 16px 4px 0", color:"#fff", fontWeight:700, fontSize:14}}>{(totHours + totAbsence + totInternal).toFixed(1)}</td>
                       )}
                       <td style={{padding:"12px 0", color:"#6b8fa3", fontSize:14}}>{totRows}</td>
                     </tr>
