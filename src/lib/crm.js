@@ -286,6 +286,20 @@ export async function getCrmClients(search = "") {
     }
   }
 
+  const { data: tagLinkRows } = await supabaseServer
+    .from("crm_client_tags")
+    .select("client_id, crm_tags(id, name, color)")
+    .in("client_id", clientIds)
+    .limit(10000);
+
+  const tagsByClientId = new Map();
+  for (const row of tagLinkRows || []) {
+    const id = Number(row?.client_id);
+    if (!Number.isFinite(id) || !row?.crm_tags) continue;
+    if (!tagsByClientId.has(id)) tagsByClientId.set(id, []);
+    tagsByClientId.get(id).push(row.crm_tags);
+  }
+
   return clients.map(row => {
     const id = Number(row.id);
     const contact = primaryContactByClientId.get(id) || fallbackContactByClientId.get(id) || null;
@@ -295,6 +309,7 @@ export async function getCrmClients(search = "") {
       contact_name: contact?.name || null,
       contact_email: contact?.email || null,
       contact_phone: contact?.phone || null,
+      tags: tagsByClientId.get(id) || [],
     };
   });
 }

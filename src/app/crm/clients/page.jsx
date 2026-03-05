@@ -49,7 +49,7 @@ export default async function CrmClientsPage({ searchParams }) {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid #2a4a5e" }}>
-              {["Företagsnamn", "Org.nr", "Kundnummer", "Fortnox", "Kostnadsstalle", "Kontakt", "Telefon", "E-post", "Senaste aktivitet"].map(h => (
+              {["Företagsnamn", "Org.nr", "Kundnummer", "Fortnox", "Kostnadsstalle", "Taggar", "Kontakt", "Telefon", "E-post", "Senaste aktivitet"].map(h => (
                 <th key={h} style={{ textAlign: "left", color: "#6b8fa3", fontSize: 12, fontWeight: 600, padding: "0 10px 12px 0", textTransform: "uppercase", letterSpacing: 0.8 }}>{h}</th>
               ))}
             </tr>
@@ -103,6 +103,31 @@ export default async function CrmClientsPage({ searchParams }) {
                     <div style={{ ...cellLinkStyle, color: "#dbe7ef" }}>
                       {client.cost_center_label || "-"}
                     </div>
+                  )}
+                </td>
+                <td style={{ padding: "6px 10px 6px 0" }}>
+                  {client.tags?.length > 0 ? (
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                      {client.tags.map(tag => (
+                        <span
+                          key={tag.id}
+                          style={{
+                            background: tag.color + "22",
+                            color: tag.color,
+                            border: `1px solid ${tag.color}55`,
+                            borderRadius: 20,
+                            padding: "2px 8px",
+                            fontSize: 11,
+                            fontWeight: 600,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span style={{ color: "#3a5368", fontSize: 12 }}>—</span>
                   )}
                 </td>
                 <td style={{ color: "#dbe7ef" }}>
