@@ -4,8 +4,35 @@ import { useState } from "react";
 
 export default function SyncCrmCustomersButton() {
   const [syncingCustomers, setSyncingCustomers] = useState(false);
+  const [syncingContacts, setSyncingContacts] = useState(false);
   const [syncingBolagsverket, setSyncingBolagsverket] = useState(false);
   const [status, setStatus] = useState("");
+  async function runContactSync() {
+    if (syncingCustomers || syncingContacts || syncingBolagsverket) return;
+
+    setSyncingContacts(true);
+    setStatus("Startar kontakt-sync...");
+
+    try {
+      const res = await fetch("/api/admin/sync-fortnox-contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok || payload?.ok === false) {
+        throw new Error(payload?.error || `HTTP ${res.status}`);
+      }
+      setStatus(`Klar. Synkade ${payload?.synced || 0} kontakter.`);
+      setTimeout(() => {
+        window.location.reload();
+      }, 900);
+    } catch (error) {
+      setStatus(`Kontakt-sync misslyckades: ${error?.message || "okänt fel"}`);
+    } finally {
+      setSyncingContacts(false);
+    }
+  }
 
   async function runSync() {
     if (syncingCustomers || syncingBolagsverket) return;
@@ -38,9 +65,21 @@ export default function SyncCrmCustomersButton() {
           throw new Error(payload?.error || `HTTP ${res.status}`);
         }
 
-        fetched += Number(payload?.fetched || 0);
-        upserted += Number(payload?.upserted || 0);
+        const fetchedBatch = Number(payload?.fetched || 0);
+        const upsertedBatch = Number(payload?.upserted || 0);
+        fetched += fetchedBatch;
+        upserted += upsertedBatch;
         nextPage = Number(payload?.nextPage || 0) || 0;
+
+        const activeCount = Number(payload?.fortnoxActive || 0);
+        const inactiveCount = Number(payload?.fortnoxInactive || 0);
+        const unknownCount = Number(payload?.fortnoxUnknown || 0);
+        const detailLookups = Number(payload?.detailLookups || 0);
+        const unresolvedAfterLookup = Number(payload?.detailStatusesStillUnknown || 0);
+        setStatus(
+          `Sida ${Number(payload?.fromPage || nextPage || 0)} klar: ${fetchedBatch} hämtade, ${upsertedBatch} sparade, ` +
+          `status A:${activeCount} I:${inactiveCount} O:${unknownCount}, detaljuppslag ${detailLookups}, okända kvar ${unresolvedAfterLookup}.`
+        );
 
         if (payload?.warning) {
           setStatus(`Delvis klar: ${payload.warning}`);
@@ -114,7 +153,7 @@ export default function SyncCrmCustomersButton() {
         <button
           type="button"
           onClick={runSync}
-          disabled={syncingCustomers || syncingBolagsverket}
+          disabled={syncingCustomers || syncingContacts || syncingBolagsverket}
           style={{
             background: syncingCustomers ? "#5a6f82" : "#1db3a7",
             color: "#fff",
@@ -123,15 +162,32 @@ export default function SyncCrmCustomersButton() {
             padding: "8px 12px",
             fontSize: 14,
             fontWeight: 700,
-            cursor: syncingCustomers || syncingBolagsverket ? "not-allowed" : "pointer",
+            cursor: syncingCustomers || syncingContacts || syncingBolagsverket ? "not-allowed" : "pointer",
           }}
         >
           {syncingCustomers ? "Synkar kunder..." : "Synka kunder från Fortnox"}
         </button>
         <button
           type="button"
+          onClick={runContactSync}
+          disabled={syncingCustomers || syncingContacts || syncingBolagsverket}
+          style={{
+            background: syncingContacts ? "#5a6f82" : "#0ea5e9",
+            color: "#fff",
+            border: "none",
+            borderRadius: 10,
+            padding: "8px 12px",
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: syncingCustomers || syncingContacts || syncingBolagsverket ? "not-allowed" : "pointer",
+          }}
+        >
+          {syncingContacts ? "Synkar kontakter..." : "Synka kontakter från Fortnox"}
+        </button>
+        <button
+          type="button"
           onClick={runBolagsverketSync}
-          disabled={syncingCustomers || syncingBolagsverket}
+          disabled={syncingCustomers || syncingContacts || syncingBolagsverket}
           style={{
             background: syncingBolagsverket ? "#5a6f82" : "#2563eb",
             color: "#fff",
@@ -140,7 +196,7 @@ export default function SyncCrmCustomersButton() {
             padding: "8px 12px",
             fontSize: 14,
             fontWeight: 700,
-            cursor: syncingCustomers || syncingBolagsverket ? "not-allowed" : "pointer",
+            cursor: syncingCustomers || syncingContacts || syncingBolagsverket ? "not-allowed" : "pointer",
           }}
         >
           {syncingBolagsverket ? "Synkar bolagsdata..." : "Synka bolagsdata"}

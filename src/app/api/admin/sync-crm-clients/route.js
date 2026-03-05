@@ -446,19 +446,27 @@ async function runCrmSync(request, body = {}) {
       }
     }
 
-    const toUpsertByOrgNumber = new Map();
+
+    // Synka ALLA kunder, även dubbletter på orgnr (en rad per kundnummer)
     const skipped = [];
     const customerCardCache = new Map();
     const fortnoxContactByCustomerNumber = new Map();
-
+    // För dubblettmarkering: räkna antal per orgnr
+    const orgCount = {};
     for (const row of allRows) {
-      const orgNumberFromList = normalizeOrgNumber(row?.OrganisationNumber || row?.OrganizationNumber || row?.OrgNo);
+      const orgNumber = normalizeOrgNumber(row?.OrganisationNumber || row?.OrganizationNumber || row?.OrgNo);
+      if (!orgNumber) continue;
+      orgCount[orgNumber] = (orgCount[orgNumber] || 0) + 1;
+    }
+
+    const toUpsert = [];
+    for (const row of allRows) {
+      const orgNumber = normalizeOrgNumber(row?.OrganisationNumber || row?.OrganizationNumber || row?.OrgNo);
       const customerNumber = String(row?.CustomerNumber || "").trim();
       const companyName = String(row?.Name || row?.CustomerName || "").trim();
-
       if (!companyName) {
         skipped.push({
-          customer_number: String(row?.CustomerNumber || "").trim() || null,
+          customer_number: customerNumber || null,
           company_name: companyName || null,
           reason: "saknar företagsnamn",
         });
@@ -466,12 +474,12 @@ async function runCrmSync(request, body = {}) {
       }
 
       const existing =
-        (orgNumberFromList ? existingByOrgMap.get(orgNumberFromList) : null) ||
+        (orgNumber ? existingByOrgMap.get(orgNumber) : null) ||
         (customerNumber ? existingByCustomerMap.get(customerNumber) : null) ||
         null;
 
       const resolvedOrgNumber =
-        orgNumberFromList ||
+        orgNumber ||
         String(existing?.organization_number || "").trim() ||
         (customerNumber ? `FNX-${customerNumber}` : "");
 
@@ -485,9 +493,6 @@ async function runCrmSync(request, body = {}) {
       }
 
       let fortnoxActive = normalizeFortnoxActive(row);
-      // If list endpoint does not provide explicit active/inactive we must fetch
-      // customer card regardless of previously saved value; otherwise a customer
-      // that was re-activated can stay incorrectly marked as inactive forever.
       if (fortnoxActive === null && customerNumber) {
         if (detailLookups >= maxDetailLookups) {
           skippedDetailLookups += 1;
@@ -511,25 +516,39 @@ async function runCrmSync(request, body = {}) {
         }
       }
 
-      const computedClientStatus = fortnoxActive === false ? "former" : "active";
-      const preservedPaused = existing?.client_status === "paused";
+      const resolvedFortnoxActive = fortnoxActive ?? (existing?.fortnox_active ?? null);
+      const existingClientStatus = String(existing?.client_status || "").trim().toLowerCase();
+      const preservedPaused = existingClientStatus === "paused";
+
+      let computedClientStatus;
+      if (preservedPaused) {
+        computedClientStatus = "paused";
+      } else if (resolvedFortnoxActive === false) {
+        computedClientStatus = "former";
+      } else if (resolvedFortnoxActive === true) {
+        computedClientStatus = "active";
+      } else if (existingClientStatus === "former" || existingClientStatus === "active") {
+        computedClientStatus = existingClientStatus;
+      } else {
+        computedClientStatus = "active";
+      }
+
+      // Markera dubblett om fler än 1 på samma orgnr
+      const is_duplicate = orgCount[orgNumber] > 1;
+
       const payload = {
         company_name: companyName,
         organization_number: resolvedOrgNumber,
         customer_number: customerNumber || existing?.customer_number || null,
-        fortnox_active: fortnoxActive ?? (existing?.fortnox_active ?? null),
-        client_status: preservedPaused ? "paused" : computedClientStatus,
+        fortnox_active: resolvedFortnoxActive,
+        client_status: computedClientStatus,
         responsible_consultant: existing?.responsible_consultant || null,
         notes: existing?.notes || null,
+        is_duplicate,
       };
 
-      // Fortnox can return duplicate customer rows in some accounts.
-      // Deduplicate by organization number to avoid ON CONFLICT touching
-      // the same row multiple times in one upsert statement.
-      toUpsertByOrgNumber.set(resolvedOrgNumber, payload);
+      toUpsert.push(payload);
     }
-
-    const toUpsert = Array.from(toUpsertByOrgNumber.values());
     const fortnoxStatusSummary = {
       fortnoxActive: toUpsert.filter(row => row.fortnox_active === true).length,
       fortnoxInactive: toUpsert.filter(row => row.fortnox_active === false).length,
@@ -537,9 +556,10 @@ async function runCrmSync(request, body = {}) {
     };
 
     if (toUpsert.length > 0) {
+      // Unik per kundnummer!
       const { error } = await supabaseServer
         .from("crm_clients")
-        .upsert(toUpsert, { onConflict: "organization_number" });
+        .upsert(toUpsert, { onConflict: "customer_number" });
 
       if (error) {
         return Response.json({ ok: false, error: error.message || "Kunde inte spara CRM-kunder." }, { status: 500 });

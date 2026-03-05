@@ -308,12 +308,28 @@ export async function POST(request) {
       `FNX-${customerNumber}`;
     const fortnoxActive = normalizeFortnoxActive(customer);
 
+    const resolvedFortnoxActive = fortnoxActive ?? null;
+    const existingClientStatus = String(client.client_status || "").trim().toLowerCase();
+
+    let resolvedClientStatus;
+    if (existingClientStatus === "paused") {
+      resolvedClientStatus = "paused";
+    } else if (resolvedFortnoxActive === false) {
+      resolvedClientStatus = "former";
+    } else if (resolvedFortnoxActive === true) {
+      resolvedClientStatus = "active";
+    } else if (existingClientStatus === "former" || existingClientStatus === "active") {
+      resolvedClientStatus = existingClientStatus;
+    } else {
+      resolvedClientStatus = "active";
+    }
+
     const payload = {
       company_name: companyName || client.company_name,
       organization_number: resolvedOrgNumber,
       customer_number: customerNumber,
-      fortnox_active: fortnoxActive,
-      client_status: fortnoxActive === false ? "former" : (client.client_status === "paused" ? "paused" : "active"),
+      fortnox_active: resolvedFortnoxActive,
+      client_status: resolvedClientStatus,
       responsible_consultant: client.responsible_consultant || null,
       notes: client.notes || null,
     };
