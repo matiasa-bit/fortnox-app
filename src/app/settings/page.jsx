@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SyncPanel from "./SyncPanel";
 
 export default function SettingsPage() {
   return (
@@ -41,15 +42,9 @@ export default function SettingsPage() {
 
           <div style={{ background: "#0f1923", border: "1px solid #2a4a5e", borderRadius: 12, padding: 14 }}>
             <h3 style={{ color: "#fff", margin: "0 0 6px", fontSize: 15 }}>Synk & datakällor</h3>
-            <p style={{ color: "#6b8fa3", margin: "0 0 10px", fontSize: 13 }}>
-              Kör synkningar från dashboarden för fakturor, artiklar och tidsredovisning.
+            <p style={{ color: "#6b8fa3", margin: "0 0 0", fontSize: 13 }}>
+              Hämta och uppdatera data från Fortnox.
             </p>
-            <Link
-              href="/"
-              style={{ display: "inline-block", background: "#1db3a7", color: "#fff", textDecoration: "none", borderRadius: 9, padding: "7px 11px", fontSize: 13 }}
-            >
-              Gå till dashboard
-            </Link>
           </div>
 
           <div style={{ background: "#0f1923", border: "1px solid #2a4a5e", borderRadius: 12, padding: 14 }}>
@@ -65,6 +60,11 @@ export default function SettingsPage() {
             </Link>
           </div>
         </div>
+      </section>
+
+      <section style={{ background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 14, padding: 20, marginBottom: 16 }}>
+        <h2 style={{ color: "#fff", margin: "0 0 14px", fontSize: 18 }}>Synk & datakällor</h2>
+        <SyncPanel />
       </section>
     </main>
   );
