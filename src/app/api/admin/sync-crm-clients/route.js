@@ -547,13 +547,18 @@ async function runCrmSync(request, body = {}) {
       }
 
       try {
+        // Keep the shared customer registry strictly coupled to Fortnox customer list.
+        // Build from raw Fortnox rows (customer number as key), not deduped CRM payload,
+        // so we do not lose customers when CRM records are merged on organization number.
         const sharedCustomersMap = new Map();
-        toUpsert.forEach(row => {
-          const customerNumber = String(row.customer_number || row.organization_number || "").trim();
-          if (!customerNumber) return;
+        allRows.forEach(row => {
+          const customerNumber = String(row?.CustomerNumber || "").trim();
+          const companyName = String(row?.Name || row?.CustomerName || "").trim();
+          if (!customerNumber || !companyName) return;
+
           sharedCustomersMap.set(customerNumber, {
             customer_number: customerNumber,
-            name: row.company_name,
+            name: companyName,
           });
         });
 
