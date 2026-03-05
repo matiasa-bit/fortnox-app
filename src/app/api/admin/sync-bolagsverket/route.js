@@ -1,4 +1,4 @@
-import { supabaseServer } from "@/lib/supabase";
+import { supabaseServer, saveAppSetting } from "@/lib/supabase";
 import {
   extractBolagsverketSnapshot,
   fetchBolagsverket,
@@ -122,6 +122,8 @@ async function runSync(params = {}) {
       board_http_status: boardRes.status,
     });
   }
+
+  await saveAppSetting("last_bolagsverket_sync", new Date().toISOString());
 
   return Response.json({
     ok: true,

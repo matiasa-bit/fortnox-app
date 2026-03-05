@@ -1,12 +1,55 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+function formatSyncTime(iso) {
+  if (!iso) return null;
+  try {
+    return new Date(iso).toLocaleString("sv-SE", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+  } catch {
+    return null;
+  }
+}
 
 export default function SyncCrmCustomersButton() {
   const [syncingCustomers, setSyncingCustomers] = useState(false);
   const [syncingContacts, setSyncingContacts] = useState(false);
   const [syncingBolagsverket, setSyncingBolagsverket] = useState(false);
   const [status, setStatus] = useState("");
+  const [lastSync, setLastSync] = useState({ crm: null, contacts: null, bolagsverket: null });
+
+  useEffect(() => {
+    fetch("/api/crm/sync-status")
+      .then(r => r.json())
+      .then(d => {
+        if (d?.ok) {
+          setLastSync({
+            crm: formatSyncTime(d.last_crm_sync),
+            contacts: formatSyncTime(d.last_contact_sync),
+            bolagsverket: formatSyncTime(d.last_bolagsverket_sync),
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  async function refreshSyncStatus() {
+    try {
+      const d = await fetch("/api/crm/sync-status").then(r => r.json());
+      if (d?.ok) {
+        setLastSync({
+          crm: formatSyncTime(d.last_crm_sync),
+          contacts: formatSyncTime(d.last_contact_sync),
+          bolagsverket: formatSyncTime(d.last_bolagsverket_sync),
+        });
+      }
+    } catch {
+    }
+  }
+
   async function runContactSync() {
     if (syncingCustomers || syncingContacts || syncingBolagsverket) return;
 
@@ -24,6 +67,7 @@ export default function SyncCrmCustomersButton() {
         throw new Error(payload?.error || `HTTP ${res.status}`);
       }
       setStatus(`Klar. Synkade ${payload?.synced || 0} kontakter.`);
+      await refreshSyncStatus();
       setTimeout(() => {
         window.location.reload();
       }, 900);
@@ -73,6 +117,7 @@ export default function SyncCrmCustomersButton() {
       await syncWithFilter("active");
 
       setStatus(`Klar. Hämtade ${fetched} och uppdaterade ${upserted} kunder.`);
+      await refreshSyncStatus();
       setTimeout(() => {
         window.location.reload();
       }, 900);
@@ -122,6 +167,7 @@ export default function SyncCrmCustomersButton() {
       }
 
       setStatus(`Bolagsverket klart. Synkade ${synced}, fel ${failed}, hoppade over ${skipped}.`);
+      await refreshSyncStatus();
       setTimeout(() => {
         window.location.reload();
       }, 900);
@@ -187,6 +233,19 @@ export default function SyncCrmCustomersButton() {
           {syncingBolagsverket ? "Synkar bolagsdata..." : "Synka bolagsdata"}
         </button>
       </div>
+      {(lastSync.crm || lastSync.contacts || lastSync.bolagsverket) && (
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          {lastSync.crm && (
+            <span style={{ color: "#8fb1c3", fontSize: 11 }}>Kunder: {lastSync.crm}</span>
+          )}
+          {lastSync.contacts && (
+            <span style={{ color: "#8fb1c3", fontSize: 11 }}>Kontakter: {lastSync.contacts}</span>
+          )}
+          {lastSync.bolagsverket && (
+            <span style={{ color: "#8fb1c3", fontSize: 11 }}>Bolagsdata: {lastSync.bolagsverket}</span>
+          )}
+        </div>
+      )}
       {status && <span style={{ color: "#8fb1c3", fontSize: 12 }}>{status}</span>}
     </div>
   );

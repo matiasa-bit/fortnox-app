@@ -784,3 +784,25 @@ export async function getCachedContractAccruals() {
     return [];
   }
 }
+
+export async function saveAppSetting(key, value) {
+  try {
+    await supabaseServer
+      .from("app_settings")
+      .upsert([{ key, value, updated_at: new Date().toISOString() }], { onConflict: "key" });
+  } catch {
+  }
+}
+
+export async function getAppSetting(key) {
+  try {
+    const { data } = await supabaseServer
+      .from("app_settings")
+      .select("value, updated_at")
+      .eq("key", key)
+      .single();
+    return data || null;
+  } catch {
+    return null;
+  }
+}

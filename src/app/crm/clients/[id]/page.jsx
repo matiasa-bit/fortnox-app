@@ -69,7 +69,7 @@ export default async function CrmClientProfilePage({ params }) {
           <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Omsättning:</strong> {client.revenue ?? "-"}</div>
           <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Anställda:</strong> {client.employees ?? "-"}</div>
           <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Startdatum:</strong> {client.start_date || "-"}</div>
-          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Ansvarig:</strong> {client.responsible_consultant || "-"}</div>
+          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Ansvarig:</strong> {client.cost_center_label || client.responsible_consultant || "-"}</div>
           <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Kontor:</strong> {client.office || "-"}</div>
           <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Registreringsort:</strong> {client.bolagsverket_registered_office || "-"}</div>
           <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Styrelse (antal):</strong> {client.bolagsverket_board_count ?? "-"}</div>

@@ -373,6 +373,9 @@ export default function DashboardClient({
     return grouped;
   });
   const [syncingArticles, setSyncingArticles] = useState(false);
+  const [syncingAllArticleRows, setSyncingAllArticleRows] = useState(false);
+  const [allArticleRowsStatus, setAllArticleRowsStatus] = useState("");
+  const [timeReportViewMode, setTimeReportViewMode] = useState("month");
   const [syncingArticleRegistry, setSyncingArticleRegistry] = useState(false);
   const [syncingTimeReports, setSyncingTimeReports] = useState(false);
   const [syncingCostcenters, setSyncingCostcenters] = useState(false);
@@ -1542,6 +1545,54 @@ export default function DashboardClient({
     [timeByEmployee]
   );
 
+  const timeByMonth = useMemo(() => {
+    const year = selectedYear || String(new Date().getFullYear());
+    const requireCustomerHours = selectedCostcenter !== "ALL";
+    const map = {};
+
+    filteredTimeReports.forEach(row => {
+      const month = String(row.report_date || "").slice(0, 7);
+      if (!month.startsWith(year)) return;
+      if (!map[month]) map[month] = { month, hours: 0, internalHours: 0, absenceHours: 0, rows: 0 };
+      const rowHours = parseFloat(row.hours) || 0;
+      const customerNumber = String(row.customer_number || "").trim();
+      const isAbsence = isAbsenceTimeRow(row);
+      const isExternal = !!customerNumber && customerNumber !== "1";
+      if (isAbsence) {
+        map[month].absenceHours += rowHours;
+      } else if (!requireCustomerHours || isExternal) {
+        map[month].hours += rowHours;
+        map[month].rows += 1;
+      }
+    });
+
+    if (requireCustomerHours) {
+      // Only count internal hours for employees explicitly mapped to the selected costcenter
+      const relevantIds = employeeIdsForSelectedCostcenter && employeeIdsForSelectedCostcenter.size > 0
+        ? employeeIdsForSelectedCostcenter
+        : null;
+      normalizedTimeReports.forEach(row => {
+        const empId = String(row.employee_id || "").trim();
+        if (relevantIds && (!empId || !relevantIds.has(empId))) return;
+        const month = String(row.report_date || "").slice(0, 7);
+        if (!month.startsWith(year)) return;
+        if (!(month in map)) map[month] = { month, hours: 0, internalHours: 0, absenceHours: 0, rows: 0 };
+        const groupMatch = selectedGroup === "ALL" || row.employee_group === selectedGroup;
+        const isInternal = String(row.customer_number || "").trim() === "1";
+        if (groupMatch && isInternal && !isAbsenceTimeRow(row)) {
+          map[month].internalHours += parseFloat(row.hours) || 0;
+        }
+      });
+    }
+
+    // Build full 12-month list for the year
+    return Array.from({ length: 12 }, (_, i) => {
+      const m = String(i + 1).padStart(2, "0");
+      const key = `${year}-${m}`;
+      return map[key] || { month: key, hours: 0, internalHours: 0, absenceHours: 0, rows: 0 };
+    });
+  }, [filteredTimeReports, normalizedTimeReports, selectedYear, selectedGroup, selectedCostcenter, employeeIdsForSelectedCostcenter]);
+
   const visibleEmployeesMissingCostCenterMapping = useMemo(() => {
     if (selectedCostcenter === "ALL") return [];
 
@@ -2129,6 +2180,58 @@ export default function DashboardClient({
     });
   };
 
+  const openMonthlyEntries = (monthKey, monthLabel, mode = "customer") => {
+    const key = String(monthKey || "").trim();
+    if (!/^\d{4}-\d{2}$/.test(key)) return;
+
+    let rows;
+    let titleSuffix = "";
+
+    if (mode === "customer") {
+      rows = filteredTimeReports.filter(row => {
+        if (!String(row.report_date || "").startsWith(key)) return false;
+        const isInternal = String(row.customer_number || "").trim() === "1";
+        return !isInternal && !isAbsenceTimeRow(row);
+      });
+      titleSuffix = " – kundtimmar";
+    } else if (mode === "absence") {
+      rows = filteredTimeReports.filter(row =>
+        String(row.report_date || "").startsWith(key) && isAbsenceTimeRow(row)
+      );
+      titleSuffix = " – frånvaro";
+    } else if (mode === "internal") {
+      const relevantIds = employeeIdsForSelectedCostcenter && employeeIdsForSelectedCostcenter.size > 0
+        ? employeeIdsForSelectedCostcenter
+        : null;
+      rows = normalizedTimeReports.filter(row => {
+        if (!String(row.report_date || "").startsWith(key)) return false;
+        const empId = String(row.employee_id || "").trim();
+        if (relevantIds && (!empId || !relevantIds.has(empId))) return false;
+        const groupMatch = selectedGroup === "ALL" || row.employee_group === selectedGroup;
+        const isInternal = String(row.customer_number || "").trim() === "1";
+        return groupMatch && isInternal && !isAbsenceTimeRow(row);
+      });
+      titleSuffix = " – interna timmar";
+    } else {
+      rows = filteredTimeReports.filter(row => String(row.report_date || "").startsWith(key));
+    }
+
+    rows = rows.slice().sort((a, b) => {
+      const dateDiff = String(b.report_date || "").localeCompare(String(a.report_date || ""));
+      if (dateDiff !== 0) return dateDiff;
+      return String(a.employee_name || a.employee_id || "").localeCompare(String(b.employee_name || b.employee_id || ""), "sv-SE", { numeric: true });
+    });
+
+    setTimeEntriesModal({
+      mode: "month",
+      employeeKey: key,
+      employeeName: `${monthLabel || key}${titleSuffix}`,
+      employeeGroup: "",
+      rows,
+      totalHours: rows.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0),
+    });
+  };
+
   const openTimeEntriesForMonth = (monthKey, monthLabel) => {
     const key = String(monthKey || "").trim();
     if (!/^\d{4}-\d{2}$/.test(key)) return;
@@ -2531,6 +2634,43 @@ export default function DashboardClient({
           >{syncingArticles ? 'Synkar artiklar...' : 'Sync artiklar'}</button>
           <button
             onClick={async () => {
+              if (syncingAllArticleRows) return;
+              setSyncingAllArticleRows(true);
+              setAllArticleRowsStatus("Startar...");
+              const fromDate = `${new Date().getFullYear() - 2}-01-01`;
+              let rounds = 0;
+              let totalSynced = 0;
+              try {
+                while (rounds < 100) {
+                  rounds += 1;
+                  const res = await fetch('/api/admin/sync-invoice-rows', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ batchSize: 50, fromDate }),
+                  });
+                  const data = await res.json().catch(() => ({}));
+                  if (!res.ok || data.ok === false) {
+                    setAllArticleRowsStatus(`Fel: ${data.error || 'okänt fel'}`);
+                    break;
+                  }
+                  const syncedNow = Number(data.syncedNow || 0);
+                  const remaining = Number(data.remaining || 0);
+                  totalSynced += syncedNow;
+                  setAllArticleRowsStatus(`Runda ${rounds}: synkade ${totalSynced} fakturor, kvar ${remaining}`);
+                  if (syncedNow === 0 || remaining === 0) break;
+                }
+                setAllArticleRowsStatus(`Klar! Totalt synkade ${totalSynced} fakturars artikelrader.`);
+              } catch (err) {
+                setAllArticleRowsStatus(`Fel: ${err?.message || 'okänt'}`);
+              } finally {
+                setSyncingAllArticleRows(false);
+              }
+            }}
+            style={{background:'#059669', color:'#fff', padding:'8px 12px', borderRadius:8, border:'none', cursor: syncingAllArticleRows ? 'not-allowed' : 'pointer'}}
+            disabled={syncingAllArticleRows}
+          >{syncingAllArticleRows ? 'Synkar alla artikelrader...' : 'Synka alla artikelrader'}</button>
+          <button
+            onClick={async () => {
               setSyncingCostcenters(true);
               try {
                 const res = await fetch('/api/admin/sync-costcenters', {
@@ -2566,6 +2706,9 @@ export default function DashboardClient({
           </button>
           {fullSyncStatus && (
             <span style={{color:'#6b8fa3', fontSize:12, alignSelf:'center'}}>{fullSyncStatus}</span>
+          )}
+          {allArticleRowsStatus && (
+            <span style={{color:'#6ee7b7', fontSize:12, alignSelf:'center'}}>{allArticleRowsStatus}</span>
           )}
           <div style={{position:"relative"}}>
             <input
@@ -2781,99 +2924,188 @@ export default function DashboardClient({
 
       {/* Time reports */}
       <div style={{background:"#1a2e3b", borderRadius:16, padding:"24px", border:"1px solid #2a4a5e", marginBottom:24}}>
-        <h2 style={{color:"#fff", fontWeight:700, fontSize:16, margin:"0 0 8px"}}>Tidsredovisning ({filteredTimeReports.length})</h2>
+        <div style={{display:"flex", alignItems:"center", gap:12, marginBottom:8, flexWrap:"wrap"}}>
+          <h2 style={{color:"#fff", fontWeight:700, fontSize:16, margin:0}}>Tidsredovisning ({filteredTimeReports.length})</h2>
+          <div style={{display:"flex", gap:4}}>
+            <button
+              type="button"
+              onClick={() => setTimeReportViewMode("month")}
+              style={{background: timeReportViewMode === "month" ? "#1db3a7" : "#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:6, padding:"4px 10px", fontSize:12, cursor:"pointer", fontWeight: timeReportViewMode === "month" ? 700 : 400}}
+            >Per månad</button>
+            <button
+              type="button"
+              onClick={() => setTimeReportViewMode("employee")}
+              style={{background: timeReportViewMode === "employee" ? "#1db3a7" : "#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:6, padding:"4px 10px", fontSize:12, cursor:"pointer", fontWeight: timeReportViewMode === "employee" ? 700 : 400}}
+            >Per medarbetare</button>
+          </div>
+        </div>
         <p style={{color:"#6b8fa3", fontSize:12, margin:"0 0 6px"}}>DB-cache från Fortnox tidsredovisning.</p>
         <p style={{color:"#6b8fa3", fontSize:12, margin:"0 0 14px"}}>Senast synkad: {latestTimeSyncLabel}</p>
         {timeReportsLoading && (
           <p style={{color:"#6b8fa3", fontSize:12, margin:"0 0 14px"}}>Laddar tidsredovisning...</p>
         )}
         <div style={{overflowX:"auto"}}>
-          <table style={{width:"100%", borderCollapse:"collapse"}}>
-            <thead>
-              <tr style={{borderBottom:"1px solid #2a4a5e"}}>
-                {["Medarbetare","Grupp", selectedCostcenter !== "ALL" ? "Kundtimmar" : "Timmar", ...(selectedCostcenter !== "ALL" ? ["Frånvaro", "Interna timmar (kund 1)"] : []), "Antal rader","Andel"].map(h => (
-                  <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {timeByEmployee.map((r) => (
-                <tr key={r.key} style={{borderBottom:"1px solid #1e3545"}}>
-                  <td style={{padding:"14px 16px 14px 0", color:"#fff", fontWeight:500, fontSize:14}}>
-                    <button
-                      type="button"
-                      onClick={() => openTimeEntriesForEmployee(r.key, r.employee, r.group)}
-                      style={{background:"transparent", border:"none", color:"#fff", cursor:"pointer", padding:0, fontWeight:500, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
-                    >
-                      {r.employee}
-                    </button>
-                  </td>
-                  <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{r.group}</td>
-                  <td style={{padding:"14px 16px 14px 0", color:"#1db3a7", fontWeight:700, fontSize:14}}>
-                    <button
-                      type="button"
-                      onClick={() => openTimeEntriesForEmployee(r.key, r.employee, r.group, selectedCostcenter !== "ALL" ? "customer" : "all")}
-                      style={{background:"transparent", border:"none", color:"#1db3a7", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
-                    >
-                      {r.hours.toFixed(1)}
-                    </button>
-                  </td>
-                  {selectedCostcenter !== "ALL" && (
-                    <td style={{padding:"14px 16px 14px 0", color:"#93c5fd", fontWeight:700, fontSize:14}}>
-                      {(r.absenceHours || 0) > 0 ? (
-                        <button
-                          type="button"
-                          onClick={() => openTimeEntriesForEmployee(r.key, r.employee, r.group, "absence")}
-                          style={{background:"transparent", border:"none", color:"#93c5fd", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
-                        >
-                          {(r.absenceHours || 0).toFixed(1)}
-                        </button>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                  )}
-                  {selectedCostcenter !== "ALL" && (
-                    <td style={{padding:"14px 16px 14px 0", color:"#f59e0b", fontWeight:700, fontSize:14}}>
-                      {(r.internalHours || 0) > 0 ? (
-                        <button
-                          type="button"
-                          onClick={() => openTimeEntriesForEmployee(r.key, r.employee, r.group, "internal")}
-                          style={{background:"transparent", border:"none", color:"#f59e0b", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
-                        >
-                          {(r.internalHours || 0).toFixed(1)}
-                        </button>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                  )}
-                  <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{r.rows}</td>
-                  <td style={{padding:"14px 0", minWidth:120}}>
-                    <div style={{display:"flex", alignItems:"center", gap:8}}>
-                      {(() => {
-                        const shareBase = selectedCostcenter !== "ALL"
-                          ? totalCustomerHoursOnSelectedCostcenterCustomers
-                          : totalDisplayedTimeHours;
-                        const sharePct = shareBase > 0 ? (r.hours / shareBase * 100) : 0;
-
-                        return (
-                          <>
-                            <div style={{flex:1, height:6, background:"#2a4a5e", borderRadius:3, overflow:"hidden"}}>
-                              <div style={{width:`${sharePct}%`, height:"100%", background:"#1db3a7", borderRadius:3}} />
-                            </div>
-                            <span style={{color:"#6b8fa3", fontSize:12, minWidth:36}}>{Math.round(sharePct)}%</span>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </td>
+          {timeReportViewMode === "month" ? (
+            <table style={{width:"100%", borderCollapse:"collapse"}}>
+              <thead>
+                <tr style={{borderBottom:"1px solid #2a4a5e"}}>
+                  {["Månad", selectedCostcenter !== "ALL" ? "Kundtimmar" : "Timmar", ...(selectedCostcenter !== "ALL" ? ["Frånvaro", "Interna timmar (kund 1)"] : []), "Rader"].map(h => (
+                    <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {timeByMonth.map((r) => {
+                  const monthIdx = parseInt(r.month.slice(5, 7), 10) - 1;
+                  const monthLabel = `${MONTHS[monthIdx] || r.month.slice(5, 7)} ${r.month.slice(0, 4)}`;
+                  const hasData = r.hours > 0 || r.absenceHours > 0 || r.internalHours > 0;
+                  return (
+                    <tr key={r.month} style={{borderBottom:"1px solid #1e3545", opacity: hasData ? 1 : 0.4}}>
+                      <td style={{padding:"10px 16px 10px 0", color:"#dbe7ef", fontSize:14}}>
+                        <button
+                          type="button"
+                          onClick={() => openMonthlyEntries(r.month, monthLabel, "customer")}
+                          style={{background:"transparent", border:"none", color: hasData ? "#dbe7ef" : "#6b8fa3", cursor: hasData ? "pointer" : "default", padding:0, fontSize:14, textDecoration: hasData ? "underline" : "none", textUnderlineOffset:3}}
+                          disabled={!hasData}
+                        >
+                          {monthLabel}
+                        </button>
+                      </td>
+                      <td style={{padding:"10px 16px 10px 0", color:"#1db3a7", fontWeight:700, fontSize:14}}>
+                        {r.hours > 0 ? (
+                          <button type="button" onClick={() => openMonthlyEntries(r.month, monthLabel, "customer")} style={{background:"transparent", border:"none", color:"#1db3a7", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}>
+                            {r.hours.toFixed(1)}
+                          </button>
+                        ) : "-"}
+                      </td>
+                      {selectedCostcenter !== "ALL" && (
+                        <td style={{padding:"10px 16px 10px 0", color:"#93c5fd", fontWeight:700, fontSize:14}}>
+                          {r.absenceHours > 0 ? (
+                            <button type="button" onClick={() => openMonthlyEntries(r.month, monthLabel, "absence")} style={{background:"transparent", border:"none", color:"#93c5fd", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}>
+                              {r.absenceHours.toFixed(1)}
+                            </button>
+                          ) : "-"}
+                        </td>
+                      )}
+                      {selectedCostcenter !== "ALL" && (
+                        <td style={{padding:"10px 16px 10px 0", color:"#f59e0b", fontWeight:700, fontSize:14}}>
+                          {r.internalHours > 0 ? (
+                            <button type="button" onClick={() => openMonthlyEntries(r.month, monthLabel, "internal")} style={{background:"transparent", border:"none", color:"#f59e0b", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}>
+                              {r.internalHours.toFixed(1)}
+                            </button>
+                          ) : "-"}
+                        </td>
+                      )}
+                      <td style={{padding:"10px 0", color:"#6b8fa3", fontSize:14}}>{r.rows > 0 ? r.rows : "-"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                {(() => {
+                  const totHours = timeByMonth.reduce((s, r) => s + r.hours, 0);
+                  const totAbsence = timeByMonth.reduce((s, r) => s + r.absenceHours, 0);
+                  const totInternal = timeByMonth.reduce((s, r) => s + r.internalHours, 0);
+                  const totRows = timeByMonth.reduce((s, r) => s + r.rows, 0);
+                  return (
+                    <tr style={{borderTop:"2px solid #2a4a5e"}}>
+                      <td style={{padding:"12px 16px 4px 0", color:"#fff", fontWeight:700, fontSize:14}}>Totalt</td>
+                      <td style={{padding:"12px 16px 4px 0", color:"#1db3a7", fontWeight:700, fontSize:14}}>{totHours.toFixed(1)}</td>
+                      {selectedCostcenter !== "ALL" && (
+                        <td style={{padding:"12px 16px 4px 0", color:"#93c5fd", fontWeight:700, fontSize:14}}>{totAbsence > 0 ? totAbsence.toFixed(1) : "-"}</td>
+                      )}
+                      {selectedCostcenter !== "ALL" && (
+                        <td style={{padding:"12px 16px 4px 0", color:"#f59e0b", fontWeight:700, fontSize:14}}>{totInternal > 0 ? totInternal.toFixed(1) : "-"}</td>
+                      )}
+                      <td style={{padding:"12px 0", color:"#6b8fa3", fontSize:14}}>{totRows}</td>
+                    </tr>
+                  );
+                })()}
+              </tfoot>
+            </table>
+          ) : (
+            <table style={{width:"100%", borderCollapse:"collapse"}}>
+              <thead>
+                <tr style={{borderBottom:"1px solid #2a4a5e"}}>
+                  {["Medarbetare","Grupp", selectedCostcenter !== "ALL" ? "Kundtimmar" : "Timmar", ...(selectedCostcenter !== "ALL" ? ["Frånvaro", "Interna timmar (kund 1)"] : []), "Antal rader","Andel"].map(h => (
+                    <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {timeByEmployee.map((r) => (
+                  <tr key={r.key} style={{borderBottom:"1px solid #1e3545"}}>
+                    <td style={{padding:"14px 16px 14px 0", color:"#fff", fontWeight:500, fontSize:14}}>
+                      <button
+                        type="button"
+                        onClick={() => openTimeEntriesForEmployee(r.key, r.employee, r.group)}
+                        style={{background:"transparent", border:"none", color:"#fff", cursor:"pointer", padding:0, fontWeight:500, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
+                      >
+                        {r.employee}
+                      </button>
+                    </td>
+                    <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{r.group}</td>
+                    <td style={{padding:"14px 16px 14px 0", color:"#1db3a7", fontWeight:700, fontSize:14}}>
+                      <button
+                        type="button"
+                        onClick={() => openTimeEntriesForEmployee(r.key, r.employee, r.group, selectedCostcenter !== "ALL" ? "customer" : "all")}
+                        style={{background:"transparent", border:"none", color:"#1db3a7", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
+                      >
+                        {r.hours.toFixed(1)}
+                      </button>
+                    </td>
+                    {selectedCostcenter !== "ALL" && (
+                      <td style={{padding:"14px 16px 14px 0", color:"#93c5fd", fontWeight:700, fontSize:14}}>
+                        {(r.absenceHours || 0) > 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => openTimeEntriesForEmployee(r.key, r.employee, r.group, "absence")}
+                            style={{background:"transparent", border:"none", color:"#93c5fd", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
+                          >
+                            {(r.absenceHours || 0).toFixed(1)}
+                          </button>
+                        ) : "-"}
+                      </td>
+                    )}
+                    {selectedCostcenter !== "ALL" && (
+                      <td style={{padding:"14px 16px 14px 0", color:"#f59e0b", fontWeight:700, fontSize:14}}>
+                        {(r.internalHours || 0) > 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => openTimeEntriesForEmployee(r.key, r.employee, r.group, "internal")}
+                            style={{background:"transparent", border:"none", color:"#f59e0b", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
+                          >
+                            {(r.internalHours || 0).toFixed(1)}
+                          </button>
+                        ) : "-"}
+                      </td>
+                    )}
+                    <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{r.rows}</td>
+                    <td style={{padding:"14px 0", minWidth:120}}>
+                      <div style={{display:"flex", alignItems:"center", gap:8}}>
+                        {(() => {
+                          const shareBase = selectedCostcenter !== "ALL"
+                            ? totalCustomerHoursOnSelectedCostcenterCustomers
+                            : totalDisplayedTimeHours;
+                          const sharePct = shareBase > 0 ? (r.hours / shareBase * 100) : 0;
+                          return (
+                            <>
+                              <div style={{flex:1, height:6, background:"#2a4a5e", borderRadius:3, overflow:"hidden"}}>
+                                <div style={{width:`${sharePct}%`, height:"100%", background:"#1db3a7", borderRadius:3}} />
+                              </div>
+                              <span style={{color:"#6b8fa3", fontSize:12, minWidth:36}}>{Math.round(sharePct)}%</span>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
-        {timeByEmployee.length === 0 && (
+        {timeByEmployee.length === 0 && timeReportViewMode === "employee" && (
           <p style={{color:"#6b8fa3", fontSize:12, marginTop:12}}>Inga tidsrader i cache för nuvarande urval. Kör "Sync tid".</p>
         )}
 

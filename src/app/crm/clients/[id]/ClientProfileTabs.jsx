@@ -271,6 +271,22 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
                             Sätt som primär
                           </button>
                         )}
+                        <button
+                          type="button"
+                          disabled={saving}
+                          onClick={() => {
+                            if (!window.confirm(`Ta bort kontakt "${c.name || "kontakten"}"?`)) return;
+                            submit(
+                              `/api/crm/clients/${clientId}/contacts`,
+                              { contact_id: c.id },
+                              () => {},
+                              "DELETE"
+                            );
+                          }}
+                          style={{ background: "none", color: "#fda4af", border: "none", cursor: "pointer", fontSize: 13, padding: 0 }}
+                        >
+                          Ta bort
+                        </button>
                       </td>
                     </tr>
                   ))}

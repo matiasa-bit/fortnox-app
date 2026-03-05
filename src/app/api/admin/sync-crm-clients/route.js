@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { readFileSync } from "fs";
-import { getTokenFromDb, saveToken, supabaseServer } from "@/lib/supabase";
+import { getTokenFromDb, saveToken, saveCustomerCostCenterMappings, supabaseServer, saveAppSetting } from "@/lib/supabase";
 
 export const maxDuration = 60;
 
@@ -598,6 +598,47 @@ async function runCrmSync(request, body = {}) {
       }
 
       try {
+        // Hämta kostnadsstalle-katalog från Fortnox och spara mappings för alla CRM-kunder
+        // (täcker kunder utan fakturor som annars missar sync-costcenters)
+        let costCenterDictionary = new Map();
+        try {
+          const ccResult = await fetchJsonWithRetry(
+            "https://api.fortnox.se/3/costcenters",
+            { headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }, cache: "no-store" },
+            3
+          );
+          const ccItems = ccResult?.data?.CostCenterList || ccResult?.data?.Costcenters || [];
+          for (const cc of ccItems) {
+            const code = String(cc?.Code || cc?.code || "").trim();
+            const desc = String(cc?.Description || cc?.description || "").trim();
+            if (code) costCenterDictionary.set(code, desc);
+          }
+        } catch {
+          // Katalogen är valfri — fortsätter utan namn
+        }
+
+        const costCenterMappings = [];
+        for (const row of allRows) {
+          const customerNumber = String(row?.CustomerNumber || "").trim();
+          const code = String(row?.CostCenter || row?.CostCenterId || "").trim();
+          if (!customerNumber || !code) continue;
+          costCenterMappings.push({
+            customer_number: customerNumber,
+            customer_name: String(row?.Name || row?.CustomerName || "").trim(),
+            cost_center: code,
+            cost_center_name: String(costCenterDictionary.get(code) || "").trim(),
+            active: normalizeFortnoxActive(row),
+            updated_at: new Date().toISOString(),
+          });
+        }
+
+        if (costCenterMappings.length > 0) {
+          await saveCustomerCostCenterMappings(costCenterMappings);
+        }
+      } catch {
+      }
+
+      try {
         const contactCustomerNumbers = Array.from(fortnoxContactByCustomerNumber.keys());
         if (contactCustomerNumbers.length > 0) {
           const { data: clientRows } = await supabaseServer
@@ -625,6 +666,8 @@ async function runCrmSync(request, body = {}) {
       } catch {
       }
     }
+
+    await saveAppSetting("last_crm_sync", new Date().toISOString());
 
     return Response.json({
       ok: true,

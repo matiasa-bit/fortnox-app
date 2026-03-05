@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { supabaseServer } from "@/lib/supabase";
+import { supabaseServer, saveAppSetting } from "@/lib/supabase";
 
 // Anpassa denna funktion om du har token-hantering på annat ställe
 async function fetchFortnoxContacts(token) {
@@ -41,6 +41,7 @@ export async function POST(request) {
         .upsert(toUpsert, { onConflict: "email" });
     }
 
+    await saveAppSetting("last_contact_sync", new Date().toISOString());
     return Response.json({ ok: true, synced: toUpsert.length });
   } catch (error) {
     return Response.json({ ok: false, error: error?.message || "Okänt fel vid kontakt-sync" }, { status: 500 });

@@ -419,8 +419,20 @@ export async function getCrmClientDetails(clientId) {
 
   const contactDirectory = await getCrmContactDirectory();
 
+  // Hämta kostnadsställe för denna kund
+  let costCenterLabel = null;
+  const customerNumber = String(clientRes.data?.customer_number || "").trim();
+  if (customerNumber) {
+    const { data: ccRow } = await supabaseServer
+      .from("customer_costcenter_map")
+      .select("cost_center, cost_center_name")
+      .eq("customer_number", customerNumber)
+      .single();
+    if (ccRow) costCenterLabel = formatCostCenterLabel(ccRow);
+  }
+
   return {
-    client: clientRes.data || null,
+    client: { ...(clientRes.data || {}), cost_center_label: costCenterLabel },
     contacts,
     contactDirectory,
     services: servicesRes.data || [],

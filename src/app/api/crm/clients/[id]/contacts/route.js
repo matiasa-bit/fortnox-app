@@ -137,6 +137,42 @@ export async function PATCH(request, { params }) {
   return Response.json({ ok: true });
 }
 
+export async function DELETE(request, { params }) {
+  const { id } = await params;
+  const clientId = Number(id);
+
+  if (!Number.isFinite(clientId)) {
+    return Response.json({ ok: false, error: "Ogiltigt klient-id." }, { status: 400 });
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const contactId = Number(body?.contact_id);
+
+  if (!Number.isFinite(contactId)) {
+    return Response.json({ ok: false, error: "contact_id saknas." }, { status: 400 });
+  }
+
+  // Ta bort länken (ny modell)
+  const { error: linkError } = await supabaseServer
+    .from("crm_client_contacts")
+    .delete()
+    .eq("client_id", clientId)
+    .eq("contact_id", contactId);
+
+  // Ta bort direkt från legacy-tabellen om den finns
+  await supabaseServer
+    .from("crm_contacts")
+    .delete()
+    .eq("client_id", clientId)
+    .eq("id", contactId);
+
+  if (linkError && !isMissingTable(linkError)) {
+    return Response.json({ ok: false, error: linkError.message || "Kunde inte ta bort kontakt." }, { status: 500 });
+  }
+
+  return Response.json({ ok: true });
+}
+
 export async function PUT(request, { params }) {
   const { id } = await params;
   const clientId = Number(id);

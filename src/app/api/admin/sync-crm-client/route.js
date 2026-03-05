@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { readFileSync } from "fs";
-import { getTokenFromDb, saveToken, supabaseServer } from "@/lib/supabase";
+import { getTokenFromDb, saveToken, saveCustomerCostCenterMappings, supabaseServer } from "@/lib/supabase";
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -92,6 +92,19 @@ function extractFortnoxContact(customer = {}) {
   };
 }
 
+async function lookupCostCenterName(code) {
+  if (!code) return "";
+  const { data } = await supabaseServer
+    .from("customer_costcenter_map")
+    .select("cost_center_name")
+    .eq("cost_center", code)
+    .not("cost_center_name", "is", null)
+    .neq("cost_center_name", "")
+    .limit(1)
+    .single();
+  return String(data?.cost_center_name || "").trim();
+}
+
 async function upsertFortnoxContact(clientId, contact) {
   const name = String(contact?.name || "").trim() || "tomt";
   const role = "Fortnox - Er referens";
@@ -99,24 +112,48 @@ async function upsertFortnoxContact(clientId, contact) {
   const phone = String(contact?.phone || "").trim() || null;
   const notes = "Autoskapat från Fortnox";
 
-  // Find existing linked contact with this role for this client
+  // 1. Kolla nya systemet: hämta länkade contact_ids, sedan slå upp i crm_contact_directory
   const { data: linkRows } = await supabaseServer
     .from("crm_client_contacts")
-    .select("contact_id, crm_contact_directory(id, role)")
+    .select("contact_id")
     .eq("client_id", clientId);
 
-  const existingLink = (linkRows || []).find(
-    row => row?.crm_contact_directory?.role === role
-  );
-
-  if (existingLink?.crm_contact_directory?.id) {
-    await supabaseServer
+  const contactIds = (linkRows || []).map(r => Number(r.contact_id)).filter(Boolean);
+  if (contactIds.length > 0) {
+    const { data: dirRows } = await supabaseServer
       .from("crm_contact_directory")
-      .update({ name, role, email, phone, notes, updated_at: new Date().toISOString() })
-      .eq("id", existingLink.crm_contact_directory.id);
+      .select("id, role")
+      .in("id", contactIds)
+      .eq("role", role)
+      .limit(1);
+
+    const existing = dirRows?.[0];
+    if (existing?.id) {
+      await supabaseServer
+        .from("crm_contact_directory")
+        .update({ name, email, phone, notes, updated_at: new Date().toISOString() })
+        .eq("id", existing.id);
+      return;
+    }
+  }
+
+  // 2. Kolla legacy-tabellen crm_contacts
+  const { data: legacyRows } = await supabaseServer
+    .from("crm_contacts")
+    .select("id")
+    .eq("client_id", clientId)
+    .eq("role", role)
+    .limit(1);
+
+  if (legacyRows?.[0]?.id) {
+    await supabaseServer
+      .from("crm_contacts")
+      .update({ name, email: email || "tomt", phone: phone || "tomt", notes })
+      .eq("id", legacyRows[0].id);
     return;
   }
 
+  // 3. Skapa ny i nya systemet
   const { data: inserted } = await supabaseServer
     .from("crm_contact_directory")
     .insert({ name, role, email, phone, notes })
@@ -305,6 +342,20 @@ export async function POST(request) {
 
     if (contactOnly) {
       await upsertFortnoxContact(clientId, fortnoxContact);
+      try {
+        const costCenterCode = String(customer?.CostCenter || customer?.CostCenterId || "").trim();
+        if (costCenterCode) {
+          await saveCustomerCostCenterMappings([{
+            customer_number: customerNumber,
+            customer_name: String(customer?.Name || client.company_name || "").trim(),
+            cost_center: costCenterCode,
+            cost_center_name: await lookupCostCenterName(costCenterCode),
+            active: normalizeFortnoxActive(customer),
+            updated_at: new Date().toISOString(),
+          }]);
+        }
+      } catch {
+      }
       return Response.json({ ok: true, clientId, fortnox_contact: fortnoxContact });
     }
 
@@ -355,9 +406,19 @@ export async function POST(request) {
       .upsert([{ customer_number: customerNumber, name: payload.company_name }], { onConflict: "customer_number" });
 
     try {
-      await upsertFortnoxContact(clientId, fortnoxContact);
+      const costCenterCode = String(customer?.CostCenter || customer?.CostCenterId || "").trim();
+      if (costCenterCode) {
+        await saveCustomerCostCenterMappings([{
+          customer_number: customerNumber,
+          customer_name: payload.company_name,
+          cost_center: costCenterCode,
+          cost_center_name: await lookupCostCenterName(costCenterCode),
+          active: payload.fortnox_active,
+          updated_at: new Date().toISOString(),
+        }]);
+      }
     } catch {
-      // Contact sync should not block the primary customer sync.
+      // Cost center sync should not block the primary customer sync.
     }
 
     return Response.json({

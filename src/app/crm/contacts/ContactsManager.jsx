@@ -62,6 +62,24 @@ export default function ContactsManager({ initialContacts = [] }) {
     router.refresh();
   }
 
+  async function deleteContact(contactId, name) {
+    if (!window.confirm(`Ta bort kontakt "${name || "kontakten"}"? Den kopplas även bort från alla kunder.`)) return;
+    setError("");
+    setSavingId(contactId);
+
+    const res = await fetch(`/api/crm/contacts/${contactId}`, {
+      method: "DELETE",
+    }).catch(() => null);
+
+    setSavingId(0);
+
+    if (!res) { setError("Kunde inte nå servern."); return; }
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json?.ok) { setError(json?.error || "Kunde inte ta bort kontakt."); return; }
+
+    router.refresh();
+  }
+
   async function saveEdit(contactId) {
     if (!contactId || savingId) return;
     setError("");
@@ -163,16 +181,26 @@ export default function ContactsManager({ initialContacts = [] }) {
                         </button>
                       </>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditId(Number(contact.id));
-                          setEditForm(toForm(contact));
-                        }}
-                        style={{ background: "#233a49", color: "#fff", border: "1px solid #2a4a5e", borderRadius: 8, padding: "8px 10px", fontWeight: 700, cursor: "pointer" }}
-                      >
-                        Redigera
-                      </button>
+                      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditId(Number(contact.id));
+                            setEditForm(toForm(contact));
+                          }}
+                          style={{ background: "#233a49", color: "#fff", border: "1px solid #2a4a5e", borderRadius: 8, padding: "8px 10px", fontWeight: 700, cursor: "pointer" }}
+                        >
+                          Redigera
+                        </button>
+                        <button
+                          type="button"
+                          disabled={savingId === Number(contact.id)}
+                          onClick={() => deleteContact(Number(contact.id), contact.name)}
+                          style={{ background: "none", color: "#fda4af", border: "1px solid #fda4af", borderRadius: 8, padding: "8px 10px", fontWeight: 700, cursor: "pointer" }}
+                        >
+                          Ta bort
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
