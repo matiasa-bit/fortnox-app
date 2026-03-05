@@ -248,10 +248,41 @@ export async function getCrmClients(search = "") {
     latestByClientId.set(id, row?.date || null);
   }
 
-  return clients.map(row => ({
-    ...row,
-    last_activity_date: latestByClientId.get(Number(row.id)) || null,
-  }));
+  const { data: contactLinkRows, error: contactLinkError } = await supabaseServer
+    .from("crm_client_contacts")
+    .select("client_id, is_primary, crm_contact_directory(name, email, phone)")
+    .in("client_id", clientIds)
+    .limit(10000);
+
+  if (contactLinkError && !isMissingCrmTable(contactLinkError)) {
+    console.error("Fel vid hämtning av kontakter till klientlista:", contactLinkError);
+  }
+
+  const primaryContactByClientId = new Map();
+  const fallbackContactByClientId = new Map();
+  for (const row of contactLinkRows || []) {
+    const id = Number(row?.client_id);
+    if (!Number.isFinite(id)) continue;
+    const c = row?.crm_contact_directory;
+    if (!c) continue;
+    if (row.is_primary) {
+      primaryContactByClientId.set(id, c);
+    } else if (!fallbackContactByClientId.has(id)) {
+      fallbackContactByClientId.set(id, c);
+    }
+  }
+
+  return clients.map(row => {
+    const id = Number(row.id);
+    const contact = primaryContactByClientId.get(id) || fallbackContactByClientId.get(id) || null;
+    return {
+      ...row,
+      last_activity_date: latestByClientId.get(id) || null,
+      contact_name: contact?.name || null,
+      contact_email: contact?.email || null,
+      contact_phone: contact?.phone || null,
+    };
+  });
 }
 
 export async function getCrmConsultants() {
@@ -315,15 +346,14 @@ export async function getCrmClientDetails(clientId) {
   let contacts = [];
   const linksRes = await supabaseServer
     .from("crm_client_contacts")
-    .select("contact_id")
+    .select("contact_id, is_primary")
     .eq("client_id", id)
     .limit(5000);
 
   if (!linksRes.error) {
+    const linkRows = linksRes.data || [];
     const contactIds = Array.from(new Set(
-      (linksRes.data || [])
-        .map(row => Number(row?.contact_id))
-        .filter(value => Number.isFinite(value))
+      linkRows.map(row => Number(row?.contact_id)).filter(value => Number.isFinite(value))
     ));
 
     if (contactIds.length > 0) {
@@ -334,7 +364,13 @@ export async function getCrmClientDetails(clientId) {
         .order("name", { ascending: true });
 
       if (!directoryRes.error) {
-        contacts = directoryRes.data || [];
+        const isPrimaryById = new Map(
+          linkRows.map(row => [Number(row.contact_id), !!row.is_primary])
+        );
+        contacts = (directoryRes.data || []).map(c => ({
+          ...c,
+          is_primary: isPrimaryById.get(Number(c.id)) || false,
+        }));
       }
     }
   }

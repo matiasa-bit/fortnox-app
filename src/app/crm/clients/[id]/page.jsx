@@ -3,6 +3,7 @@ import { getCrmClientDetails } from "@/lib/crm";
 import ClientProfileTabs from "@/app/crm/clients/[id]/ClientProfileTabs";
 import SyncSingleBolagsverketButton from "@/app/crm/clients/[id]/SyncSingleBolagsverketButton";
 import SyncSingleFortnoxButton from "@/app/crm/clients/[id]/SyncSingleFortnoxButton";
+import SyncFortnoxContactButton from "@/app/crm/clients/[id]/SyncFortnoxContactButton";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,7 @@ export default async function CrmClientProfilePage({ params }) {
           </div>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
             <SyncSingleFortnoxButton clientId={client.id} />
+            <SyncFortnoxContactButton clientId={client.id} />
             <SyncSingleBolagsverketButton clientId={client.id} />
             <Link
               href={`/crm/clients/${client.id}/edit`}

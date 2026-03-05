@@ -2,6 +2,8 @@ import { cookies } from "next/headers";
 import { readFileSync } from "fs";
 import { getTokenFromDb, saveToken, supabaseServer } from "@/lib/supabase";
 
+export const maxDuration = 60;
+
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -316,6 +318,7 @@ async function runCrmSync(request, body = {}) {
     const maxPages = Math.max(1, Math.min(100, Number(body?.maxPages || 10)));
     const fromPage = Math.max(1, Number(body?.fromPage || 1));
     const maxDetailLookups = Math.max(0, Math.min(1000, Number(body?.maxDetailLookups || 120)));
+    const fortnoxFilter = ["active", "inactive"].includes(body?.fortnoxFilter) ? body.fortnoxFilter : null;
 
     let page = fromPage;
     let hasMore = true;
@@ -328,7 +331,8 @@ async function runCrmSync(request, body = {}) {
     const lastPage = fromPage + maxPages - 1;
 
     while (hasMore && page <= lastPage) {
-      const url = `https://api.fortnox.se/3/customers?limit=500&page=${page}`;
+      const filterParam = fortnoxFilter ? `&filter=${fortnoxFilter}` : "";
+      const url = `https://api.fortnox.se/3/customers?limit=500&page=${page}${filterParam}`;
       let result;
       try {
         result = await fetchJsonWithRetry(url, {
@@ -492,7 +496,9 @@ async function runCrmSync(request, body = {}) {
         continue;
       }
 
-      let fortnoxActive = normalizeFortnoxActive(row);
+      let fortnoxActive = fortnoxFilter === "active" ? true
+        : fortnoxFilter === "inactive" ? false
+        : normalizeFortnoxActive(row);
       if (fortnoxActive === null && customerNumber) {
         if (detailLookups >= maxDetailLookups) {
           skippedDetailLookups += 1;

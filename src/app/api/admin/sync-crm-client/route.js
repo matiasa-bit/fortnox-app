@@ -93,40 +93,41 @@ function extractFortnoxContact(customer = {}) {
 }
 
 async function upsertFortnoxContact(clientId, contact) {
-  const { data: existingRows } = await supabaseServer
-    .from("crm_contacts")
-    .select("id")
-    .eq("client_id", clientId)
-    .eq("role", "Fortnox - Er referens")
-    .limit(1);
+  const name = String(contact?.name || "").trim() || "tomt";
+  const role = "Fortnox - Er referens";
+  const email = String(contact?.email || "").trim() || null;
+  const phone = String(contact?.phone || "").trim() || null;
+  const notes = "Autoskapat från Fortnox";
 
-  const existingId = Number(existingRows?.[0]?.id);
-  const payload = {
-    client_id: clientId,
-    name: String(contact?.name || "tomt").trim() || "tomt",
-    role: "Fortnox - Er referens",
-    email: String(contact?.email || "tomt").trim() || "tomt",
-    phone: String(contact?.phone || "tomt").trim() || "tomt",
-    notes: "Autoskapat fran Fortnox",
-  };
+  // Find existing linked contact with this role for this client
+  const { data: linkRows } = await supabaseServer
+    .from("crm_client_contacts")
+    .select("contact_id, crm_contact_directory(id, role)")
+    .eq("client_id", clientId);
 
-  if (Number.isFinite(existingId)) {
+  const existingLink = (linkRows || []).find(
+    row => row?.crm_contact_directory?.role === role
+  );
+
+  if (existingLink?.crm_contact_directory?.id) {
     await supabaseServer
-      .from("crm_contacts")
-      .update({
-        name: payload.name,
-        role: payload.role,
-        email: payload.email,
-        phone: payload.phone,
-        notes: payload.notes,
-      })
-      .eq("id", existingId);
+      .from("crm_contact_directory")
+      .update({ name, role, email, phone, notes, updated_at: new Date().toISOString() })
+      .eq("id", existingLink.crm_contact_directory.id);
     return;
   }
 
-  await supabaseServer
-    .from("crm_contacts")
-    .insert(payload);
+  const { data: inserted } = await supabaseServer
+    .from("crm_contact_directory")
+    .insert({ name, role, email, phone, notes })
+    .select("id")
+    .single();
+
+  if (inserted?.id) {
+    await supabaseServer
+      .from("crm_client_contacts")
+      .insert({ client_id: clientId, contact_id: inserted.id });
+  }
 }
 
 async function getToken(cookieStore, userId) {
@@ -300,6 +301,12 @@ export async function POST(request) {
     }
 
     const fortnoxContact = extractFortnoxContact(customer);
+    const contactOnly = body?.contactOnly === true;
+
+    if (contactOnly) {
+      await upsertFortnoxContact(clientId, fortnoxContact);
+      return Response.json({ ok: true, clientId, fortnox_contact: fortnoxContact });
+    }
 
     const companyName = String(customer?.Name || client.company_name || "").trim();
     const resolvedOrgNumber =
@@ -345,12 +352,7 @@ export async function POST(request) {
 
     await supabaseServer
       .from("customers")
-      .upsert([
-        {
-          customer_number: customerNumber,
-          name: payload.company_name,
-        },
-      ], { onConflict: "customer_number" });
+      .upsert([{ customer_number: customerNumber, name: payload.company_name }], { onConflict: "customer_number" });
 
     try {
       await upsertFortnoxContact(clientId, fortnoxContact);

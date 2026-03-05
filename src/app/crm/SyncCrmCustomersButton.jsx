@@ -40,52 +40,37 @@ export default function SyncCrmCustomersButton() {
     setSyncingCustomers(true);
     setStatus("Startar CRM-sync...");
 
-    let nextPage = 1;
     let fetched = 0;
     let upserted = 0;
-    let maxGuard = 20;
 
-    try {
+    async function syncWithFilter(filter) {
+      let nextPage = 1;
+      let maxGuard = 20;
       while (nextPage && maxGuard > 0) {
         maxGuard -= 1;
-        setStatus(`Synkar sida ${nextPage}...`);
-
+        setStatus(`Synkar ${filter === "active" ? "aktiva" : "inaktiva"} kunder, sida ${nextPage}...`);
         const res = await fetch("/api/admin/sync-crm-clients", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fromPage: nextPage,
-            maxPages: 1,
-            maxDetailLookups: 1000,
-          }),
+          body: JSON.stringify({ fromPage: nextPage, maxPages: 1, maxDetailLookups: 0, fortnoxFilter: filter }),
         });
-
         const payload = await res.json().catch(() => ({}));
         if (!res.ok || payload?.ok === false) {
           throw new Error(payload?.error || `HTTP ${res.status}`);
         }
-
-        const fetchedBatch = Number(payload?.fetched || 0);
-        const upsertedBatch = Number(payload?.upserted || 0);
-        fetched += fetchedBatch;
-        upserted += upsertedBatch;
+        fetched += Number(payload?.fetched || 0);
+        upserted += Number(payload?.upserted || 0);
         nextPage = Number(payload?.nextPage || 0) || 0;
-
-        const activeCount = Number(payload?.fortnoxActive || 0);
-        const inactiveCount = Number(payload?.fortnoxInactive || 0);
-        const unknownCount = Number(payload?.fortnoxUnknown || 0);
-        const detailLookups = Number(payload?.detailLookups || 0);
-        const unresolvedAfterLookup = Number(payload?.detailStatusesStillUnknown || 0);
-        setStatus(
-          `Sida ${Number(payload?.fromPage || nextPage || 0)} klar: ${fetchedBatch} hämtade, ${upsertedBatch} sparade, ` +
-          `status A:${activeCount} I:${inactiveCount} O:${unknownCount}, detaljuppslag ${detailLookups}, okända kvar ${unresolvedAfterLookup}.`
-        );
-
         if (payload?.warning) {
           setStatus(`Delvis klar: ${payload.warning}`);
-          break;
+          return;
         }
       }
+    }
+
+    try {
+      await syncWithFilter("inactive");
+      await syncWithFilter("active");
 
       setStatus(`Klar. Hämtade ${fetched} och uppdaterade ${upserted} kunder.`);
       setTimeout(() => {

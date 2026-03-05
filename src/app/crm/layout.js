@@ -7,6 +7,7 @@ const navItems = [
   { href: "/crm/contacts", label: "Kontakter" },
   { href: "/crm/activity", label: "Aktivitetslogg" },
   { href: "/crm/clients/new", label: "Ny klient" },
+  { href: "/crm/mail", label: "Mail" },
 ];
 
 export default function CrmLayout({ children }) {

@@ -43,7 +43,7 @@ export default async function CrmClientsPage({ searchParams }) {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid #2a4a5e" }}>
-              {["Företagsnamn", "Org.nr", "Kundnummer", "Fortnox", "Kostnadsstalle", "Senaste aktivitet"].map(h => (
+              {["Företagsnamn", "Org.nr", "Kundnummer", "Fortnox", "Kostnadsstalle", "Kontakt", "Telefon", "E-post", "Senaste aktivitet"].map(h => (
                 <th key={h} style={{ textAlign: "left", color: "#6b8fa3", fontSize: 12, fontWeight: 600, padding: "0 10px 12px 0", textTransform: "uppercase", letterSpacing: 0.8 }}>{h}</th>
               ))}
             </tr>
@@ -97,6 +97,27 @@ export default async function CrmClientsPage({ searchParams }) {
                     <div style={{ ...cellLinkStyle, color: "#dbe7ef" }}>
                       {client.cost_center_label || "-"}
                     </div>
+                  )}
+                </td>
+                <td style={{ color: "#dbe7ef" }}>
+                  {client.id ? (
+                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.contact_name || "-"}</Link>
+                  ) : (
+                    <div style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.contact_name || "-"}</div>
+                  )}
+                </td>
+                <td style={{ color: "#dbe7ef" }}>
+                  {client.id ? (
+                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.contact_phone || "-"}</Link>
+                  ) : (
+                    <div style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.contact_phone || "-"}</div>
+                  )}
+                </td>
+                <td style={{ color: "#dbe7ef" }}>
+                  {client.id ? (
+                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.contact_email || "-"}</Link>
+                  ) : (
+                    <div style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.contact_email || "-"}</div>
                   )}
                 </td>
                 <td style={{ color: "#8fb1c3" }}>

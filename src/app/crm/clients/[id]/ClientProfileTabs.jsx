@@ -48,6 +48,8 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
 
   const [contactForm, setContactForm] = useState({ name: "", role: "", email: "", phone: "" });
   const [selectedContactId, setSelectedContactId] = useState("");
+  const [editingContactId, setEditingContactId] = useState(null);
+  const [editContactForm, setEditContactForm] = useState({ name: "", role: "", email: "", phone: "" });
   const [serviceForm, setServiceForm] = useState({ service_type: "", billing_model: "", price: "", start_date: "" });
   const [noteForm, setNoteForm] = useState({ description: "", date: today() });
 
@@ -58,13 +60,13 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
     { key: "documents", label: `Dokumentlänkar (${documents.length})` },
   ]), [contacts.length, services.length, activities.length, documents.length]);
 
-  async function submit(path, payload, onSuccess) {
+  async function submit(path, payload, onSuccess, method = "POST") {
     if (saving) return;
     setError("");
     setSaving(true);
 
     const res = await fetch(path, {
-      method: "POST",
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     }).catch(() => null);
@@ -146,11 +148,95 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
           </div>
 
           <div style={cardStyle}>
-            <h3 style={{ margin: "0 0 10px", fontSize: 16 }}>Kontaktpersoner</h3>
-            {contacts.length === 0 ? <p style={{ margin: 0, color: "#8fb1c3" }}>Inga kontakter ännu.</p> : (
-              <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}>
-                {contacts.map(c => <li key={c.id}>{c.name} · {c.role || "-"} · {c.email || "-"} · {c.phone || "-"}</li>)}
-              </ul>
+            <h3 style={{ margin: "0 0 12px", fontSize: 16 }}>Kontaktpersoner</h3>
+            {contacts.length === 0 ? (
+              <p style={{ margin: 0, color: "#8fb1c3" }}>Inga kontakter ännu.</p>
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr style={{ color: "#8fb1c3", textAlign: "left" }}>
+                    <th style={{ padding: "4px 10px 8px 0", fontWeight: 600 }}>Namn</th>
+                    <th style={{ padding: "4px 10px 8px 0", fontWeight: 600 }}>Roll</th>
+                    <th style={{ padding: "4px 10px 8px 0", fontWeight: 600 }}>E-post</th>
+                    <th style={{ padding: "4px 10px 8px 0", fontWeight: 600 }}>Telefon</th>
+                    <th style={{ padding: "4px 0 8px 0", fontWeight: 600 }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {contacts.map(c => editingContactId === c.id ? (
+                    <tr key={c.id} style={{ background: "#0f1923" }}>
+                      <td style={{ padding: "4px 10px 4px 0" }}>
+                        <input value={editContactForm.name} onChange={e => setEditContactForm(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, padding: "5px 8px" }} />
+                      </td>
+                      <td style={{ padding: "4px 10px 4px 0" }}>
+                        <input value={editContactForm.role} onChange={e => setEditContactForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, padding: "5px 8px" }} />
+                      </td>
+                      <td style={{ padding: "4px 10px 4px 0" }}>
+                        <input value={editContactForm.email} onChange={e => setEditContactForm(p => ({ ...p, email: e.target.value }))} style={{ ...inputStyle, padding: "5px 8px" }} />
+                      </td>
+                      <td style={{ padding: "4px 10px 4px 0" }}>
+                        <input value={editContactForm.phone} onChange={e => setEditContactForm(p => ({ ...p, phone: e.target.value }))} style={{ ...inputStyle, padding: "5px 8px" }} />
+                      </td>
+                      <td style={{ padding: "4px 0", whiteSpace: "nowrap" }}>
+                        <button
+                          type="button"
+                          disabled={saving}
+                          onClick={() => submit(
+                            `/api/crm/clients/${clientId}/contacts`,
+                            { contact_id: c.id, ...editContactForm },
+                            () => setEditingContactId(null),
+                            "PATCH"
+                          )}
+                          style={{ background: "#00c97a", color: "#0f1923", border: "none", borderRadius: 6, padding: "5px 10px", fontWeight: 700, cursor: "pointer", marginRight: 6 }}
+                        >
+                          Spara
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingContactId(null)}
+                          style={{ background: "#233a49", color: "#fff", border: "1px solid #2a4a5e", borderRadius: 6, padding: "5px 10px", cursor: "pointer" }}
+                        >
+                          Avbryt
+                        </button>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={c.id} style={{ borderTop: "1px solid #1e3447" }}>
+                      <td style={{ padding: "8px 10px 8px 0", color: "#dbe7ef" }}>
+                        {c.name || "-"}
+                        {c.is_primary && <span style={{ marginLeft: 6, fontSize: 11, color: "#00c97a", fontWeight: 700 }}>PRIMÄR</span>}
+                      </td>
+                      <td style={{ padding: "8px 10px 8px 0", color: "#8fb1c3" }}>{c.role || "-"}</td>
+                      <td style={{ padding: "8px 10px 8px 0", color: "#dbe7ef" }}>{c.email || "-"}</td>
+                      <td style={{ padding: "8px 10px 8px 0", color: "#dbe7ef" }}>{c.phone || "-"}</td>
+                      <td style={{ padding: "8px 0", whiteSpace: "nowrap", display: "flex", gap: 10 }}>
+                        <button
+                          type="button"
+                          onClick={() => { setEditingContactId(c.id); setEditContactForm({ name: c.name || "", role: c.role || "", email: c.email || "", phone: c.phone || "" }); }}
+                          style={{ background: "none", color: "#3b9eff", border: "none", cursor: "pointer", fontSize: 13, padding: 0 }}
+                        >
+                          Redigera
+                        </button>
+                        {!c.is_primary && (
+                          <button
+                            type="button"
+                            disabled={saving}
+                            onClick={() => submit(
+                              `/api/crm/clients/${clientId}/contacts`,
+                              { contact_id: c.id },
+                              () => {},
+                              "PUT"
+                            )}
+                            style={{ background: "none", color: "#00c97a", border: "none", cursor: "pointer", fontSize: 13, padding: 0 }}
+                          >
+                            Sätt som primär
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
         </div>
