@@ -29,7 +29,7 @@ export default function SyncCrmCustomersButton() {
           body: JSON.stringify({
             fromPage: nextPage,
             maxPages: 1,
-            maxDetailLookups: 120,
+            maxDetailLookups: 1000,
           }),
         });
 
