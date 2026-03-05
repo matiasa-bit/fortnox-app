@@ -779,7 +779,6 @@ export default function DashboardClient({
 
   useEffect(() => {
     let cancelled = false;
-    const successfullySyncedInvoices = new Set();
 
     const missingInvoiceNumbers = filteredInvoiceNumbers
       .filter(invoiceNumber => invoiceRows[invoiceNumber] === undefined)
@@ -1063,6 +1062,43 @@ export default function DashboardClient({
     ));
   }, [filteredInvoicesForRollingWindow]);
 
+  // Proactively load rolling window invoice rows from DB as soon as customer is selected,
+  // so they're ready before the user clicks an article group checkbox.
+  useEffect(() => {
+    const missing = rollingInvoiceNumbers
+      .filter(n => invoiceRows[n] === undefined)
+      .slice(0, 300);
+
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch("/api/invoice-rows", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ invoiceNumbers: missing }),
+          cache: "no-store",
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok || payload?.ok === false || cancelled) return;
+        const rowsByInvoice = payload?.rowsByInvoice || {};
+        setInvoiceRows(prev => {
+          const next = { ...prev };
+          missing.forEach(n => {
+            if (next[n] !== undefined) return;
+            next[n] = Array.isArray(rowsByInvoice[n]) ? rowsByInvoice[n] : [];
+          });
+          return next;
+        });
+      } catch {
+        // no-op
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [rollingInvoiceNumbers, invoiceRows]);
+
   const missingRollingInvoiceNumbersForGroupFilter = useMemo(() => {
     if (selectedArticleGroupFilters.length === 0) return [];
 
@@ -1196,6 +1232,7 @@ export default function DashboardClient({
     articleGroupAutoSyncKeyRef.current = autoSyncKey;
 
     let cancelled = false;
+    const successfullySyncedInvoices = new Set();
 
     const syncMissingRows = async () => {
       setSyncingArticleRowsForGroupFilter(true);
@@ -1206,7 +1243,7 @@ export default function DashboardClient({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               invoiceNumbers: invoiceNumbersToSync,
-              batchSize: shouldForceResync ? 200 : 50,
+              batchSize: 200,
               forceResync: shouldForceResync,
             }),
           });
@@ -1215,43 +1252,37 @@ export default function DashboardClient({
           if (!res.ok || payload?.ok === false) break;
 
           const syncedList = Array.isArray(payload?.syncedInvoiceNumbers)
-            ? payload.syncedInvoiceNumbers
+            ? payload.syncedInvoiceNumbers.map(n => String(n || "").trim()).filter(Boolean)
             : [];
           syncedList.forEach(invoiceNumber => {
-            const normalizedInvoiceNumber = String(invoiceNumber || "").trim();
-            if (normalizedInvoiceNumber) successfullySyncedInvoices.add(normalizedInvoiceNumber);
+            successfullySyncedInvoices.add(invoiceNumber);
           });
+
+          if (cancelled) return;
+
+          // Load and display newly synced rows immediately after each batch
+          if (syncedList.length > 0) {
+            const loadRes = await fetch("/api/invoice-rows", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ invoiceNumbers: syncedList }),
+              cache: "no-store",
+            });
+            const loadPayload = await loadRes.json().catch(() => ({}));
+            if (!cancelled && loadRes.ok && loadPayload?.ok !== false) {
+              const rowsByInvoice = loadPayload?.rowsByInvoice || {};
+              setInvoiceRows(prev => {
+                const next = { ...prev };
+                syncedList.forEach(invoiceNumber => {
+                  next[invoiceNumber] = Array.isArray(rowsByInvoice[invoiceNumber]) ? rowsByInvoice[invoiceNumber] : [];
+                });
+                return next;
+              });
+            }
+          }
 
           if (!Number(payload?.syncedNow) || Number(payload?.remaining || 0) <= 0) break;
         }
-
-        if (cancelled) return;
-
-        const loadRes = await fetch("/api/invoice-rows", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ invoiceNumbers: invoiceNumbersToSync }),
-          cache: "no-store",
-        });
-        const loadPayload = await loadRes.json().catch(() => ({}));
-        if (!loadRes.ok || loadPayload?.ok === false || cancelled) return;
-
-        const rowsByInvoice = loadPayload?.rowsByInvoice || {};
-        setInvoiceRows(prev => {
-          const next = { ...prev };
-          invoiceNumbersToSync.forEach(invoiceNumber => {
-            const syncedRows = Array.isArray(rowsByInvoice[invoiceNumber]) ? rowsByInvoice[invoiceNumber] : [];
-            if (shouldForceResync) {
-              if (!successfullySyncedInvoices.has(invoiceNumber)) return;
-              next[invoiceNumber] = syncedRows;
-              return;
-            }
-
-            if (next[invoiceNumber] && next[invoiceNumber].length > 0) return;
-            next[invoiceNumber] = syncedRows;
-          });
-          return next;
-        });
       } catch {
       } finally {
         if (!cancelled) setSyncingArticleRowsForGroupFilter(false);
@@ -2392,6 +2423,9 @@ export default function DashboardClient({
         costcenterRemaining: 0,
       };
 
+      setFullSyncStatus("Synkar fakturor från Fortnox...");
+      await postSyncJson("/api/admin/sync-invoices", { fromDate: "2025-01-01" });
+
       setFullSyncStatus("Synkar tidsredovisning (stort uttag)...");
       const timeResult = await postSyncJson("/api/admin/sync-time-reports", {
         fromDate: "2025-01-01",
@@ -2515,6 +2549,29 @@ export default function DashboardClient({
             disabled={syncingFullData}
             title="Kör stor hämtning av tillgänglig data från Fortnox"
           >{syncingFullData ? 'Kör full sync...' : 'Full sync alla moduler'}</button>
+          <button
+            onClick={async () => {
+              try {
+                const res = await fetch('/api/admin/sync-invoices', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ fromDate: '2025-01-01' }),
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || data.ok === false) {
+                  alert(`Fel vid sync fakturor: ${data.error || 'okänt'}`);
+                } else {
+                  const debugStr = data.debug?.length ? `\nDebug: ${JSON.stringify(data.debug)}` : '';
+                  alert(`Fakturor synkade! Sparade: ${data.saved}${debugStr}`);
+                  if (data.saved > 0) window.location.reload();
+                }
+              } catch (err) {
+                alert(`Fel: ${err?.message || 'okänt'}`);
+              }
+            }}
+            style={{background:'#2563eb', color:'#fff', padding:'8px 12px', borderRadius:8, border:'none', cursor:'pointer'}}
+            title="Hämta alla fakturor från Fortnox och spara i databasen"
+          >Sync fakturor</button>
           <button
             onClick={async () => {
               setSyncingTimeReports(true);
@@ -2659,9 +2716,10 @@ export default function DashboardClient({
               if (syncingAllArticleRows) return;
               setSyncingAllArticleRows(true);
               setAllArticleRowsStatus("Startar...");
-              const fromDate = `${new Date().getFullYear() - 2}-01-01`;
+              const fromDate = "2025-01-01";
               let rounds = 0;
               let totalSynced = 0;
+              const allSyncedNumbers = [];
               try {
                 while (rounds < 100) {
                   rounds += 1;
@@ -2678,8 +2736,33 @@ export default function DashboardClient({
                   const syncedNow = Number(data.syncedNow || 0);
                   const remaining = Number(data.remaining || 0);
                   totalSynced += syncedNow;
+                  if (Array.isArray(data.syncedInvoiceNumbers)) {
+                    allSyncedNumbers.push(...data.syncedInvoiceNumbers.map(n => String(n || "").trim()).filter(Boolean));
+                  }
                   setAllArticleRowsStatus(`Runda ${rounds}: synkade ${totalSynced} fakturor, kvar ${remaining}`);
                   if (syncedNow === 0 || remaining === 0) break;
+                }
+                if (allSyncedNumbers.length > 0) {
+                  setAllArticleRowsStatus(`Laddar in ${allSyncedNumbers.length} fakturors rader...`);
+                  const chunkSize = 300;
+                  for (let i = 0; i < allSyncedNumbers.length; i += chunkSize) {
+                    const chunk = allSyncedNumbers.slice(i, i + chunkSize);
+                    const loadRes = await fetch('/api/invoice-rows', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ invoiceNumbers: chunk }),
+                      cache: 'no-store',
+                    });
+                    const loadData = await loadRes.json().catch(() => ({}));
+                    if (loadRes.ok && loadData.ok !== false) {
+                      const rowsByInvoice = loadData.rowsByInvoice || {};
+                      setInvoiceRows(prev => {
+                        const next = { ...prev };
+                        chunk.forEach(n => { next[n] = Array.isArray(rowsByInvoice[n]) ? rowsByInvoice[n] : []; });
+                        return next;
+                      });
+                    }
+                  }
                 }
                 setAllArticleRowsStatus(`Klar! Totalt synkade ${totalSynced} fakturars artikelrader.`);
               } catch (err) {
@@ -2691,6 +2774,70 @@ export default function DashboardClient({
             style={{background:'#059669', color:'#fff', padding:'8px 12px', borderRadius:8, border:'none', cursor: syncingAllArticleRows ? 'not-allowed' : 'pointer'}}
             disabled={syncingAllArticleRows}
           >{syncingAllArticleRows ? 'Synkar alla artikelrader...' : 'Synka alla artikelrader'}</button>
+          <button
+            onClick={async () => {
+              if (syncingAllArticleRows) return;
+              if (!window.confirm('Detta tvingar omsynk av ALLA fakturors artikelrader från Fortnox (kan ta lång tid). Fortsätta?')) return;
+              setSyncingAllArticleRows(true);
+              setAllArticleRowsStatus("Force-synk startar...");
+              const fromDate = "2025-01-01";
+              let rounds = 0;
+              let totalSynced = 0;
+              const allSyncedNumbers = [];
+              try {
+                while (rounds < 200) {
+                  rounds += 1;
+                  const res = await fetch('/api/admin/sync-invoice-rows', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ batchSize: 50, fromDate, forceResync: true }),
+                  });
+                  const data = await res.json().catch(() => ({}));
+                  if (!res.ok || data.ok === false) {
+                    setAllArticleRowsStatus(`Fel: ${data.error || 'okänt fel'}`);
+                    break;
+                  }
+                  const syncedNow = Number(data.syncedNow || 0);
+                  const remaining = Number(data.remaining || 0);
+                  totalSynced += syncedNow;
+                  if (Array.isArray(data.syncedInvoiceNumbers)) {
+                    allSyncedNumbers.push(...data.syncedInvoiceNumbers.map(n => String(n || "").trim()).filter(Boolean));
+                  }
+                  setAllArticleRowsStatus(`Force-synk runda ${rounds}: ${totalSynced} fakturor klara, kvar ${remaining}`);
+                  if (syncedNow === 0 || remaining === 0) break;
+                }
+                if (allSyncedNumbers.length > 0) {
+                  setAllArticleRowsStatus(`Laddar in ${allSyncedNumbers.length} fakturors rader...`);
+                  const chunkSize = 300;
+                  for (let i = 0; i < allSyncedNumbers.length; i += chunkSize) {
+                    const chunk = allSyncedNumbers.slice(i, i + chunkSize);
+                    const loadRes = await fetch('/api/invoice-rows', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ invoiceNumbers: chunk }),
+                      cache: 'no-store',
+                    });
+                    const loadData = await loadRes.json().catch(() => ({}));
+                    if (loadRes.ok && loadData.ok !== false) {
+                      const rowsByInvoice = loadData.rowsByInvoice || {};
+                      setInvoiceRows(prev => {
+                        const next = { ...prev };
+                        chunk.forEach(n => { next[n] = Array.isArray(rowsByInvoice[n]) ? rowsByInvoice[n] : []; });
+                        return next;
+                      });
+                    }
+                  }
+                }
+                setAllArticleRowsStatus(`Force-synk klar! Totalt omsynkade ${totalSynced} fakturars artikelrader.`);
+              } catch (err) {
+                setAllArticleRowsStatus(`Fel: ${err?.message || 'okänt'}`);
+              } finally {
+                setSyncingAllArticleRows(false);
+              }
+            }}
+            style={{background:'#b45309', color:'#fff', padding:'8px 12px', borderRadius:8, border:'none', cursor: syncingAllArticleRows ? 'not-allowed' : 'pointer'}}
+            disabled={syncingAllArticleRows}
+          >{syncingAllArticleRows ? 'Synkar...' : 'Force omsynk artikelrader'}</button>
           <button
             onClick={async () => {
               setSyncingCostcenters(true);
