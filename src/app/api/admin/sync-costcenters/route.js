@@ -144,8 +144,14 @@ export async function POST(request) {
   const mappings = await getCustomerCostCenterMappings([]);
   const existingMap = new Map(mappings.map(m => [normalizeCustomerNumber(m.customer_number), m]));
 
-  // Only sync customers with no row yet — those already checked won't be re-queued
-  const numbersNeedingSync = invoiceCustomerNumbers.filter(num => !existingMap.has(num));
+  // Sync customers with no row yet, OR those not refreshed in the last 45 days.
+  // The 45-day window ensures Fortnox changes are picked up automatically over time.
+  const staleCutoff = new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString();
+  const numbersNeedingSync = invoiceCustomerNumbers.filter(num => {
+    const row = existingMap.get(num);
+    if (!row) return true;
+    return !row.updated_at || row.updated_at < staleCutoff;
+  });
 
   const toSync = numbersNeedingSync.slice(0, batchSize);
   if (toSync.length === 0) {
@@ -176,7 +182,10 @@ export async function POST(request) {
         token, cookieStore, userId
       );
       token = newToken;
-      const customer = data?.Customer || {};
+      // Skip if card wasn't actually retrieved — don't save empty row that would
+      // overwrite existing good data with blanks on a transient API failure.
+      if (!data?.Customer) { failed.push(customerNumber); continue; }
+      const customer = data.Customer;
       const code = normalizeCostCenter(customer.CostCenter || customer.CostCenterCode || customer.CostCenterId);
       rowsToSave.push({
         customer_number: customerNumber,
