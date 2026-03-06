@@ -10,9 +10,9 @@ function toInputValue(value) {
 
 const inputStyle = {
   width: "100%",
-  background: "#0f1923",
+  background: "#080c10",
   color: "#fff",
-  border: "1px solid #2a4a5e",
+  border: "1px solid #1e293b",
   borderRadius: 8,
   padding: "10px 12px",
   fontSize: 14,
@@ -82,27 +82,27 @@ export default function ClientForm({ mode, initialClient, clientId }) {
     <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
         <label>
-          <div style={{ marginBottom: 6, color: "#dbe7ef", fontSize: 13 }}>Företagsnamn *</div>
+          <div style={{ marginBottom: 6, color: "#e2e8f0", fontSize: 13 }}>Företagsnamn *</div>
           <input required value={form.company_name} onChange={e => updateField("company_name", e.target.value)} style={inputStyle} />
         </label>
 
         <label>
-          <div style={{ marginBottom: 6, color: "#dbe7ef", fontSize: 13 }}>Org.nr *</div>
+          <div style={{ marginBottom: 6, color: "#e2e8f0", fontSize: 13 }}>Org.nr *</div>
           <input required value={form.organization_number} onChange={e => updateField("organization_number", e.target.value)} style={inputStyle} />
         </label>
 
         <label>
-          <div style={{ marginBottom: 6, color: "#dbe7ef", fontSize: 13 }}>Kundnummer (gamla appen/Fortnox)</div>
+          <div style={{ marginBottom: 6, color: "#e2e8f0", fontSize: 13 }}>Kundnummer (gamla appen/Fortnox)</div>
           <input value={form.customer_number} onChange={e => updateField("customer_number", e.target.value)} style={inputStyle} />
         </label>
 
         <label>
-          <div style={{ marginBottom: 6, color: "#dbe7ef", fontSize: 13 }}>Bransch</div>
+          <div style={{ marginBottom: 6, color: "#e2e8f0", fontSize: 13 }}>Bransch</div>
           <input value={form.industry} onChange={e => updateField("industry", e.target.value)} style={inputStyle} />
         </label>
 
         <label>
-          <div style={{ marginBottom: 6, color: "#dbe7ef", fontSize: 13 }}>Status</div>
+          <div style={{ marginBottom: 6, color: "#e2e8f0", fontSize: 13 }}>Status</div>
           <select value={form.client_status} onChange={e => updateField("client_status", e.target.value)} style={inputStyle}>
             <option value="active">active</option>
             <option value="paused">paused</option>
@@ -111,33 +111,33 @@ export default function ClientForm({ mode, initialClient, clientId }) {
         </label>
 
         <label>
-          <div style={{ marginBottom: 6, color: "#dbe7ef", fontSize: 13 }}>Omsättning</div>
+          <div style={{ marginBottom: 6, color: "#e2e8f0", fontSize: 13 }}>Omsättning</div>
           <input type="number" step="0.01" value={form.revenue} onChange={e => updateField("revenue", e.target.value)} style={inputStyle} />
         </label>
 
         <label>
-          <div style={{ marginBottom: 6, color: "#dbe7ef", fontSize: 13 }}>Anställda</div>
+          <div style={{ marginBottom: 6, color: "#e2e8f0", fontSize: 13 }}>Anställda</div>
           <input type="number" step="1" value={form.employees} onChange={e => updateField("employees", e.target.value)} style={inputStyle} />
         </label>
 
         <label>
-          <div style={{ marginBottom: 6, color: "#dbe7ef", fontSize: 13 }}>Startdatum</div>
+          <div style={{ marginBottom: 6, color: "#e2e8f0", fontSize: 13 }}>Startdatum</div>
           <input type="date" value={form.start_date} onChange={e => updateField("start_date", e.target.value)} style={inputStyle} />
         </label>
 
         <label>
-          <div style={{ marginBottom: 6, color: "#dbe7ef", fontSize: 13 }}>Ansvarig konsult</div>
+          <div style={{ marginBottom: 6, color: "#e2e8f0", fontSize: 13 }}>Ansvarig konsult</div>
           <input value={form.responsible_consultant} onChange={e => updateField("responsible_consultant", e.target.value)} style={inputStyle} />
         </label>
 
         <label>
-          <div style={{ marginBottom: 6, color: "#dbe7ef", fontSize: 13 }}>Kontor</div>
+          <div style={{ marginBottom: 6, color: "#e2e8f0", fontSize: 13 }}>Kontor</div>
           <input value={form.office} onChange={e => updateField("office", e.target.value)} style={inputStyle} />
         </label>
       </div>
 
       <label>
-        <div style={{ marginBottom: 6, color: "#dbe7ef", fontSize: 13 }}>Anteckningar</div>
+        <div style={{ marginBottom: 6, color: "#e2e8f0", fontSize: 13 }}>Anteckningar</div>
         <textarea
           rows={5}
           value={form.notes}
@@ -153,8 +153,8 @@ export default function ClientForm({ mode, initialClient, clientId }) {
           type="submit"
           disabled={saving}
           style={{
-            background: saving ? "#5a6f82" : "#00c97a",
-            color: "#0f1923",
+            background: saving ? "#5a6f82" : "#f59e0b",
+            color: "#080c10",
             border: "none",
             borderRadius: 8,
             padding: "10px 14px",
@@ -169,8 +169,8 @@ export default function ClientForm({ mode, initialClient, clientId }) {
           href={isEdit ? `/crm/clients/${clientId}` : "/crm/clients"}
           style={{
             background: "#233a49",
-            color: "#dbe7ef",
-            border: "1px solid #2a4a5e",
+            color: "#e2e8f0",
+            border: "1px solid #1e293b",
             borderRadius: 8,
             padding: "10px 14px",
             textDecoration: "none",

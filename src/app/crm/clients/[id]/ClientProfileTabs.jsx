@@ -3,12 +3,12 @@
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const cardStyle = { background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 14, padding: 16 };
+const cardStyle = { background: "#0f1419", border: "1px solid #1e293b", borderRadius: 14, padding: 16 };
 const inputStyle = {
   width: "100%",
-  background: "#0f1923",
+  background: "#080c10",
   color: "#fff",
-  border: "1px solid #2a4a5e",
+  border: "1px solid #1e293b",
   borderRadius: 8,
   padding: "9px 10px",
   fontSize: 13,
@@ -27,7 +27,7 @@ function TabButton({ tab, activeTab, label, onClick }) {
       style={{
         background: active ? "#2f7ef7" : "#233a49",
         color: "#fff",
-        border: "1px solid #2a4a5e",
+        border: "1px solid #1e293b",
         borderRadius: 8,
         padding: "8px 12px",
         fontWeight: 700,
@@ -180,7 +180,7 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
               type="button"
               disabled={saving}
               onClick={() => submit(`/api/crm/clients/${clientId}/contacts`, contactForm, () => setContactForm({ name: "", role: "", email: "", phone: "" }))}
-              style={{ marginTop: 10, background: "#00c97a", color: "#0f1923", border: "none", borderRadius: 8, padding: "9px 12px", fontWeight: 700, cursor: "pointer" }}
+              style={{ marginTop: 10, background: "#f59e0b", color: "#080c10", border: "none", borderRadius: 8, padding: "9px 12px", fontWeight: 700, cursor: "pointer" }}
             >
               Lägg till kontakt
             </button>
@@ -203,7 +203,7 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
                 </thead>
                 <tbody>
                   {contacts.map(c => editingContactId === c.id ? (
-                    <tr key={c.id} style={{ background: "#0f1923" }}>
+                    <tr key={c.id} style={{ background: "#080c10" }}>
                       <td style={{ padding: "4px 10px 4px 0" }}>
                         <input value={editContactForm.name} onChange={e => setEditContactForm(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, padding: "5px 8px" }} />
                       </td>
@@ -226,14 +226,14 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
                             () => setEditingContactId(null),
                             "PATCH"
                           )}
-                          style={{ background: "#00c97a", color: "#0f1923", border: "none", borderRadius: 6, padding: "5px 10px", fontWeight: 700, cursor: "pointer", marginRight: 6 }}
+                          style={{ background: "#f59e0b", color: "#080c10", border: "none", borderRadius: 6, padding: "5px 10px", fontWeight: 700, cursor: "pointer", marginRight: 6 }}
                         >
                           Spara
                         </button>
                         <button
                           type="button"
                           onClick={() => setEditingContactId(null)}
-                          style={{ background: "#233a49", color: "#fff", border: "1px solid #2a4a5e", borderRadius: 6, padding: "5px 10px", cursor: "pointer" }}
+                          style={{ background: "#233a49", color: "#fff", border: "1px solid #1e293b", borderRadius: 6, padding: "5px 10px", cursor: "pointer" }}
                         >
                           Avbryt
                         </button>
@@ -241,18 +241,18 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
                     </tr>
                   ) : (
                     <tr key={c.id} style={{ borderTop: "1px solid #1e3447" }}>
-                      <td style={{ padding: "8px 10px 8px 0", color: "#dbe7ef" }}>
+                      <td style={{ padding: "8px 10px 8px 0", color: "#e2e8f0" }}>
                         {c.name || "-"}
-                        {c.is_primary && <span style={{ marginLeft: 6, fontSize: 11, color: "#00c97a", fontWeight: 700 }}>PRIMÄR</span>}
+                        {c.is_primary && <span style={{ marginLeft: 6, fontSize: 11, color: "#f59e0b", fontWeight: 700 }}>PRIMÄR</span>}
                       </td>
                       <td style={{ padding: "8px 10px 8px 0", color: "#8fb1c3" }}>{c.role || "-"}</td>
-                      <td style={{ padding: "8px 10px 8px 0", color: "#dbe7ef" }}>{c.email || "-"}</td>
-                      <td style={{ padding: "8px 10px 8px 0", color: "#dbe7ef" }}>{c.phone || "-"}</td>
+                      <td style={{ padding: "8px 10px 8px 0", color: "#e2e8f0" }}>{c.email || "-"}</td>
+                      <td style={{ padding: "8px 10px 8px 0", color: "#e2e8f0" }}>{c.phone || "-"}</td>
                       <td style={{ padding: "8px 0", whiteSpace: "nowrap", display: "flex", gap: 10 }}>
                         <button
                           type="button"
                           onClick={() => { setEditingContactId(c.id); setEditContactForm({ name: c.name || "", role: c.role || "", email: c.email || "", phone: c.phone || "" }); }}
-                          style={{ background: "none", color: "#3b9eff", border: "none", cursor: "pointer", fontSize: 13, padding: 0 }}
+                          style={{ background: "none", color: "#38bdf8", border: "none", cursor: "pointer", fontSize: 13, padding: 0 }}
                         >
                           Redigera
                         </button>
@@ -266,7 +266,7 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
                               () => {},
                               "PUT"
                             )}
-                            style={{ background: "none", color: "#00c97a", border: "none", cursor: "pointer", fontSize: 13, padding: 0 }}
+                            style={{ background: "none", color: "#f59e0b", border: "none", cursor: "pointer", fontSize: 13, padding: 0 }}
                           >
                             Sätt som primär
                           </button>
@@ -365,9 +365,9 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
           </div>
 
           {allTags.length === 0 && (
-            <p style={{ margin: "12px 0 0", color: "#6b8fa3", fontSize: 13 }}>
+            <p style={{ margin: "12px 0 0", color: "#64748b", fontSize: 13 }}>
               Inga taggar skapade ännu. Gå till{" "}
-              <a href="/crm/settings" style={{ color: "#3b9eff" }}>CRM-inställningar</a> för att skapa taggar.
+              <a href="/crm/settings" style={{ color: "#38bdf8" }}>CRM-inställningar</a> för att skapa taggar.
             </p>
           )}
         </div>
@@ -387,7 +387,7 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
               type="button"
               disabled={saving}
               onClick={() => submit(`/api/crm/clients/${clientId}/services`, serviceForm, () => setServiceForm({ service_type: "", billing_model: "", price: "", start_date: "" }))}
-              style={{ marginTop: 10, background: "#00c97a", color: "#0f1923", border: "none", borderRadius: 8, padding: "9px 12px", fontWeight: 700, cursor: "pointer" }}
+              style={{ marginTop: 10, background: "#f59e0b", color: "#080c10", border: "none", borderRadius: 8, padding: "9px 12px", fontWeight: 700, cursor: "pointer" }}
             >
               Lägg till tjänst
             </button>
@@ -416,7 +416,7 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
               type="button"
               disabled={saving}
               onClick={() => submit(`/api/crm/clients/${clientId}/activities`, noteForm, () => setNoteForm({ description: "", date: today() }))}
-              style={{ marginTop: 10, background: "#00c97a", color: "#0f1923", border: "none", borderRadius: 8, padding: "9px 12px", fontWeight: 700, cursor: "pointer" }}
+              style={{ marginTop: 10, background: "#f59e0b", color: "#080c10", border: "none", borderRadius: 8, padding: "9px 12px", fontWeight: 700, cursor: "pointer" }}
             >
               Lägg till anteckning
             </button>
@@ -440,7 +440,7 @@ export default function ClientProfileTabs({ clientId, contacts = [], contactDire
             <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}>
               {documents.map(d => (
                 <li key={d.id}>
-                  <a href={d.url} target="_blank" rel="noreferrer" style={{ color: "#3b9eff" }}>{d.title}</a>
+                  <a href={d.url} target="_blank" rel="noreferrer" style={{ color: "#38bdf8" }}>{d.title}</a>
                   {d.document_type ? ` · ${d.document_type}` : ""}
                 </li>
               ))}

@@ -132,7 +132,7 @@ export default function SyncPanel() {
   }
 
   const buttons = [
-    { label: "Full sync alla moduler", color: "#f59e0b", textColor: "#0f1923", onClick: fullSync },
+    { label: "Full sync alla moduler", color: "#f59e0b", textColor: "#080c10", onClick: fullSync },
     { label: "Sync fakturor", color: "#2563eb", onClick: syncInvoices },
     { label: "Sync tid", color: "#1db3a7", onClick: syncTime },
     { label: "Sync artikelregister", color: "#9b59ff", onClick: syncArticleRegistry },
@@ -143,7 +143,7 @@ export default function SyncPanel() {
   ];
 
   return (
-    <div style={{ background: "#0f1923", border: "1px solid #2a4a5e", borderRadius: 12, padding: 20 }}>
+    <div style={{ background: "#080c10", border: "1px solid #1e293b", borderRadius: 12, padding: 20 }}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: status ? 14 : 0 }}>
         {buttons.map(({ label, color, textColor, onClick }) => (
           <button

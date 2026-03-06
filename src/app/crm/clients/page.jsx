@@ -28,10 +28,10 @@ export default async function CrmClientsPage({ searchParams }) {
   };
 
   return (
-    <section style={{ background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 16, padding: 24 }}>
+    <section style={{ background: "#0f1419", border: "1px solid #1e293b", borderRadius: 16, padding: 24 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Klientlista</h2>
-        <Link href="/crm/clients/new" style={{ background: "#00c97a", color: "#0f1923", borderRadius: 10, padding: "8px 12px", textDecoration: "none", fontWeight: 700, fontSize: 14 }}>
+        <Link href="/crm/clients/new" style={{ background: "#f59e0b", color: "#080c10", borderRadius: 10, padding: "8px 12px", textDecoration: "none", fontWeight: 700, fontSize: 14 }}>
           Ny klient
         </Link>
       </div>
@@ -48,15 +48,15 @@ export default async function CrmClientsPage({ searchParams }) {
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: "1px solid #2a4a5e" }}>
+            <tr style={{ borderBottom: "1px solid #1e293b" }}>
               {["Företagsnamn", "Org.nr", "Kundnummer", "Fortnox", "Kostnadsstalle", "Taggar", "Kontakt", "Telefon", "E-post", "Senaste aktivitet"].map(h => (
-                <th key={h} style={{ textAlign: "left", color: "#6b8fa3", fontSize: 12, fontWeight: 600, padding: "0 10px 12px 0", textTransform: "uppercase", letterSpacing: 0.8 }}>{h}</th>
+                <th key={h} style={{ textAlign: "left", color: "#64748b", fontSize: 12, fontWeight: 600, padding: "0 10px 12px 0", textTransform: "uppercase", letterSpacing: 0.8 }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {clients.map(client => (
-              <tr key={client.id || client.customer_number || client.organization_number || client.company_name} style={{ borderBottom: "1px solid #1e3545" }}>
+              <tr key={client.id || client.customer_number || client.organization_number || client.company_name} style={{ borderBottom: "1px solid #141c24" }}>
                 <td style={{ color: "#fff", fontWeight: 600 }}>
                   {client.id ? (
                     <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#fff", fontWeight: 600 }}>
@@ -66,27 +66,27 @@ export default async function CrmClientsPage({ searchParams }) {
                     <div style={{ ...cellLinkStyle, color: "#fff", fontWeight: 600 }}>{client.company_name}</div>
                   )}
                 </td>
-                <td style={{ color: "#dbe7ef" }}>
+                <td style={{ color: "#e2e8f0" }}>
                   {client.id ? (
-                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.organization_number || "-"}</Link>
+                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#e2e8f0" }}>{client.organization_number || "-"}</Link>
                   ) : (
-                    <div style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.organization_number || "-"}</div>
+                    <div style={{ ...cellLinkStyle, color: "#e2e8f0" }}>{client.organization_number || "-"}</div>
                   )}
                 </td>
-                <td style={{ color: "#dbe7ef" }}>
+                <td style={{ color: "#e2e8f0" }}>
                   {client.id ? (
-                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.customer_number || "-"}</Link>
+                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#e2e8f0" }}>{client.customer_number || "-"}</Link>
                   ) : (
-                    <div style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.customer_number || "-"}</div>
+                    <div style={{ ...cellLinkStyle, color: "#e2e8f0" }}>{client.customer_number || "-"}</div>
                   )}
                 </td>
-                <td style={{ color: "#dbe7ef", fontWeight: 700 }}>
+                <td style={{ color: "#e2e8f0", fontWeight: 700 }}>
                   {client.id ? (
                     <Link
                       href={`/crm/clients/${client.id}`}
                       style={{
                         ...cellLinkStyle,
-                        color: client.fortnox_active === true ? "#00c97a" : client.fortnox_active === false ? "#fda4af" : "#94a3b8",
+                        color: client.fortnox_active === true ? "#f59e0b" : client.fortnox_active === false ? "#fda4af" : "#94a3b8",
                         fontWeight: 700,
                       }}
                     >
@@ -96,11 +96,11 @@ export default async function CrmClientsPage({ searchParams }) {
                     <div style={{ ...cellLinkStyle, color: "#94a3b8", fontWeight: 700 }}>-</div>
                   )}
                 </td>
-                <td style={{ color: "#dbe7ef" }}>
+                <td style={{ color: "#e2e8f0" }}>
                   {client.id ? (
-                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.cost_center_label || "-"}</Link>
+                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#e2e8f0" }}>{client.cost_center_label || "-"}</Link>
                   ) : (
-                    <div style={{ ...cellLinkStyle, color: "#dbe7ef" }}>
+                    <div style={{ ...cellLinkStyle, color: "#e2e8f0" }}>
                       {client.cost_center_label || "-"}
                     </div>
                   )}
@@ -130,25 +130,25 @@ export default async function CrmClientsPage({ searchParams }) {
                     <span style={{ color: "#3a5368", fontSize: 12 }}>—</span>
                   )}
                 </td>
-                <td style={{ color: "#dbe7ef" }}>
+                <td style={{ color: "#e2e8f0" }}>
                   {client.id ? (
-                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.contact_name || "-"}</Link>
+                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#e2e8f0" }}>{client.contact_name || "-"}</Link>
                   ) : (
-                    <div style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.contact_name || "-"}</div>
+                    <div style={{ ...cellLinkStyle, color: "#e2e8f0" }}>{client.contact_name || "-"}</div>
                   )}
                 </td>
-                <td style={{ color: "#dbe7ef" }}>
+                <td style={{ color: "#e2e8f0" }}>
                   {client.id ? (
-                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.contact_phone || "-"}</Link>
+                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#e2e8f0" }}>{client.contact_phone || "-"}</Link>
                   ) : (
-                    <div style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.contact_phone || "-"}</div>
+                    <div style={{ ...cellLinkStyle, color: "#e2e8f0" }}>{client.contact_phone || "-"}</div>
                   )}
                 </td>
-                <td style={{ color: "#dbe7ef" }}>
+                <td style={{ color: "#e2e8f0" }}>
                   {client.id ? (
-                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.contact_email || "-"}</Link>
+                    <Link href={`/crm/clients/${client.id}`} style={{ ...cellLinkStyle, color: "#e2e8f0" }}>{client.contact_email || "-"}</Link>
                   ) : (
-                    <div style={{ ...cellLinkStyle, color: "#dbe7ef" }}>{client.contact_email || "-"}</div>
+                    <div style={{ ...cellLinkStyle, color: "#e2e8f0" }}>{client.contact_email || "-"}</div>
                   )}
                 </td>
                 <td style={{ color: "#8fb1c3" }}>
@@ -167,7 +167,7 @@ export default async function CrmClientsPage({ searchParams }) {
       </div>
 
       {clients.length === 0 && (
-        <p style={{ color: "#6b8fa3", fontSize: 13, marginTop: 12 }}>
+        <p style={{ color: "#64748b", fontSize: 13, marginTop: 12 }}>
           Inga klienter hittades.
         </p>
       )}

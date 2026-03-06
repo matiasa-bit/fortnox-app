@@ -2375,8 +2375,8 @@ export default function DashboardClient({
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload?.length) {
       return (
-        <div style={{background:"#1a2e3b", border:"1px solid #00c97a33", borderRadius:12, padding:"12px 16px"}}>
-          <p style={{color:"#00c97a", fontWeight:600, marginBottom:4}}>{label}</p>
+        <div style={{background:"#0f1419", border:"1px solid #f59e0b33", borderRadius:12, padding:"12px 16px"}}>
+          <p style={{color:"#f59e0b", fontWeight:600, marginBottom:4}}>{label}</p>
           <p style={{color:"#fff"}}>{formatSEK(payload[0].value)}</p>
           <p style={{color:"#888", fontSize:12}}>{payload[0].payload.antal} fakturor</p>
         </div>
@@ -2510,36 +2510,36 @@ export default function DashboardClient({
   };
 
   return (
-    <main style={{minHeight:"100vh", background:"linear-gradient(135deg, #0f1923 0%, #1a2e3b 100%)", padding:"32px", fontFamily:"system-ui, sans-serif"}}>
-      
+    <main style={{minHeight:"100vh", background:"#080c10", padding:"36px 40px", fontFamily:"inherit"}}>
+
       {/* Header */}
-      <div style={{marginBottom:32, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:16}}>
+      <div style={{marginBottom:32, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:16, paddingBottom:24, borderBottom:"1px solid #1e293b", maxWidth:1600, margin:"0 auto 32px"}}>
         <div>
-          <h1 style={{fontSize:28, fontWeight:800, color:"#fff", margin:0}}>Fortnox Dashboard</h1>
-          <p style={{color:"#6b8fa3", margin:"4px 0 0", fontSize:14}}>Omsättning exkl. moms · {years.join(" & ") || "2025–2026"}</p>
+          <h1 style={{fontSize:24, fontWeight:700, color:"#f1f5f9", margin:0, letterSpacing:"-0.03em"}}>Fortnox Dashboard</h1>
+          <p style={{color:"#475569", margin:"3px 0 0", fontSize:13}}>Omsättning exkl. moms · {years.join(" & ") || "2025–2026"}</p>
         </div>
-        <div style={{display:"flex", gap:12, flexWrap:"wrap"}}>
+        <div style={{display:"flex", gap:8, flexWrap:"wrap"}}>
           <Link
             href="/database"
-            style={{background:"#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:10, padding:"8px 12px", fontSize:14, textDecoration:"none"}}
+            style={{background:"#0f1419", color:"#e2e8f0", border:"1px solid #1e293b", borderRadius:10, padding:"7px 14px", fontSize:13, textDecoration:"none", fontWeight:500, letterSpacing:"0.01em"}}
           >
             Databas
           </Link>
           <Link
             href="/settings"
-            style={{background:"#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:10, padding:"8px 12px", fontSize:14, textDecoration:"none"}}
+            style={{background:"#0f1419", color:"#e2e8f0", border:"1px solid #1e293b", borderRadius:10, padding:"7px 14px", fontSize:13, textDecoration:"none", fontWeight:500, letterSpacing:"0.01em"}}
           >
             Inställningar
           </Link>
           <Link
             href="/agency"
-            style={{background:"#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:10, padding:"8px 12px", fontSize:14, textDecoration:"none"}}
+            style={{background:"#0f1419", color:"#e2e8f0", border:"1px solid #1e293b", borderRadius:10, padding:"7px 14px", fontSize:13, textDecoration:"none", fontWeight:500, letterSpacing:"0.01em"}}
           >
             Byråvy
           </Link>
           <Link
             href="/crm/clients"
-            style={{background:"#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:10, padding:"8px 12px", fontSize:14, textDecoration:"none"}}
+            style={{background:"#0f1419", color:"#e2e8f0", border:"1px solid #1e293b", borderRadius:10, padding:"7px 14px", fontSize:13, textDecoration:"none", fontWeight:500, letterSpacing:"0.01em"}}
           >
             CRM
           </Link>
@@ -2564,14 +2564,14 @@ export default function DashboardClient({
                 if (match) setSelectedYear(match.value);
               }}
               placeholder="Sök år"
-              style={{background:"#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:10, padding:"8px 34px 8px 16px", fontSize:14, minWidth:120}}
+              style={{background:"#0f1419", color:"#fff", border:"1px solid #1e293b", borderRadius:10, padding:"8px 34px 8px 16px", fontSize:14, minWidth:120}}
             />
             {yearInput && (
               <button
                 type="button"
                 onClick={() => { setYearInput(DEFAULT_SELECTED_YEAR); setSelectedYear(DEFAULT_SELECTED_YEAR); }}
                 aria-label="Rensa år"
-                style={{position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", border:"none", background:"transparent", color:"#6b8fa3", cursor:"pointer", fontSize:16, lineHeight:1, padding:0}}
+                style={{position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", border:"none", background:"transparent", color:"#64748b", cursor:"pointer", fontSize:16, lineHeight:1, padding:0}}
               >×</button>
             )}
           </div>
@@ -2593,7 +2593,7 @@ export default function DashboardClient({
                   setRollingEndMonthInput(raw);
                 }
               }}
-              style={{background:"#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:10, padding:"8px 34px 8px 16px", fontSize:14, minWidth:170}}
+              style={{background:"#0f1419", color:"#fff", border:"1px solid #1e293b", borderRadius:10, padding:"8px 34px 8px 16px", fontSize:14, minWidth:170}}
               title="Välj slutmånad för rullande 12 månader"
               aria-label="Slutmånad för rullande 12 månader"
             />
@@ -2602,7 +2602,7 @@ export default function DashboardClient({
                 type="button"
                 onClick={() => { setRollingEndMonthInput(""); }}
                 aria-label="Rensa slutmånad"
-                style={{position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", border:"none", background:"transparent", color:"#6b8fa3", cursor:"pointer", fontSize:16, lineHeight:1, padding:0}}
+                style={{position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", border:"none", background:"transparent", color:"#64748b", cursor:"pointer", fontSize:16, lineHeight:1, padding:0}}
               >×</button>
             )}
           </div>
@@ -2623,14 +2623,14 @@ export default function DashboardClient({
                 if (match) setSelectedCustomer(match.value);
               }}
               placeholder="Sök kund"
-              style={{background:"#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:10, padding:"8px 34px 8px 16px", fontSize:14, maxWidth:240, minWidth:220}}
+              style={{background:"#0f1419", color:"#fff", border:"1px solid #1e293b", borderRadius:10, padding:"8px 34px 8px 16px", fontSize:14, maxWidth:240, minWidth:220}}
             />
             {customerInput && (
               <button
                 type="button"
                 onClick={() => { setCustomerInput(""); setSelectedCustomer("ALL"); }}
                 aria-label="Rensa kund"
-                style={{position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", border:"none", background:"transparent", color:"#6b8fa3", cursor:"pointer", fontSize:16, lineHeight:1, padding:0}}
+                style={{position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", border:"none", background:"transparent", color:"#64748b", cursor:"pointer", fontSize:16, lineHeight:1, padding:0}}
               >×</button>
             )}
           </div>
@@ -2654,14 +2654,14 @@ export default function DashboardClient({
                 if (match) setSelectedCostcenter(match.value);
               }}
               placeholder="Sök kostnadsställe"
-              style={{background:"#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:10, padding:"8px 34px 8px 16px", fontSize:14, maxWidth:240, minWidth:220}}
+              style={{background:"#0f1419", color:"#fff", border:"1px solid #1e293b", borderRadius:10, padding:"8px 34px 8px 16px", fontSize:14, maxWidth:240, minWidth:220}}
             />
             {costcenterInput && (
               <button
                 type="button"
                 onClick={() => { setCostcenterInput(""); setSelectedCostcenter("ALL"); }}
                 aria-label="Rensa kostnadsställe"
-                style={{position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", border:"none", background:"transparent", color:"#6b8fa3", cursor:"pointer", fontSize:16, lineHeight:1, padding:0}}
+                style={{position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", border:"none", background:"transparent", color:"#64748b", cursor:"pointer", fontSize:16, lineHeight:1, padding:0}}
               >×</button>
             )}
           </div>
@@ -2685,14 +2685,14 @@ export default function DashboardClient({
                 if (match) setSelectedGroup(match.value);
               }}
               placeholder="Sök grupp"
-              style={{background:"#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:10, padding:"8px 34px 8px 16px", fontSize:14, maxWidth:240, minWidth:180}}
+              style={{background:"#0f1419", color:"#fff", border:"1px solid #1e293b", borderRadius:10, padding:"8px 34px 8px 16px", fontSize:14, maxWidth:240, minWidth:180}}
             />
             {groupInput && (
               <button
                 type="button"
                 onClick={() => { setGroupInput(""); setSelectedGroup("ALL"); }}
                 aria-label="Rensa grupp"
-                style={{position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", border:"none", background:"transparent", color:"#6b8fa3", cursor:"pointer", fontSize:16, lineHeight:1, padding:0}}
+                style={{position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", border:"none", background:"transparent", color:"#64748b", cursor:"pointer", fontSize:16, lineHeight:1, padding:0}}
               >×</button>
             )}
           </div>
@@ -2702,16 +2702,16 @@ export default function DashboardClient({
         </div>
       </div>
 
-      <div style={{marginTop:-16, marginBottom:24, color:"#6b8fa3", fontSize:13}}>
+      <div style={{marginTop:-16, marginBottom:24, color:"#64748b", fontSize:13}}>
         Förladdade artikelrader: {invoicesWithRowsInCacheStatus}/{totalInvoicesInCacheStatus} senaste fakturor har artikelrader
         {missingInvoiceRowsInCacheStatus > 0 ? ` · ${missingInvoiceRowsInCacheStatus} saknas` : " · komplett"}
       </div>
-      <div style={{marginTop:-14, marginBottom:24, color:"#6b8fa3", fontSize:13}}>
+      <div style={{marginTop:-14, marginBottom:24, color:"#64748b", fontSize:13}}>
         Artikelregister i DB: {withRegistryMatchInStatus}/{usedArticleNumbersInStatus} använda artikelnummer matchar register
         {missingRegistryMatchInStatus > 0 ? ` · ${missingRegistryMatchInStatus} saknas` : " · komplett"}
       </div>
       {selectedCostcenter !== "ALL" && timeCostcenterFilterMode && (
-        <div style={{marginTop:-14, marginBottom:24, color:"#6b8fa3", fontSize:13}}>
+        <div style={{marginTop:-14, marginBottom:24, color:"#64748b", fontSize:13}}>
           Tidsfilter för {selectedCostcenterLabel}: {timeCostcenterFilterMode.mode === "employee"
             ? `användarmappning (${timeCostcenterFilterMode.mappedUsersCount} user-id) + kollegor på kundernas tidsrader`
             : timeCostcenterFilterMode.mode === "employee-name-fallback"
@@ -2723,15 +2723,15 @@ export default function DashboardClient({
       {/* Debug info */}
       {invoices.length === 0 && (
         <div style={{background:"#ff6b6b22", border:"1px solid #ff6b6b", borderRadius:12, padding:16, marginBottom:24, color:"#ff6b6b"}}>
-          Inga fakturor hämtades. Prova att logga in igen via <a href="/api/auth/login" style={{color:"#00c97a"}}>denna länk</a>.
+          Inga fakturor hämtades. Prova att logga in igen via <a href="/api/auth/login" style={{color:"#f59e0b"}}>denna länk</a>.
         </div>
       )}
 
       {/* KPI Cards */}
       <div style={{display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))", gap:16, marginBottom:32}}>
         {[
-          { label:"Total omsättning", value: formatSEK(totalOmsattning), color:"#00c97a" },
-          { label:"Antal fakturor", value: totalFakturor, color:"#3b9eff", onClick: openAllInvoices, overdueCount: overdueInvoicesCount },
+          { label:"Total omsättning", value: formatSEK(totalOmsattning), color:"#f59e0b" },
+          { label:"Antal fakturor", value: totalFakturor, color:"#38bdf8", onClick: openAllInvoices, overdueCount: overdueInvoicesCount },
           { label:"Timmar (tid)", value: totalHours.toFixed(1), color:"#1db3a7", onClick: openTimeEntriesForPeriod },
           { label:"Obetalda fakturor", value: obetalda, color:"#ff6b6b", onClick: openUnpaidInvoices },
           { label:"Avtalsvärde", value: contractAccrualsLoading ? "Laddar avtal..." : (contractValueForCurrentSelection > 0 ? formatSEK(contractValueForCurrentSelection) : (hasContractsForCurrentSelection ? formatSEK(0) : "Inga avtal hittade")), color:"#f59e0b" },
@@ -2740,10 +2740,10 @@ export default function DashboardClient({
             key={card.label}
             onClick={card.onClick || undefined}
             style={{
-              background:"#1a2e3b",
+              background:"#0f1419",
               borderRadius:16,
               padding:"20px 24px",
-              border:"1px solid #2a4a5e",
+              border:"1px solid #1e293b",
               cursor: card.onClick ? "pointer" : "default",
               position: "relative",
             }}
@@ -2754,41 +2754,41 @@ export default function DashboardClient({
                 style={{position:"absolute", top:10, right:10, width:10, height:10, borderRadius:"50%", background:"#ff6b6b", boxShadow:"0 0 0 3px rgba(255,107,107,0.2)"}}
               />
             )}
-            <p style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:1, margin:"0 0 8px"}}>{card.label}</p>
+            <p style={{color:"#64748b", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:1, margin:"0 0 8px"}}>{card.label}</p>
             <p style={{fontSize:26, fontWeight:800, color:card.color, margin:0}}>{card.value}</p>
           </div>
         ))}
       </div>
 
       {/* Time reports */}
-      <div style={{background:"#1a2e3b", borderRadius:16, padding:"24px", border:"1px solid #2a4a5e", marginBottom:24}}>
+      <div style={{background:"#0f1419", borderRadius:16, padding:"24px", border:"1px solid #1e293b", marginBottom:24}}>
         <div style={{display:"flex", alignItems:"center", gap:12, marginBottom:8, flexWrap:"wrap"}}>
           <h2 style={{color:"#fff", fontWeight:700, fontSize:16, margin:0}}>Tidsredovisning ({filteredTimeReports.length})</h2>
           <div style={{display:"flex", gap:4}}>
             <button
               type="button"
               onClick={() => setTimeReportViewMode("month")}
-              style={{background: timeReportViewMode === "month" ? "#1db3a7" : "#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:6, padding:"4px 10px", fontSize:12, cursor:"pointer", fontWeight: timeReportViewMode === "month" ? 700 : 400}}
+              style={{background: timeReportViewMode === "month" ? "#1db3a7" : "#0f1419", color:"#fff", border:"1px solid #1e293b", borderRadius:6, padding:"4px 10px", fontSize:12, cursor:"pointer", fontWeight: timeReportViewMode === "month" ? 700 : 400}}
             >Per månad</button>
             <button
               type="button"
               onClick={() => setTimeReportViewMode("employee")}
-              style={{background: timeReportViewMode === "employee" ? "#1db3a7" : "#1a2e3b", color:"#fff", border:"1px solid #2a4a5e", borderRadius:6, padding:"4px 10px", fontSize:12, cursor:"pointer", fontWeight: timeReportViewMode === "employee" ? 700 : 400}}
+              style={{background: timeReportViewMode === "employee" ? "#1db3a7" : "#0f1419", color:"#fff", border:"1px solid #1e293b", borderRadius:6, padding:"4px 10px", fontSize:12, cursor:"pointer", fontWeight: timeReportViewMode === "employee" ? 700 : 400}}
             >Per medarbetare</button>
           </div>
         </div>
-        <p style={{color:"#6b8fa3", fontSize:12, margin:"0 0 6px"}}>DB-cache från Fortnox tidsredovisning.</p>
-        <p style={{color:"#6b8fa3", fontSize:12, margin:"0 0 14px"}}>Senast synkad: {latestTimeSyncLabel}</p>
+        <p style={{color:"#64748b", fontSize:12, margin:"0 0 6px"}}>DB-cache från Fortnox tidsredovisning.</p>
+        <p style={{color:"#64748b", fontSize:12, margin:"0 0 14px"}}>Senast synkad: {latestTimeSyncLabel}</p>
         {timeReportsLoading && (
-          <p style={{color:"#6b8fa3", fontSize:12, margin:"0 0 14px"}}>Laddar tidsredovisning...</p>
+          <p style={{color:"#64748b", fontSize:12, margin:"0 0 14px"}}>Laddar tidsredovisning...</p>
         )}
         <div style={{overflowX:"auto"}}>
           {timeReportViewMode === "month" ? (
             <table style={{width:"100%", borderCollapse:"collapse"}}>
               <thead>
-                <tr style={{borderBottom:"1px solid #2a4a5e"}}>
+                <tr style={{borderBottom:"1px solid #1e293b"}}>
                   {["Månad", selectedCostcenter !== "ALL" ? "Kundtimmar" : "Timmar", ...(selectedCostcenter !== "ALL" ? ["Frånvaro", "Interna timmar (kund 1)", "Totalt"] : []), "Rader"].map(h => (
-                    <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
+                    <th key={h} style={{color:"#64748b", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -2798,12 +2798,12 @@ export default function DashboardClient({
                   const monthLabel = `${MONTHS[monthIdx] || r.month.slice(5, 7)} ${r.month.slice(0, 4)}`;
                   const hasData = r.hours > 0 || r.absenceHours > 0 || r.internalHours > 0;
                   return (
-                    <tr key={r.month} style={{borderBottom:"1px solid #1e3545", opacity: hasData ? 1 : 0.4}}>
-                      <td style={{padding:"10px 16px 10px 0", color:"#dbe7ef", fontSize:14}}>
+                    <tr key={r.month} style={{borderBottom:"1px solid #141c24", opacity: hasData ? 1 : 0.4}}>
+                      <td style={{padding:"10px 16px 10px 0", color:"#e2e8f0", fontSize:14}}>
                         <button
                           type="button"
                           onClick={() => openMonthlyEntries(r.month, monthLabel, "customer")}
-                          style={{background:"transparent", border:"none", color: hasData ? "#dbe7ef" : "#6b8fa3", cursor: hasData ? "pointer" : "default", padding:0, fontSize:14, textDecoration: hasData ? "underline" : "none", textUnderlineOffset:3}}
+                          style={{background:"transparent", border:"none", color: hasData ? "#e2e8f0" : "#64748b", cursor: hasData ? "pointer" : "default", padding:0, fontSize:14, textDecoration: hasData ? "underline" : "none", textUnderlineOffset:3}}
                           disabled={!hasData}
                         >
                           {monthLabel}
@@ -2841,7 +2841,7 @@ export default function DashboardClient({
                             : "-"}
                         </td>
                       )}
-                      <td style={{padding:"10px 0", color:"#6b8fa3", fontSize:14}}>{r.rows > 0 ? r.rows : "-"}</td>
+                      <td style={{padding:"10px 0", color:"#64748b", fontSize:14}}>{r.rows > 0 ? r.rows : "-"}</td>
                     </tr>
                   );
                 })}
@@ -2853,7 +2853,7 @@ export default function DashboardClient({
                   const totInternal = timeByMonth.reduce((s, r) => s + r.internalHours, 0);
                   const totRows = timeByMonth.reduce((s, r) => s + r.rows, 0);
                   return (
-                    <tr style={{borderTop:"2px solid #2a4a5e"}}>
+                    <tr style={{borderTop:"2px solid #1e293b"}}>
                       <td style={{padding:"12px 16px 4px 0", color:"#fff", fontWeight:700, fontSize:14}}>Totalt</td>
                       <td style={{padding:"12px 16px 4px 0", color:"#1db3a7", fontWeight:700, fontSize:14}}>{totHours.toFixed(1)}</td>
                       {selectedCostcenter !== "ALL" && (
@@ -2865,7 +2865,7 @@ export default function DashboardClient({
                       {selectedCostcenter !== "ALL" && (
                         <td style={{padding:"12px 16px 4px 0", color:"#fff", fontWeight:700, fontSize:14}}>{(totHours + totAbsence + totInternal).toFixed(1)}</td>
                       )}
-                      <td style={{padding:"12px 0", color:"#6b8fa3", fontSize:14}}>{totRows}</td>
+                      <td style={{padding:"12px 0", color:"#64748b", fontSize:14}}>{totRows}</td>
                     </tr>
                   );
                 })()}
@@ -2874,15 +2874,15 @@ export default function DashboardClient({
           ) : (
             <table style={{width:"100%", borderCollapse:"collapse"}}>
               <thead>
-                <tr style={{borderBottom:"1px solid #2a4a5e"}}>
+                <tr style={{borderBottom:"1px solid #1e293b"}}>
                   {["Medarbetare","Grupp", selectedCostcenter !== "ALL" ? "Kundtimmar" : "Timmar", ...(selectedCostcenter !== "ALL" ? ["Frånvaro", "Interna timmar (kund 1)"] : []), "Antal rader","Andel"].map(h => (
-                    <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
+                    <th key={h} style={{color:"#64748b", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {timeByEmployee.map((r) => (
-                  <tr key={r.key} style={{borderBottom:"1px solid #1e3545"}}>
+                  <tr key={r.key} style={{borderBottom:"1px solid #141c24"}}>
                     <td style={{padding:"14px 16px 14px 0", color:"#fff", fontWeight:500, fontSize:14}}>
                       <button
                         type="button"
@@ -2892,7 +2892,7 @@ export default function DashboardClient({
                         {r.employee}
                       </button>
                     </td>
-                    <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{r.group}</td>
+                    <td style={{padding:"14px 16px 14px 0", color:"#64748b", fontSize:14}}>{r.group}</td>
                     <td style={{padding:"14px 16px 14px 0", color:"#1db3a7", fontWeight:700, fontSize:14}}>
                       <button
                         type="button"
@@ -2928,7 +2928,7 @@ export default function DashboardClient({
                         ) : "-"}
                       </td>
                     )}
-                    <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{r.rows}</td>
+                    <td style={{padding:"14px 16px 14px 0", color:"#64748b", fontSize:14}}>{r.rows}</td>
                     <td style={{padding:"14px 0", minWidth:120}}>
                       <div style={{display:"flex", alignItems:"center", gap:8}}>
                         {(() => {
@@ -2938,10 +2938,10 @@ export default function DashboardClient({
                           const sharePct = shareBase > 0 ? (r.hours / shareBase * 100) : 0;
                           return (
                             <>
-                              <div style={{flex:1, height:6, background:"#2a4a5e", borderRadius:3, overflow:"hidden"}}>
+                              <div style={{flex:1, height:6, background:"#1e293b", borderRadius:3, overflow:"hidden"}}>
                                 <div style={{width:`${sharePct}%`, height:"100%", background:"#1db3a7", borderRadius:3}} />
                               </div>
-                              <span style={{color:"#6b8fa3", fontSize:12, minWidth:36}}>{Math.round(sharePct)}%</span>
+                              <span style={{color:"#64748b", fontSize:12, minWidth:36}}>{Math.round(sharePct)}%</span>
                             </>
                           );
                         })()}
@@ -2954,7 +2954,7 @@ export default function DashboardClient({
           )}
         </div>
         {timeByEmployee.length === 0 && timeReportViewMode === "employee" && (
-          <p style={{color:"#6b8fa3", fontSize:12, marginTop:12}}>Inga tidsrader i cache för nuvarande urval. Kör "Sync tid".</p>
+          <p style={{color:"#64748b", fontSize:12, marginTop:12}}>Inga tidsrader i cache för nuvarande urval. Kör "Sync tid".</p>
         )}
 
         {selectedCostcenter !== "ALL" && visibleEmployeesMissingCostCenterMapping.length > 0 && (
@@ -2964,16 +2964,16 @@ export default function DashboardClient({
         )}
 
         {selectedCostcenter !== "ALL" && collaborationInsight && (
-          <div style={{marginTop:16, background:"#132635", border:"1px solid #2a4a5e", borderRadius:12, padding:"14px 16px"}}>
+          <div style={{marginTop:16, background:"#132635", border:"1px solid #1e293b", borderRadius:12, padding:"14px 16px"}}>
             <p style={{margin:"0 0 6px", color:"#fff", fontWeight:700, fontSize:14}}>
               Vem jobbar {collaborationInsight.primary.employeeName} mest med?
             </p>
-            <p style={{margin:"0 0 10px", color:"#6b8fa3", fontSize:12}}>
+            <p style={{margin:"0 0 10px", color:"#64748b", fontSize:12}}>
               {collaborationInsight.primary.employeeName}: {collaborationInsight.primary.customerHours.toFixed(1)} kundtimmar
             </p>
 
             {collaborationInsight.collaborators.length === 0 ? (
-              <p style={{margin:0, color:"#6b8fa3", fontSize:12}}>Inga kollegor hittades på samma kundtimmar i detta urval.</p>
+              <p style={{margin:0, color:"#64748b", fontSize:12}}>Inga kollegor hittades på samma kundtimmar i detta urval.</p>
             ) : (
               <div style={{display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:8}}>
                 {collaborationInsight.collaborators.map(colleague => (
@@ -2986,7 +2986,7 @@ export default function DashboardClient({
                       "Kollega",
                       "customer"
                     )}
-                    style={{display:"flex", justifyContent:"space-between", gap:10, background:"#1a2e3b", border:"1px solid #2a4a5e", borderRadius:8, padding:"8px 10px", cursor:"pointer", textAlign:"left"}}
+                    style={{display:"flex", justifyContent:"space-between", gap:10, background:"#0f1419", border:"1px solid #1e293b", borderRadius:8, padding:"8px 10px", cursor:"pointer", textAlign:"left"}}
                   >
                     <span style={{color:"#fff", fontSize:13, textDecoration:"underline", textUnderlineOffset:3}}>{colleague.employeeName}</span>
                     <span style={{color:"#1db3a7", fontWeight:700, fontSize:13, textDecoration:"underline", textUnderlineOffset:3}}>{colleague.customerHours.toFixed(1)} h</span>
@@ -2998,11 +2998,11 @@ export default function DashboardClient({
         )}
 
         {selectedCostcenter !== "ALL" && helpedColleaguesInsight && (
-          <div style={{marginTop:12, background:"#132635", border:"1px solid #2a4a5e", borderRadius:12, padding:"14px 16px"}}>
+          <div style={{marginTop:12, background:"#132635", border:"1px solid #1e293b", borderRadius:12, padding:"14px 16px"}}>
             <p style={{margin:"0 0 6px", color:"#fff", fontWeight:700, fontSize:14}}>
               Vem har {helpedColleaguesInsight.primary.employeeName} hjälpt mest?
             </p>
-            <p style={{margin:"0 0 10px", color:"#6b8fa3", fontSize:12}}>
+            <p style={{margin:"0 0 10px", color:"#64748b", fontSize:12}}>
               {helpedColleaguesInsight.primary.employeeName}: {helpedColleaguesInsight.totalHelpedHours.toFixed(1)} kundtimmar på andras kunder
             </p>
 
@@ -3027,13 +3027,13 @@ export default function DashboardClient({
                       customerNumbers: colleague.customerNumbers || (colleague.debugCustomers || []).map(item => item.customerNumber),
                     }
                   )}
-                  style={{display:"flex", flexDirection:"column", gap:4, background:"#1a2e3b", border:"1px solid #2a4a5e", borderRadius:8, padding:"8px 10px", cursor:"pointer", textAlign:"left"}}
+                  style={{display:"flex", flexDirection:"column", gap:4, background:"#0f1419", border:"1px solid #1e293b", borderRadius:8, padding:"8px 10px", cursor:"pointer", textAlign:"left"}}
                 >
                   <span style={{display:"flex", justifyContent:"space-between", gap:10}}>
                     <span style={{color:"#fff", fontSize:13, textDecoration:"underline", textUnderlineOffset:3}}>{colleague.employeeName}</span>
-                    <span style={{color:"#3b9eff", fontWeight:700, fontSize:13, textDecoration:"underline", textUnderlineOffset:3}}>{colleague.helpedHours.toFixed(1)} h</span>
+                    <span style={{color:"#38bdf8", fontWeight:700, fontSize:13, textDecoration:"underline", textUnderlineOffset:3}}>{colleague.helpedHours.toFixed(1)} h</span>
                   </span>
-                  <span style={{color:"#6b8fa3", fontSize:11}}>
+                  <span style={{color:"#64748b", fontSize:11}}>
                     {(colleague.customerNumbers || []).length} kunder
                   </span>
                 </button>
@@ -3044,40 +3044,40 @@ export default function DashboardClient({
       </div>
 
       {/* Monthly Chart */}
-      <div style={{background:"#1a2e3b", borderRadius:16, padding:"24px", border:"1px solid #2a4a5e", marginBottom:24}}>
+      <div style={{background:"#0f1419", borderRadius:16, padding:"24px", border:"1px solid #1e293b", marginBottom:24}}>
         <h2 style={{color:"#fff", fontWeight:700, fontSize:16, margin:"0 0 24px"}}>Omsättning per månad</h2>
-        <p style={{color:"#6b8fa3", fontSize:12, margin:"-12px 0 16px"}}>Rullande 12 månader: {rollingPeriodLabel}</p>
+        <p style={{color:"#64748b", fontSize:12, margin:"-12px 0 16px"}}>Rullande 12 månader: {rollingPeriodLabel}</p>
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={monthlyData} barCategoryGap="30%">
-            <CartesianGrid strokeDasharray="3 3" stroke="#2a4a5e" vertical={false} />
-            <XAxis dataKey="month" tick={{fill:"#6b8fa3", fontSize:12}} axisLine={false} tickLine={false} />
-            <YAxis tick={{fill:"#6b8fa3", fontSize:11}} axisLine={false} tickLine={false} tickFormatter={v => v >= 1000 ? `${Math.round(v/1000)}k` : v} />
-            <Tooltip content={<CustomTooltip />} cursor={{fill:"rgba(0,201,122,0.05)"}} />
-            <Bar dataKey="omsattning" fill="#00c97a" radius={[6,6,0,0]} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+            <XAxis dataKey="month" tick={{fill:"#64748b", fontSize:12}} axisLine={false} tickLine={false} />
+            <YAxis tick={{fill:"#64748b", fontSize:11}} axisLine={false} tickLine={false} tickFormatter={v => v >= 1000 ? `${Math.round(v/1000)}k` : v} />
+            <Tooltip content={<CustomTooltip />} cursor={{fill:"rgba(245,158,11,0.05)"}} />
+            <Bar dataKey="omsattning" fill="#f59e0b" radius={[6,6,0,0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
       {selectedCustomer !== "ALL" && (
-        <div style={{background:"#1a2e3b", borderRadius:16, padding:"24px", border:"1px solid #2a4a5e", marginBottom:24}}>
+        <div style={{background:"#0f1419", borderRadius:16, padding:"24px", border:"1px solid #1e293b", marginBottom:24}}>
           <h2 style={{color:"#fff", fontWeight:700, fontSize:16, margin:"0 0 8px"}}>Omsättning per timme per månad</h2>
-          <p style={{color:"#6b8fa3", fontSize:12, margin:"0 0 16px"}}>
+          <p style={{color:"#64748b", fontSize:12, margin:"0 0 16px"}}>
             Visas för vald kund: {selectedCustomerLabel} · Rullande 12 månader: {rollingPeriodLabel}
           </p>
           {articleGroupOptionsForRevenuePerHour.length > 0 && (
-            <div style={{margin:"0 0 14px", padding:"10px 12px", border:"1px solid #2a4a5e", borderRadius:10, background:"#132635"}}>
+            <div style={{margin:"0 0 14px", padding:"10px 12px", border:"1px solid #1e293b", borderRadius:10, background:"#132635"}}>
               <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginBottom:8, flexWrap:"wrap"}}>
-                <span style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8}}>Artikelgrupper</span>
+                <span style={{color:"#64748b", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8}}>Artikelgrupper</span>
                 <div style={{display:"flex", gap:10, alignItems:"center"}}>
                   <button
                     type="button"
                     onClick={() => setSelectedArticleGroupFilters(articleGroupOptionsForRevenuePerHour)}
-                    style={{background:"transparent", border:"none", color:"#3b9eff", cursor:"pointer", fontSize:12, padding:0, textDecoration:"underline", textUnderlineOffset:2}}
+                    style={{background:"transparent", border:"none", color:"#38bdf8", cursor:"pointer", fontSize:12, padding:0, textDecoration:"underline", textUnderlineOffset:2}}
                   >Välj alla</button>
                   <button
                     type="button"
                     onClick={() => setSelectedArticleGroupFilters([])}
-                    style={{background:"transparent", border:"none", color:"#6b8fa3", cursor:"pointer", fontSize:12, padding:0, textDecoration:"underline", textUnderlineOffset:2}}
+                    style={{background:"transparent", border:"none", color:"#64748b", cursor:"pointer", fontSize:12, padding:0, textDecoration:"underline", textUnderlineOffset:2}}
                   >Rensa</button>
                 </div>
               </div>
@@ -3085,7 +3085,7 @@ export default function DashboardClient({
                 {articleGroupOptionsForRevenuePerHour.map(groupName => {
                   const checked = selectedArticleGroupFilterSet.has(groupName);
                   return (
-                    <label key={`article-group-filter-${groupName}`} style={{display:"inline-flex", alignItems:"center", gap:6, color:checked ? "#dbe7ef" : "#6b8fa3", fontSize:12, cursor:"pointer"}}>
+                    <label key={`article-group-filter-${groupName}`} style={{display:"inline-flex", alignItems:"center", gap:6, color:checked ? "#e2e8f0" : "#64748b", fontSize:12, cursor:"pointer"}}>
                       <input
                         type="checkbox"
                         checked={checked}
@@ -3104,12 +3104,12 @@ export default function DashboardClient({
                 })}
               </div>
               {selectedArticleGroupFilters.length > 0 && (
-                <p style={{margin:"8px 0 0", color:"#6b8fa3", fontSize:11}}>
+                <p style={{margin:"8px 0 0", color:"#64748b", fontSize:11}}>
                   Aktivt urval: {selectedArticleGroupFilters.join(", ")}
                 </p>
               )}
               {selectedArticleGroupFilters.length > 0 && syncingArticleRowsForGroupFilter && (
-                <p style={{margin:"6px 0 0", color:"#3b9eff", fontSize:11}}>
+                <p style={{margin:"6px 0 0", color:"#38bdf8", fontSize:11}}>
                   Hämtar artikelrader för äldre fakturor i perioden...
                 </p>
               )}
@@ -3118,22 +3118,22 @@ export default function DashboardClient({
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%", borderCollapse:"collapse"}}>
               <thead>
-                <tr style={{borderBottom:"1px solid #2a4a5e"}}>
+                <tr style={{borderBottom:"1px solid #1e293b"}}>
                   {["Månad", "Omsättning ex. moms", "Nedlagda timmar", "Omsättning / timme"].map(h => (
-                    <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
+                    <th key={h} style={{color:"#64748b", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {monthlyRevenuePerHourData.map((row) => (
-                  <tr key={row.key} style={{borderBottom:"1px solid #1e3545"}}>
+                  <tr key={row.key} style={{borderBottom:"1px solid #141c24"}}>
                     <td style={{padding:"14px 16px 14px 0", color:"#fff", fontSize:14}}>{row.month}</td>
-                    <td style={{padding:"14px 16px 14px 0", color:"#00c97a", fontWeight:700, fontSize:14}}>
+                    <td style={{padding:"14px 16px 14px 0", color:"#f59e0b", fontWeight:700, fontSize:14}}>
                       {(parseFloat(row.omsattning) || 0) > 0 ? (
                         <button
                           type="button"
                           onClick={() => openInvoicesForRevenueMonth(row.key, row.month)}
-                          style={{background:"transparent", border:"none", color:"#00c97a", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
+                          style={{background:"transparent", border:"none", color:"#f59e0b", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
                         >
                           {formatSEK(row.omsattning)}
                         </button>
@@ -3154,20 +3154,20 @@ export default function DashboardClient({
                         "0.0"
                       )}
                     </td>
-                    <td style={{padding:"14px 0", color:"#3b9eff", fontWeight:700, fontSize:14}}>
+                    <td style={{padding:"14px 0", color:"#38bdf8", fontWeight:700, fontSize:14}}>
                       {row.omsattningPerTimme !== null ? formatSEK(Math.round(row.omsattningPerTimme)) : "–"}
                     </td>
                   </tr>
                 ))}
                 {monthlyRevenuePerHourData.length > 0 && (
-                  <tr style={{borderTop:"1px solid #2a4a5e", background:"rgba(9,16,24,0.22)"}}>
-                    <td style={{padding:"14px 16px 14px 0", color:"#dbe7ef", fontWeight:700, fontSize:14}}>Snitt (hela perioden)</td>
-                    <td style={{padding:"14px 16px 14px 0", color:"#00c97a", fontWeight:700, fontSize:14}}>
+                  <tr style={{borderTop:"1px solid #1e293b", background:"rgba(9,16,24,0.22)"}}>
+                    <td style={{padding:"14px 16px 14px 0", color:"#e2e8f0", fontWeight:700, fontSize:14}}>Snitt (hela perioden)</td>
+                    <td style={{padding:"14px 16px 14px 0", color:"#f59e0b", fontWeight:700, fontSize:14}}>
                       {monthlyRevenuePerHourSummary.totalOmsattning > 0 ? (
                         <button
                           type="button"
                           onClick={openInvoicesForRevenuePeriod}
-                          style={{background:"transparent", border:"none", color:"#00c97a", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
+                          style={{background:"transparent", border:"none", color:"#f59e0b", cursor:"pointer", padding:0, fontWeight:700, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
                         >
                           {formatSEK(monthlyRevenuePerHourSummary.totalOmsattning)}
                         </button>
@@ -3188,7 +3188,7 @@ export default function DashboardClient({
                         "0.0"
                       )}
                     </td>
-                    <td style={{padding:"14px 0", color:"#3b9eff", fontWeight:700, fontSize:14}}>
+                    <td style={{padding:"14px 0", color:"#38bdf8", fontWeight:700, fontSize:14}}>
                       {monthlyRevenuePerHourSummary.snittPerTimme !== null ? formatSEK(Math.round(monthlyRevenuePerHourSummary.snittPerTimme)) : "–"}
                     </td>
                   </tr>
@@ -3197,25 +3197,25 @@ export default function DashboardClient({
             </table>
           </div>
           {monthlyRevenuePerHourData.length === 0 && (
-            <p style={{color:"#6b8fa3", fontSize:12, marginTop:12}}>Ingen data för valt urval.</p>
+            <p style={{color:"#64748b", fontSize:12, marginTop:12}}>Ingen data för valt urval.</p>
           )}
         </div>
       )}
 
       {selectedCustomer !== "ALL" && (
-        <div style={{background:"#1a2e3b", borderRadius:16, padding:"24px", border:"1px solid #2a4a5e", marginBottom:24}}>
+        <div style={{background:"#0f1419", borderRadius:16, padding:"24px", border:"1px solid #1e293b", marginBottom:24}}>
           <h2 style={{color:"#fff", fontWeight:700, fontSize:16, margin:"0 0 8px"}}>Kundavtal</h2>
-          <p style={{color:"#6b8fa3", fontSize:12, margin:"0 0 14px"}}>Visas för vald kund: {selectedCustomerLabel}</p>
+          <p style={{color:"#64748b", fontSize:12, margin:"0 0 14px"}}>Visas för vald kund: {selectedCustomerLabel}</p>
           {contractAccrualsLoading && (
-            <p style={{color:"#6b8fa3", fontSize:12, margin:"0 0 14px"}}>Laddar kundavtal...</p>
+            <p style={{color:"#64748b", fontSize:12, margin:"0 0 14px"}}>Laddar kundavtal...</p>
           )}
 
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%", borderCollapse:"collapse"}}>
               <thead>
-                <tr style={{borderBottom:"1px solid #2a4a5e"}}>
+                <tr style={{borderBottom:"1px solid #1e293b"}}>
                   {["", "Avtalsnr", "Beskrivning", "Start", "Slut", "Status", "Intervall", "Belopp ex. moms"].map(h => (
-                    <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
+                    <th key={h} style={{color:"#64748b", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -3232,12 +3232,12 @@ export default function DashboardClient({
 
                   return (
                     <Fragment key={rowKey}>
-                      <tr style={{borderBottom:"1px solid #1e3545"}}>
+                      <tr style={{borderBottom:"1px solid #141c24"}}>
                         <td style={{padding:"12px 16px 12px 0", width:30}}>
                           <button
                             type="button"
                             onClick={() => toggleCustomerContractExpanded(rowKey)}
-                            style={{background:"transparent", border:"none", color:"#6b8fa3", cursor:"pointer", fontSize:14, lineHeight:1, padding:0}}
+                            style={{background:"transparent", border:"none", color:"#64748b", cursor:"pointer", fontSize:14, lineHeight:1, padding:0}}
                             aria-label={isExpanded ? "Dölj avtalsdetaljer" : "Visa avtalsdetaljer"}
                             title={isExpanded ? "Dölj detaljer" : "Visa detaljer"}
                           >
@@ -3245,15 +3245,15 @@ export default function DashboardClient({
                           </button>
                         </td>
                         <td style={{padding:"12px 16px 12px 0", color:"#fff", fontWeight:600, fontSize:13}}>{row.contract_number || "-"}</td>
-                        <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:13}}>{resolvedContractDescription || "-"}</td>
-                        <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.start_date || "-"}</td>
-                        <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.end_date || "-"}</td>
-                        <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.status || "-"}</td>
-                        <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.period || "-"}</td>
-                        <td style={{padding:"12px 0", color:"#00c97a", fontWeight:700, fontSize:13}}>{row.total != null ? formatSEK(amountExVat) : "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#e2e8f0", fontSize:13}}>{resolvedContractDescription || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#64748b", fontSize:13}}>{row.start_date || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#64748b", fontSize:13}}>{row.end_date || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#64748b", fontSize:13}}>{row.status || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#64748b", fontSize:13}}>{row.period || "-"}</td>
+                        <td style={{padding:"12px 0", color:"#f59e0b", fontWeight:700, fontSize:13}}>{row.total != null ? formatSEK(amountExVat) : "-"}</td>
                       </tr>
                       {isExpanded && (
-                        <tr style={{borderBottom:"1px solid #1e3545", background:"rgba(9,16,24,0.22)"}}>
+                        <tr style={{borderBottom:"1px solid #141c24", background:"rgba(9,16,24,0.22)"}}>
                           <td colSpan={8} style={{padding:"10px 0 12px", color:"#8fb1c3", fontSize:12}}>
                             <div style={{display:"grid", gap:6}}>
                               <div style={{color:"#b8d4e3"}}>Faktureras enligt avtal:</div>
@@ -3283,27 +3283,27 @@ export default function DashboardClient({
           </div>
 
           {selectedCustomerContracts.length === 0 && (
-            <p style={{color:"#6b8fa3", fontSize:12, marginTop:12}}>Inga avtal hittades för vald kund.</p>
+            <p style={{color:"#64748b", fontSize:12, marginTop:12}}>Inga avtal hittades för vald kund.</p>
           )}
         </div>
       )}
 
       {/* Top customers / Costcenter view */}
-      <div style={{background:"#1a2e3b", borderRadius:16, padding:"24px", border:"1px solid #2a4a5e", marginBottom:24}}>
+      <div style={{background:"#0f1419", borderRadius:16, padding:"24px", border:"1px solid #1e293b", marginBottom:24}}>
         {selectedCostcenter !== "ALL" ? (
           <>
             <h2 style={{color:"#fff", fontWeight:700, fontSize:16, margin:"0 0 8px"}}>
               Kunder i kostnadsställe {selectedCostcenterLabel}
             </h2>
-            <p style={{color:"#6b8fa3", fontSize:13, margin:"0 0 18px"}}>
+            <p style={{color:"#64748b", fontSize:13, margin:"0 0 18px"}}>
               Kundöversikt baserad på aktuella filter (år och ansvarig).
             </p>
             <div style={{overflowX:"auto"}}>
               <table style={{width:"100%", borderCollapse:"collapse"}}>
                 <thead>
-                  <tr style={{borderBottom:"1px solid #2a4a5e"}}>
+                  <tr style={{borderBottom:"1px solid #1e293b"}}>
                     {["Kund","Omsättning ex. moms","Antal fakturor","Avtalsvärde","Senaste faktura","Andel",""] .map(h => (
-                      <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
+                      <th key={h} style={{color:"#64748b", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -3313,7 +3313,7 @@ export default function DashboardClient({
                     const contractStats = c.number ? contractStatsByCustomer.get(c.number) : null;
                     const contractValue = costcenterContractSummary.byCustomerKey.get(c.key) || 0;
                     return (
-                      <tr key={c.key} style={{borderBottom:"1px solid #1e3545"}}>
+                      <tr key={c.key} style={{borderBottom:"1px solid #141c24"}}>
                         <td style={{padding:"14px 16px 14px 0", color:"#fff", fontWeight:500, fontSize:14}}>
                           <button
                             type="button"
@@ -3323,28 +3323,28 @@ export default function DashboardClient({
                             {c.number ? `${c.number} - ${c.name}` : c.name}
                           </button>
                         </td>
-                        <td style={{padding:"14px 16px 14px 0", color:"#00c97a", fontWeight:700, fontSize:14}}>{formatSEK(c.omsattning)}</td>
-                        <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{c.antal}</td>
-                        <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>
+                        <td style={{padding:"14px 16px 14px 0", color:"#f59e0b", fontWeight:700, fontSize:14}}>{formatSEK(c.omsattning)}</td>
+                        <td style={{padding:"14px 16px 14px 0", color:"#64748b", fontSize:14}}>{c.antal}</td>
+                        <td style={{padding:"14px 16px 14px 0", color:"#64748b", fontSize:14}}>
                           {contractStats
                             ? (
                               <button
                                 type="button"
                                 onClick={() => openContractsForCustomer(c.number, c.name)}
-                                style={{background:"transparent", border:"none", color:"#6b8fa3", cursor:"pointer", padding:0, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
+                                style={{background:"transparent", border:"none", color:"#64748b", cursor:"pointer", padding:0, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
                               >
                                 {formatSEK(contractValue)}
                               </button>
                             )
                             : "-"}
                         </td>
-                        <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{c.senasteFaktura || "-"}</td>
+                        <td style={{padding:"14px 16px 14px 0", color:"#64748b", fontSize:14}}>{c.senasteFaktura || "-"}</td>
                         <td style={{padding:"14px 0", minWidth:120}}>
                           <div style={{display:"flex", alignItems:"center", gap:8}}>
-                            <div style={{flex:1, height:6, background:"#2a4a5e", borderRadius:3, overflow:"hidden"}}>
-                              <div style={{width:`${share}%`, height:"100%", background:"#3b9eff", borderRadius:3}} />
+                            <div style={{flex:1, height:6, background:"#1e293b", borderRadius:3, overflow:"hidden"}}>
+                              <div style={{width:`${share}%`, height:"100%", background:"#38bdf8", borderRadius:3}} />
                             </div>
-                            <span style={{color:"#6b8fa3", fontSize:12, minWidth:36}}>{share}%</span>
+                            <span style={{color:"#64748b", fontSize:12, minWidth:36}}>{share}%</span>
                           </div>
                         </td>
                         <td style={{padding:"14px 0 14px 16px", textAlign:"right", whiteSpace:"nowrap"}}>
@@ -3353,7 +3353,7 @@ export default function DashboardClient({
                             onClick={() => goToCustomerFromCostcenter(c.number, c.name)}
                             disabled={!c.number}
                             style={{
-                              background: c.number ? "#2f7ef7" : "#2a4a5e",
+                              background: c.number ? "#2f7ef7" : "#1e293b",
                               color: "#fff",
                               border: "none",
                               borderRadius: 8,
@@ -3371,8 +3371,8 @@ export default function DashboardClient({
                     );
                   })}
                   {costcenterCustomerData.length > 0 && (
-                    <tr style={{borderTop:"1px solid #2a4a5e", background:"rgba(9,16,24,0.22)"}}>
-                      <td style={{padding:"14px 16px 14px 0", color:"#dbe7ef", fontWeight:700, fontSize:14}}>Summa</td>
+                    <tr style={{borderTop:"1px solid #1e293b", background:"rgba(9,16,24,0.22)"}}>
+                      <td style={{padding:"14px 16px 14px 0", color:"#e2e8f0", fontWeight:700, fontSize:14}}>Summa</td>
                       <td style={{padding:"14px 16px 14px 0"}} />
                       <td style={{padding:"14px 16px 14px 0"}} />
                       <td style={{padding:"14px 16px 14px 0", color:"#f59e0b", fontWeight:700, fontSize:14}}>{formatSEK(costcenterContractSummary.totalValue)}</td>
@@ -3385,7 +3385,7 @@ export default function DashboardClient({
               </table>
             </div>
             {costcenterCustomerData.length === 0 && (
-              <div style={{color:"#6b8fa3", fontSize:13}}>Inga kunddata hittades för valt kostnadsställe med nuvarande filter.</div>
+              <div style={{color:"#64748b", fontSize:13}}>Inga kunddata hittades för valt kostnadsställe med nuvarande filter.</div>
             )}
           </>
         ) : (
@@ -3396,9 +3396,9 @@ export default function DashboardClient({
             <div style={{overflowX:"auto"}}>
               <table style={{width:"100%", borderCollapse:"collapse"}}>
                 <thead>
-                  <tr style={{borderBottom:"1px solid #2a4a5e"}}>
+                  <tr style={{borderBottom:"1px solid #1e293b"}}>
                     {["Kund","Omsättning ex. moms","Antal fakturor","Avtal","Andel"].map(h => (
-                      <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
+                      <th key={h} style={{color:"#64748b", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -3406,7 +3406,7 @@ export default function DashboardClient({
                   {customerData.map((c) => {
                     const contractStats = c.number ? contractStatsByCustomer.get(c.number) : null;
                     return (
-                    <tr key={c.key} style={{borderBottom:"1px solid #1e3545"}}>
+                    <tr key={c.key} style={{borderBottom:"1px solid #141c24"}}>
                       <td style={{padding:"14px 16px 14px 0", color:"#fff", fontWeight:500, fontSize:14}}>
                         <button
                           type="button"
@@ -3416,15 +3416,15 @@ export default function DashboardClient({
                           {c.number ? `${c.number} - ${c.name}` : c.name}
                         </button>
                       </td>
-                      <td style={{padding:"14px 16px 14px 0", color:"#00c97a", fontWeight:700, fontSize:14}}>{formatSEK(c.omsattning)}</td>
-                      <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{c.antal}</td>
-                      <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>
+                      <td style={{padding:"14px 16px 14px 0", color:"#f59e0b", fontWeight:700, fontSize:14}}>{formatSEK(c.omsattning)}</td>
+                      <td style={{padding:"14px 16px 14px 0", color:"#64748b", fontSize:14}}>{c.antal}</td>
+                      <td style={{padding:"14px 16px 14px 0", color:"#64748b", fontSize:14}}>
                         {contractStats
                           ? (
                             <button
                               type="button"
                               onClick={() => openContractsForCustomer(c.number, c.name)}
-                              style={{background:"transparent", border:"none", color:"#6b8fa3", cursor:"pointer", padding:0, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
+                              style={{background:"transparent", border:"none", color:"#64748b", cursor:"pointer", padding:0, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
                             >
                               {`${contractStats.count} (${formatSEK(contractStats.total)})`}
                             </button>
@@ -3433,10 +3433,10 @@ export default function DashboardClient({
                       </td>
                       <td style={{padding:"14px 0", minWidth:120}}>
                         <div style={{display:"flex", alignItems:"center", gap:8}}>
-                          <div style={{flex:1, height:6, background:"#2a4a5e", borderRadius:3, overflow:"hidden"}}>
-                            <div style={{width:`${totalOmsattning > 0 ? (c.omsattning/totalOmsattning*100) : 0}%`, height:"100%", background:"#00c97a", borderRadius:3}} />
+                          <div style={{flex:1, height:6, background:"#1e293b", borderRadius:3, overflow:"hidden"}}>
+                            <div style={{width:`${totalOmsattning > 0 ? (c.omsattning/totalOmsattning*100) : 0}%`, height:"100%", background:"#f59e0b", borderRadius:3}} />
                           </div>
-                          <span style={{color:"#6b8fa3", fontSize:12, minWidth:36}}>{totalOmsattning > 0 ? Math.round(c.omsattning/totalOmsattning*100) : 0}%</span>
+                          <span style={{color:"#64748b", fontSize:12, minWidth:36}}>{totalOmsattning > 0 ? Math.round(c.omsattning/totalOmsattning*100) : 0}%</span>
                         </div>
                       </td>
                     </tr>
@@ -3450,15 +3450,15 @@ export default function DashboardClient({
 
       {/* Articles */ }
       {articleGroupStats.length > 0 && (
-        <div style={{background:"#1a2e3b", borderRadius:16, padding:"24px", border:"1px solid #2a4a5e", marginBottom:24}}>
+        <div style={{background:"#0f1419", borderRadius:16, padding:"24px", border:"1px solid #1e293b", marginBottom:24}}>
           <h2 style={{color:"#fff", fontWeight:700, fontSize:16, margin:"0 0 8px"}}>Artikelgrupper ({articleGroupStats.length})</h2>
-          <p style={{color:"#6b8fa3", fontSize:12, margin:"0 0 14px"}}>Mappad uppföljning per artikelgrupp för aktuellt urval.</p>
+          <p style={{color:"#64748b", fontSize:12, margin:"0 0 14px"}}>Mappad uppföljning per artikelgrupp för aktuellt urval.</p>
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%", borderCollapse:"collapse"}}>
               <thead>
-                <tr style={{borderBottom:"1px solid #2a4a5e"}}>
+                <tr style={{borderBottom:"1px solid #1e293b"}}>
                   {["Grupp", "Omsättning ex. moms", "Artiklar", "Antal", "Mängd", "Andel"].map(h => (
-                    <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
+                    <th key={h} style={{color:"#64748b", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -3467,38 +3467,38 @@ export default function DashboardClient({
                   const isExpanded = expandedArticleGroups.has(group.key);
                   return (
                     <Fragment key={group.key}>
-                      <tr style={{borderBottom:"1px solid #1e3545"}}>
+                      <tr style={{borderBottom:"1px solid #141c24"}}>
                         <td style={{padding:"14px 16px 14px 0", color:"#fff", fontWeight:500, fontSize:14}}>
                           <button
                             type="button"
                             onClick={() => toggleArticleGroupExpanded(group.key)}
                             style={{background:"transparent", border:"none", color:"#fff", cursor:"pointer", padding:0, fontWeight:500, fontSize:14, display:"flex", alignItems:"center", gap:8}}
                           >
-                            <span style={{color:"#6b8fa3", fontSize:12}}>{isExpanded ? "▼" : "▶"}</span>
+                            <span style={{color:"#64748b", fontSize:12}}>{isExpanded ? "▼" : "▶"}</span>
                             <span>{group.groupName}</span>
                           </button>
                         </td>
-                        <td style={{padding:"14px 16px 14px 0", color:"#00c97a", fontWeight:700, fontSize:14}}>{formatSEK(group.omsattning)}</td>
-                        <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{group.articleCount}</td>
-                        <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{group.antal}</td>
-                        <td style={{padding:"14px 16px 14px 0", color:"#6b8fa3", fontSize:14}}>{group.quantity.toFixed(1)}</td>
+                        <td style={{padding:"14px 16px 14px 0", color:"#f59e0b", fontWeight:700, fontSize:14}}>{formatSEK(group.omsattning)}</td>
+                        <td style={{padding:"14px 16px 14px 0", color:"#64748b", fontSize:14}}>{group.articleCount}</td>
+                        <td style={{padding:"14px 16px 14px 0", color:"#64748b", fontSize:14}}>{group.antal}</td>
+                        <td style={{padding:"14px 16px 14px 0", color:"#64748b", fontSize:14}}>{group.quantity.toFixed(1)}</td>
                         <td style={{padding:"14px 0", minWidth:120}}>
                           <div style={{display:"flex", alignItems:"center", gap:8}}>
-                            <div style={{flex:1, height:6, background:"#2a4a5e", borderRadius:3, overflow:"hidden"}}>
+                            <div style={{flex:1, height:6, background:"#1e293b", borderRadius:3, overflow:"hidden"}}>
                               <div style={{width:`${totalOmsattning > 0 ? (group.omsattning / totalOmsattning * 100) : 0}%`, height:"100%", background:"#2f7ef7", borderRadius:3}} />
                             </div>
-                            <span style={{color:"#6b8fa3", fontSize:12, minWidth:36}}>{totalOmsattning > 0 ? Math.round(group.omsattning / totalOmsattning * 100) : 0}%</span>
+                            <span style={{color:"#64748b", fontSize:12, minWidth:36}}>{totalOmsattning > 0 ? Math.round(group.omsattning / totalOmsattning * 100) : 0}%</span>
                           </div>
                         </td>
                       </tr>
                       {isExpanded && (
-                        <tr style={{borderBottom:"1px solid #1e3545"}}>
+                        <tr style={{borderBottom:"1px solid #141c24"}}>
                           <td colSpan={6} style={{padding:"0 0 12px 0"}}>
-                            <table style={{width:"100%", borderCollapse:"collapse", background:"#0f1923", border:"1px solid #1e3545", borderRadius:8}}>
+                            <table style={{width:"100%", borderCollapse:"collapse", background:"#080c10", border:"1px solid #141c24", borderRadius:8}}>
                               <thead>
-                                <tr style={{borderBottom:"1px solid #1e3545"}}>
+                                <tr style={{borderBottom:"1px solid #141c24"}}>
                                   {["Artikelnr", "Benämning", "Omsättning ex. moms", "Antal", "Mängd", "Andel"].map(h => (
-                                    <th key={`${group.key}-${h}`} style={{padding:"8px 10px", color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.6, textAlign:"left"}}>{h}</th>
+                                    <th key={`${group.key}-${h}`} style={{padding:"8px 10px", color:"#64748b", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.6, textAlign:"left"}}>{h}</th>
                                   ))}
                                 </tr>
                               </thead>
@@ -3506,13 +3506,13 @@ export default function DashboardClient({
                                 {(group.articles || []).map(article => {
                                   const share = group.omsattning > 0 ? Math.round(((parseFloat(article.omsattning || 0) || 0) / group.omsattning) * 100) : 0;
                                   return (
-                                    <tr key={`${group.key}-${article.key}`} style={{borderBottom:"1px solid #1e3545"}}>
-                                      <td style={{padding:"8px 10px", color:"#dbe7ef", fontSize:13}}>{article.articleNumber || "-"}</td>
+                                    <tr key={`${group.key}-${article.key}`} style={{borderBottom:"1px solid #141c24"}}>
+                                      <td style={{padding:"8px 10px", color:"#e2e8f0", fontSize:13}}>{article.articleNumber || "-"}</td>
                                       <td style={{padding:"8px 10px", color:"#fff", fontSize:13}}>{article.name || "-"}</td>
-                                      <td style={{padding:"8px 10px", color:"#00c97a", fontWeight:700, fontSize:13}}>{formatSEK(article.omsattning || 0)}</td>
-                                      <td style={{padding:"8px 10px", color:"#6b8fa3", fontSize:13}}>{article.antal}</td>
-                                      <td style={{padding:"8px 10px", color:"#6b8fa3", fontSize:13}}>{(parseFloat(article.quantity || 0) || 0).toFixed(1)}</td>
-                                      <td style={{padding:"8px 10px", color:"#6b8fa3", fontSize:13}}>{share}%</td>
+                                      <td style={{padding:"8px 10px", color:"#f59e0b", fontWeight:700, fontSize:13}}>{formatSEK(article.omsattning || 0)}</td>
+                                      <td style={{padding:"8px 10px", color:"#64748b", fontSize:13}}>{article.antal}</td>
+                                      <td style={{padding:"8px 10px", color:"#64748b", fontSize:13}}>{(parseFloat(article.quantity || 0) || 0).toFixed(1)}</td>
+                                      <td style={{padding:"8px 10px", color:"#64748b", fontSize:13}}>{share}%</td>
                                     </tr>
                                   );
                                 })}
@@ -3537,7 +3537,7 @@ export default function DashboardClient({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{width:"min(980px, 96vw)", maxHeight:"85vh", overflow:"auto", background:"#1a2e3b", border:"1px solid #2a4a5e", borderRadius:14, padding:20}}
+            style={{width:"min(980px, 96vw)", maxHeight:"85vh", overflow:"auto", background:"#0f1419", border:"1px solid #1e293b", borderRadius:14, padding:20}}
           >
             <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginBottom:14}}>
               <h3 style={{margin:0, color:"#fff", fontSize:18, fontWeight:700}}>
@@ -3548,19 +3548,19 @@ export default function DashboardClient({
               <button
                 type="button"
                 onClick={() => { setInvoiceModal(null); setModalExpandedInvoices(new Set()); }}
-                style={{background:"transparent", border:"none", color:"#6b8fa3", fontSize:22, cursor:"pointer", lineHeight:1}}
+                style={{background:"transparent", border:"none", color:"#64748b", fontSize:22, cursor:"pointer", lineHeight:1}}
                 aria-label="Stäng"
               >×</button>
             </div>
 
-            <div style={{color:"#6b8fa3", fontSize:13, marginBottom:10}}>
+            <div style={{color:"#64748b", fontSize:13, marginBottom:10}}>
               {invoiceModal.invoices.length} fakturor{invoiceModal.mode === "unpaid" ? " med restsaldo" : ""}
             </div>
 
             <div style={{overflowX:"auto"}}>
               <table style={{width:"100%", borderCollapse:"collapse"}}>
                 <thead>
-                  <tr style={{borderBottom:"1px solid #2a4a5e"}}>
+                  <tr style={{borderBottom:"1px solid #1e293b"}}>
                     {[
                       "Faktura",
                       ...((invoiceModal.mode === "unpaid" || (invoiceModal.mode === "all" && invoiceModal.customerNumber === null)) ? ["Kund"] : []),
@@ -3570,7 +3570,7 @@ export default function DashboardClient({
                       ...(invoiceModal.mode === "unpaid" ? ["Restsaldo"] : []),
                       ...(invoiceModal.mode === "unpaid" ? ["Status"] : []),
                     ].map(h => (
-                      <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
+                      <th key={h} style={{color:"#64748b", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -3601,7 +3601,7 @@ export default function DashboardClient({
                     return (
                     <Fragment key={`${inv.document_number || idx}-wrapper`}>
                       <tr
-                        style={{borderBottom:"1px solid #1e3545", cursor:"pointer", background:isHovered ? "#0f1923" : "transparent", transition:"background 0.15s ease"}}
+                        style={{borderBottom:"1px solid #141c24", cursor:"pointer", background:isHovered ? "#080c10" : "transparent", transition:"background 0.15s ease"}}
                         onClick={() => toggleModalInvoiceExpand(inv.document_number)}
                         onMouseEnter={() => setModalHoveredInvoice(invNumber)}
                         onMouseLeave={() => setModalHoveredInvoice(null)}
@@ -3630,7 +3630,7 @@ export default function DashboardClient({
                           </div>
                         </td>
                         {(invoiceModal.mode === "unpaid" || (invoiceModal.mode === "all" && invoiceModal.customerNumber === null)) && (
-                          <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:14}}>
+                          <td style={{padding:"12px 16px 12px 0", color:"#e2e8f0", fontSize:14}}>
                             {(() => {
                               const customerNumber = String(inv.customer_number || inv.CustomerNumber || "").trim();
                               const customerName = String(inv.customer_name || inv.CustomerName || "").trim();
@@ -3639,11 +3639,11 @@ export default function DashboardClient({
                             })()}
                           </td>
                         )}
-                        <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:14}}>{inv.invoice_date || "-"}</td>
-                        <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:14}}>{dueDateLabel}</td>
-                        <td style={{padding:"12px 0", color:"#00c97a", fontWeight:700, fontSize:14, display:"flex", justifyContent:"space-between", alignItems:"center", gap:12}}>
+                        <td style={{padding:"12px 16px 12px 0", color:"#e2e8f0", fontSize:14}}>{inv.invoice_date || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#e2e8f0", fontSize:14}}>{dueDateLabel}</td>
+                        <td style={{padding:"12px 0", color:"#f59e0b", fontWeight:700, fontSize:14, display:"flex", justifyContent:"space-between", alignItems:"center", gap:12}}>
                           <span>{formatSEK(exMoms(inv.total || 0))}</span>
-                          <span style={{color:"#6b8fa3", fontSize:12}}>{isExpanded ? "▼ Dölj artiklar" : "▶ Visa artiklar"}</span>
+                          <span style={{color:"#64748b", fontSize:12}}>{isExpanded ? "▼ Dölj artiklar" : "▶ Visa artiklar"}</span>
                         </td>
                         {invoiceModal.mode === "unpaid" && (
                           <td style={{padding:"12px 0", color:"#ff8e8e", fontWeight:700, fontSize:14}}>
@@ -3657,7 +3657,7 @@ export default function DashboardClient({
                         )}
                       </tr>
                       {isExpanded && (
-                        <tr style={{borderBottom:"1px solid #1e3545"}}>
+                        <tr style={{borderBottom:"1px solid #141c24"}}>
                           <td colSpan={invoiceModal.mode === "unpaid" ? 7 : 4} style={{padding:"0 0 12px 0"}}>
                             {(() => {
                               const rows = invoiceRows[invNumber] || [];
@@ -3665,7 +3665,7 @@ export default function DashboardClient({
                               const rowError = modalInvoiceRowsError[invNumber];
 
                               if (isLoadingRows) {
-                                return <div style={{padding:"10px 0", color:"#6b8fa3", fontSize:13}}>Hämtar artiklar från Fortnox och sparar i databasen...</div>;
+                                return <div style={{padding:"10px 0", color:"#64748b", fontSize:13}}>Hämtar artiklar från Fortnox och sparar i databasen...</div>;
                               }
 
                               if (rowError) {
@@ -3673,13 +3673,13 @@ export default function DashboardClient({
                               }
 
                               if (!Array.isArray(rows) || rows.length === 0) {
-                                return <div style={{padding:"10px 0", color:"#6b8fa3", fontSize:13}}>Inga artiklar hittades för denna faktura.</div>;
+                                return <div style={{padding:"10px 0", color:"#64748b", fontSize:13}}>Inga artiklar hittades för denna faktura.</div>;
                               }
 
                               return (
-                                <table style={{width:"100%", fontSize:12, borderCollapse:"collapse", background:"#0f1923", border:"1px solid #1e3545", borderRadius:8}}>
+                                <table style={{width:"100%", fontSize:12, borderCollapse:"collapse", background:"#080c10", border:"1px solid #141c24", borderRadius:8}}>
                                   <thead>
-                                    <tr style={{borderBottom:"1px solid #1e3545"}}>
+                                    <tr style={{borderBottom:"1px solid #141c24"}}>
                                       {[
                                         "Artikelnr",
                                         "Benämning",
@@ -3687,7 +3687,7 @@ export default function DashboardClient({
                                         "Pris",
                                         "Belopp",
                                       ].map(h => (
-                                        <th key={`${invNumber}-${h}`} style={{padding:"8px 10px", color:"#6b8fa3", textAlign:h === "Benämning" ? "left" : "right", fontWeight:600}}>{h}</th>
+                                        <th key={`${invNumber}-${h}`} style={{padding:"8px 10px", color:"#64748b", textAlign:h === "Benämning" ? "left" : "right", fontWeight:600}}>{h}</th>
                                       ))}
                                     </tr>
                                   </thead>
@@ -3698,12 +3698,12 @@ export default function DashboardClient({
                                       const resolvedName = articleNumberToName.get(articleNumber) || fallbackName;
                                       const { quantity, unitPrice, total } = resolveInvoiceRowNumbers(row);
                                       return (
-                                        <tr key={`${invNumber}-modal-row-${rowIdx}`} style={{borderBottom:"1px solid #1e3545"}}>
-                                          <td style={{padding:"8px 10px", color:"#dbe7ef", textAlign:"right"}}>{articleNumber || "-"}</td>
+                                        <tr key={`${invNumber}-modal-row-${rowIdx}`} style={{borderBottom:"1px solid #141c24"}}>
+                                          <td style={{padding:"8px 10px", color:"#e2e8f0", textAlign:"right"}}>{articleNumber || "-"}</td>
                                           <td style={{padding:"8px 10px", color:"#fff", textAlign:"left"}}>{resolvedName}</td>
-                                          <td style={{padding:"8px 10px", color:"#6b8fa3", textAlign:"right"}}>{quantity.toFixed(2)}</td>
-                                          <td style={{padding:"8px 10px", color:"#6b8fa3", textAlign:"right"}}>{unitPrice ? formatSEK(normalizeInvoiceRowAmount(unitPrice)) : "-"}</td>
-                                          <td style={{padding:"8px 10px", color:"#00c97a", textAlign:"right", fontWeight:600}}>{formatSEK(normalizeInvoiceRowAmount(total))}</td>
+                                          <td style={{padding:"8px 10px", color:"#64748b", textAlign:"right"}}>{quantity.toFixed(2)}</td>
+                                          <td style={{padding:"8px 10px", color:"#64748b", textAlign:"right"}}>{unitPrice ? formatSEK(normalizeInvoiceRowAmount(unitPrice)) : "-"}</td>
+                                          <td style={{padding:"8px 10px", color:"#f59e0b", textAlign:"right", fontWeight:600}}>{formatSEK(normalizeInvoiceRowAmount(total))}</td>
                                         </tr>
                                       );
                                     })}
@@ -3721,7 +3721,7 @@ export default function DashboardClient({
               </table>
             </div>
             {invoiceModal.invoices.length === 0 && (
-              <div style={{color:"#6b8fa3", fontSize:13, marginTop:12}}>Inga fakturor hittades för kunden i nuvarande filter.</div>
+              <div style={{color:"#64748b", fontSize:13, marginTop:12}}>Inga fakturor hittades för kunden i nuvarande filter.</div>
             )}
           </div>
         </div>
@@ -3734,7 +3734,7 @@ export default function DashboardClient({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{width:"min(1100px, 96vw)", maxHeight:"85vh", overflow:"auto", background:"#1a2e3b", border:"1px solid #2a4a5e", borderRadius:14, padding:20}}
+            style={{width:"min(1100px, 96vw)", maxHeight:"85vh", overflow:"auto", background:"#0f1419", border:"1px solid #1e293b", borderRadius:14, padding:20}}
           >
             <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginBottom:14}}>
               <h3 style={{margin:0, color:"#fff", fontSize:18, fontWeight:700}}>
@@ -3745,12 +3745,12 @@ export default function DashboardClient({
               <button
                 type="button"
                 onClick={() => setTimeEntriesModal(null)}
-                style={{background:"transparent", border:"none", color:"#6b8fa3", fontSize:22, cursor:"pointer", lineHeight:1}}
+                style={{background:"transparent", border:"none", color:"#64748b", fontSize:22, cursor:"pointer", lineHeight:1}}
                 aria-label="Stäng"
               >×</button>
             </div>
 
-            <div style={{color:"#6b8fa3", fontSize:13, marginBottom:10}}>
+            <div style={{color:"#64748b", fontSize:13, marginBottom:10}}>
               {timeEntriesModal.mode === "month" || timeEntriesModal.mode === "period"
                 ? `Kund: ${timeEntriesModal.employeeGroup} · Rader: ${timeEntriesModal.rows.length} · Timmar: ${timeEntriesModal.totalHours.toFixed(1)}`
                 : `Grupp: ${timeEntriesModal.employeeGroup} · Rader: ${timeEntriesModal.rows.length} · Timmar: ${timeEntriesModal.totalHours.toFixed(1)}`}
@@ -3759,9 +3759,9 @@ export default function DashboardClient({
             <div style={{overflowX:"auto"}}>
               <table style={{width:"100%", borderCollapse:"collapse"}}>
                 <thead>
-                  <tr style={{borderBottom:"1px solid #2a4a5e"}}>
+                  <tr style={{borderBottom:"1px solid #1e293b"}}>
                     {["Datum", "Kund", "Projekt", "Aktivitet", "Konsult", "Timmar", "Beskrivning"].map(h => (
-                      <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
+                      <th key={h} style={{color:"#64748b", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -3769,14 +3769,14 @@ export default function DashboardClient({
                   {timeEntriesModal.rows.map((row, idx) => {
                     const consultantName = String(row.employee_name || row.employee_id || "").trim();
                     return (
-                      <tr key={`${timeEntriesModal.employeeKey}-${row.report_date || ""}-${idx}`} style={{borderBottom:"1px solid #1e3545"}}>
-                        <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:13}}>{row.report_date || "-"}</td>
+                      <tr key={`${timeEntriesModal.employeeKey}-${row.report_date || ""}-${idx}`} style={{borderBottom:"1px solid #141c24"}}>
+                        <td style={{padding:"12px 16px 12px 0", color:"#e2e8f0", fontSize:13}}>{row.report_date || "-"}</td>
                         <td style={{padding:"12px 16px 12px 0", color:"#fff", fontSize:13}}>{row.customer_number ? `${row.customer_number} - ${row.customer_name || ""}` : (row.customer_name || "-")}</td>
-                        <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.project_name || "-"}</td>
-                        <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.activity || "-"}</td>
-                        <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:13}}>{consultantName || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#64748b", fontSize:13}}>{row.project_name || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#64748b", fontSize:13}}>{row.activity || "-"}</td>
+                        <td style={{padding:"12px 16px 12px 0", color:"#e2e8f0", fontSize:13}}>{consultantName || "-"}</td>
                         <td style={{padding:"12px 16px 12px 0", color:"#1db3a7", fontWeight:700, fontSize:13}}>{(parseFloat(row.hours) || 0).toFixed(1)}</td>
-                        <td style={{padding:"12px 0", color:"#6b8fa3", fontSize:13}}>{row.description ? `📝 ${row.description}` : "-"}</td>
+                        <td style={{padding:"12px 0", color:"#64748b", fontSize:13}}>{row.description ? `📝 ${row.description}` : "-"}</td>
                       </tr>
                     );
                   })}
@@ -3785,7 +3785,7 @@ export default function DashboardClient({
             </div>
 
             {timeEntriesModal.rows.length === 0 && (
-              <div style={{color:"#6b8fa3", fontSize:13, marginTop:12}}>
+              <div style={{color:"#64748b", fontSize:13, marginTop:12}}>
                 {timeEntriesModal.mode === "month" || timeEntriesModal.mode === "period"
                   ? "Inga tidsrader hittades för vald period i nuvarande filter."
                   : "Inga tidsrader hittades för vald medarbetare i nuvarande filter."}
@@ -3802,7 +3802,7 @@ export default function DashboardClient({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{width:"min(1100px, 96vw)", maxHeight:"85vh", overflow:"auto", background:"#1a2e3b", border:"1px solid #2a4a5e", borderRadius:14, padding:20}}
+            style={{width:"min(1100px, 96vw)", maxHeight:"85vh", overflow:"auto", background:"#0f1419", border:"1px solid #1e293b", borderRadius:14, padding:20}}
           >
             <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginBottom:14}}>
               <h3 style={{margin:0, color:"#fff", fontSize:18, fontWeight:700}}>
@@ -3811,21 +3811,21 @@ export default function DashboardClient({
               <button
                 type="button"
                 onClick={() => setContractModal(null)}
-                style={{background:"transparent", border:"none", color:"#6b8fa3", fontSize:22, cursor:"pointer", lineHeight:1}}
+                style={{background:"transparent", border:"none", color:"#64748b", fontSize:22, cursor:"pointer", lineHeight:1}}
                 aria-label="Stäng"
               >×</button>
             </div>
 
-            <div style={{color:"#6b8fa3", fontSize:13, marginBottom:10}}>
+            <div style={{color:"#64748b", fontSize:13, marginBottom:10}}>
               Avtal: {contractModal.rows.length} · Totalt avtalsvärde ex. moms: {formatSEK(contractModal.total || 0)}
             </div>
 
             <div style={{overflowX:"auto"}}>
               <table style={{width:"100%", borderCollapse:"collapse"}}>
                 <thead>
-                  <tr style={{borderBottom:"1px solid #2a4a5e"}}>
+                  <tr style={{borderBottom:"1px solid #1e293b"}}>
                     {["", "Avtalsnr", "Beskrivning", "Start", "Slut", "Status", "Intervall", "Belopp ex. moms"].map(h => (
-                      <th key={h} style={{color:"#6b8fa3", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
+                      <th key={h} style={{color:"#64748b", fontSize:12, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, textAlign:"left", paddingBottom:12, paddingRight:16}}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -3842,12 +3842,12 @@ export default function DashboardClient({
 
                     return (
                       <Fragment key={rowKey}>
-                        <tr style={{borderBottom:"1px solid #1e3545"}}>
+                        <tr style={{borderBottom:"1px solid #141c24"}}>
                           <td style={{padding:"12px 16px 12px 0", width:30}}>
                             <button
                               type="button"
                               onClick={() => toggleModalContractExpanded(rowKey)}
-                              style={{background:"transparent", border:"none", color:"#6b8fa3", cursor:"pointer", fontSize:14, lineHeight:1, padding:0}}
+                              style={{background:"transparent", border:"none", color:"#64748b", cursor:"pointer", fontSize:14, lineHeight:1, padding:0}}
                               aria-label={isExpanded ? "Dölj avtalsdetaljer" : "Visa avtalsdetaljer"}
                               title={isExpanded ? "Dölj detaljer" : "Visa detaljer"}
                             >
@@ -3855,15 +3855,15 @@ export default function DashboardClient({
                             </button>
                           </td>
                           <td style={{padding:"12px 16px 12px 0", color:"#fff", fontWeight:600, fontSize:13}}>{row.contract_number || "-"}</td>
-                          <td style={{padding:"12px 16px 12px 0", color:"#dbe7ef", fontSize:13}}>{resolvedContractDescription || "-"}</td>
-                          <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.start_date || "-"}</td>
-                          <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.end_date || "-"}</td>
-                          <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.status || "-"}</td>
-                          <td style={{padding:"12px 16px 12px 0", color:"#6b8fa3", fontSize:13}}>{row.period || "-"}</td>
-                          <td style={{padding:"12px 0", color:"#00c97a", fontWeight:700, fontSize:13}}>{row.total != null ? formatSEK(amountExVat) : "-"}</td>
+                          <td style={{padding:"12px 16px 12px 0", color:"#e2e8f0", fontSize:13}}>{resolvedContractDescription || "-"}</td>
+                          <td style={{padding:"12px 16px 12px 0", color:"#64748b", fontSize:13}}>{row.start_date || "-"}</td>
+                          <td style={{padding:"12px 16px 12px 0", color:"#64748b", fontSize:13}}>{row.end_date || "-"}</td>
+                          <td style={{padding:"12px 16px 12px 0", color:"#64748b", fontSize:13}}>{row.status || "-"}</td>
+                          <td style={{padding:"12px 16px 12px 0", color:"#64748b", fontSize:13}}>{row.period || "-"}</td>
+                          <td style={{padding:"12px 0", color:"#f59e0b", fontWeight:700, fontSize:13}}>{row.total != null ? formatSEK(amountExVat) : "-"}</td>
                         </tr>
                         {isExpanded && (
-                          <tr style={{borderBottom:"1px solid #1e3545", background:"rgba(9,16,24,0.22)"}}>
+                          <tr style={{borderBottom:"1px solid #141c24", background:"rgba(9,16,24,0.22)"}}>
                             <td colSpan={8} style={{padding:"10px 0 12px", color:"#8fb1c3", fontSize:12}}>
                               <div style={{display:"grid", gap:6}}>
                                 <div style={{color:"#b8d4e3"}}>Faktureras enligt avtal:</div>
@@ -3893,7 +3893,7 @@ export default function DashboardClient({
             </div>
 
             {contractModal.rows.length === 0 && (
-              <div style={{color:"#6b8fa3", fontSize:13, marginTop:12}}>Inga avtal hittades för vald kund.</div>
+              <div style={{color:"#64748b", fontSize:13, marginTop:12}}>Inga avtal hittades för vald kund.</div>
             )}
           </div>
         </div>

@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useMemo } from "react";
 
-const cardStyle = { background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 14, padding: 20 };
+const cardStyle = { background: "#0f1419", border: "1px solid #1e293b", borderRadius: 14, padding: 20 };
 const inputStyle = {
   width: "100%",
-  background: "#0f1923",
+  background: "#080c10",
   color: "#fff",
-  border: "1px solid #2a4a5e",
+  border: "1px solid #1e293b",
   borderRadius: 8,
   padding: "9px 10px",
   fontSize: 13,
@@ -128,7 +128,7 @@ export default function MailComposerPage() {
     <div style={{ display: "grid", gap: 16, maxWidth: 1000 }}>
       <div>
         <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 700 }}>Mailutskick</h2>
-        <p style={{ margin: 0, color: "#6b8fa3", fontSize: 13 }}>Filtrera mottagare, välj mall och skicka mail direkt från CRM.</p>
+        <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>Filtrera mottagare, välj mall och skicka mail direkt från CRM.</p>
       </div>
 
       {/* Mottagarfilter */}
@@ -168,14 +168,14 @@ export default function MailComposerPage() {
               <button
                 type="button"
                 onClick={toggleAll}
-                style={{ background: "none", color: "#3b9eff", border: "none", cursor: "pointer", fontSize: 13, padding: 0 }}
+                style={{ background: "none", color: "#38bdf8", border: "none", cursor: "pointer", fontSize: 13, padding: 0 }}
               >
                 {selectedIds.size === recipients.length ? "Avmarkera alla" : "Välj alla"}
               </button>
             </div>
 
             {recipients.length > 0 && (
-              <div style={{ maxHeight: 240, overflowY: "auto", border: "1px solid #2a4a5e", borderRadius: 8 }}>
+              <div style={{ maxHeight: 240, overflowY: "auto", border: "1px solid #1e293b", borderRadius: 8 }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                   <tbody>
                     {recipients.map(r => (
@@ -187,7 +187,7 @@ export default function MailComposerPage() {
                         <td style={{ padding: "7px 10px", width: 32 }}>
                           <input type="checkbox" readOnly checked={selectedIds.has(r.contact_id)} style={{ cursor: "pointer" }} />
                         </td>
-                        <td style={{ padding: "7px 0", color: "#dbe7ef", fontWeight: 600 }}>{r.company_name}</td>
+                        <td style={{ padding: "7px 0", color: "#e2e8f0", fontWeight: 600 }}>{r.company_name}</td>
                         <td style={{ padding: "7px 10px", color: "#8fb1c3" }}>{r.name}</td>
                         <td style={{ padding: "7px 10px", color: "#8fb1c3" }}>{r.email}</td>
                       </tr>
@@ -198,7 +198,7 @@ export default function MailComposerPage() {
             )}
 
             {recipients.length === 0 && (
-              <p style={{ color: "#6b8fa3", fontSize: 13, margin: 0 }}>Inga kontakter med e-post hittades för detta filter.</p>
+              <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>Inga kontakter med e-post hittades för detta filter.</p>
             )}
           </>
         )}
@@ -227,9 +227,9 @@ export default function MailComposerPage() {
                 type="button"
                 onClick={() => setTemplateId(t.id)}
                 style={{
-                  background: templateId === t.id ? "#2f7ef7" : "#0f1923",
+                  background: templateId === t.id ? "#2f7ef7" : "#080c10",
                   color: "#fff",
-                  border: `1px solid ${templateId === t.id ? "#2f7ef7" : "#2a4a5e"}`,
+                  border: `1px solid ${templateId === t.id ? "#2f7ef7" : "#1e293b"}`,
                   borderRadius: 8,
                   padding: "8px 14px",
                   fontSize: 13,
@@ -239,7 +239,7 @@ export default function MailComposerPage() {
                 }}
               >
                 <div>{t.label}</div>
-                <div style={{ fontSize: 11, color: templateId === t.id ? "#bfdbfe" : "#6b8fa3", fontWeight: 400, marginTop: 2 }}>{t.description}</div>
+                <div style={{ fontSize: 11, color: templateId === t.id ? "#bfdbfe" : "#64748b", fontWeight: 400, marginTop: 2 }}>{t.description}</div>
               </button>
             ))}
           </div>
@@ -270,8 +270,8 @@ export default function MailComposerPage() {
           disabled={sending || selectedRecipients.length === 0 || !subject.trim()}
           onClick={handleSend}
           style={{
-            background: sending || selectedRecipients.length === 0 || !subject.trim() ? "#5a6f82" : "#00c97a",
-            color: sending || selectedRecipients.length === 0 || !subject.trim() ? "#fff" : "#0f1923",
+            background: sending || selectedRecipients.length === 0 || !subject.trim() ? "#5a6f82" : "#f59e0b",
+            color: sending || selectedRecipients.length === 0 || !subject.trim() ? "#fff" : "#080c10",
             border: "none",
             borderRadius: 10,
             padding: "10px 20px",
@@ -284,9 +284,9 @@ export default function MailComposerPage() {
         </button>
 
         {result && (
-          <div style={{ marginTop: 14, padding: 12, borderRadius: 8, background: result.ok ? "#0a2a1a" : "#2a0f0f", border: `1px solid ${result.ok ? "#00c97a" : "#fda4af"}` }}>
+          <div style={{ marginTop: 14, padding: 12, borderRadius: 8, background: result.ok ? "#0a2a1a" : "#2a0f0f", border: `1px solid ${result.ok ? "#f59e0b" : "#fda4af"}` }}>
             {result.ok ? (
-              <p style={{ margin: 0, color: "#00c97a", fontSize: 13 }}>
+              <p style={{ margin: 0, color: "#f59e0b", fontSize: 13 }}>
                 ✓ Klart — {result.sent} mail skickade
                 {result.failed > 0 && `, ${result.failed} misslyckades`}
                 {result.skipped > 0 && `, ${result.skipped} saknade e-post`}

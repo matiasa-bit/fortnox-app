@@ -53,14 +53,14 @@ export default async function AgencyPage() {
 
   if (!isLoggedIn && !allowSharedView) {
     return (
-      <main className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0f1923 0%, #1a2e3b 100%)" }}>
+      <main className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(135deg, #080c10 0%, #0f1419 100%)" }}>
         <div className="text-center">
           <h1 className="text-4xl font-bold text-white mb-4">Byråvy</h1>
           <p className="text-gray-400 mb-8">Logga in för att se översikten.</p>
           <a
             href="/api/auth/login"
             className="inline-block px-8 py-4 rounded-xl text-white font-semibold text-lg"
-            style={{ background: "linear-gradient(135deg, #00c97a, #00a862)", boxShadow: "0 8px 32px rgba(0,201,122,0.3)" }}
+            style={{ background: "linear-gradient(135deg, #f59e0b, #00a862)", boxShadow: "0 8px 32px rgba(245,158,11,0.3)" }}
           >
             Logga in med Fortnox
           </a>
@@ -498,17 +498,17 @@ export default async function AgencyPage() {
   };
 
   return (
-    <main style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0f1923 0%, #1a2e3b 100%)", padding: "32px", fontFamily: "system-ui, sans-serif" }}>
+    <main style={{ minHeight: "100vh", background: "linear-gradient(135deg, #080c10 0%, #0f1419 100%)", padding: "32px", fontFamily: "system-ui, sans-serif" }}>
       <div style={{ marginBottom: 28, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: "#fff", margin: 0 }}>Byråvy</h1>
-          <p style={{ color: "#6b8fa3", margin: "4px 0 0", fontSize: 14 }}>Grupperad enligt inställningar · {currentYear}</p>
+          <p style={{ color: "#64748b", margin: "4px 0 0", fontSize: 14 }}>Grupperad enligt inställningar · {currentYear}</p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Link href="/" style={{ background: "#1a2e3b", color: "#fff", border: "1px solid #2a4a5e", borderRadius: 10, padding: "8px 12px", fontSize: 14, textDecoration: "none" }}>
+          <Link href="/" style={{ background: "#0f1419", color: "#fff", border: "1px solid #1e293b", borderRadius: 10, padding: "8px 12px", fontSize: 14, textDecoration: "none" }}>
             Dashboard
           </Link>
-          <Link href="/settings" style={{ background: "#1a2e3b", color: "#fff", border: "1px solid #2a4a5e", borderRadius: 10, padding: "8px 12px", fontSize: 14, textDecoration: "none" }}>
+          <Link href="/settings" style={{ background: "#0f1419", color: "#fff", border: "1px solid #1e293b", borderRadius: 10, padding: "8px 12px", fontSize: 14, textDecoration: "none" }}>
             Inställningar
           </Link>
         </div>
@@ -516,24 +516,24 @@ export default async function AgencyPage() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 24 }}>
         {[
-          { label: `Fakturerat i år`, value: formatSEK(revenueYearFromGroups), color: "#00c97a" },
+          { label: `Fakturerat i år`, value: formatSEK(revenueYearFromGroups), color: "#f59e0b" },
           { label: "Prognos helår", value: formatSEK(bureauKpis.prognosYear), color: "#13d07c" },
           { label: "Avtalsvärde", value: formatSEK(bureauKpis.avtalsvarde), color: "#8a6f42" },
           { label: "Nedlagda timmar i år", value: formatNum(bureauKpis.timmarYear, 1), color: "#1db3a7" },
-          { label: "Intäkt/timme i år", value: bureauKpis.timmarYear > 0 ? formatSEK(revenueYearFromGroups / bureauKpis.timmarYear) : "-", color: "#3b9eff" },
+          { label: "Intäkt/timme i år", value: bureauKpis.timmarYear > 0 ? formatSEK(revenueYearFromGroups / bureauKpis.timmarYear) : "-", color: "#38bdf8" },
           { label: "Gap mot avtal", value: formatSEK(bureauKpis.avtalsvarde - revenueYearFromGroups), color: "#ff6b6b" },
         ].map(card => (
-          <div key={card.label} style={{ background: "#1a2e3b", borderRadius: 16, padding: "18px 20px", border: "1px solid #2a4a5e" }}>
-            <p style={{ color: "#6b8fa3", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, margin: "0 0 8px" }}>{card.label}</p>
+          <div key={card.label} style={{ background: "#0f1419", borderRadius: 16, padding: "18px 20px", border: "1px solid #1e293b" }}>
+            <p style={{ color: "#64748b", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, margin: "0 0 8px" }}>{card.label}</p>
             <p style={{ fontSize: 25, fontWeight: 800, color: card.color, margin: 0 }}>{card.value}</p>
           </div>
         ))}
       </div>
 
-      <div style={{ background: "#1a2e3b", borderRadius: 16, border: "1px solid #2a4a5e", overflow: "hidden" }}>
-        <div style={{ padding: "18px 20px", borderBottom: "1px solid #2a4a5e" }}>
+      <div style={{ background: "#0f1419", borderRadius: 16, border: "1px solid #1e293b", overflow: "hidden" }}>
+        <div style={{ padding: "18px 20px", borderBottom: "1px solid #1e293b" }}>
           <h2 style={{ color: "#fff", fontWeight: 700, fontSize: 16, margin: "0 0 6px" }}>Gruppöversikt</h2>
-          <p style={{ color: "#6b8fa3", fontSize: 12, margin: 0 }}>Gul nivå motsvarar gruppnamn från inställningarna. Under gruppen visas konsulter, och under konsult visas kunder enligt konsultens kostnadsställe.</p>
+          <p style={{ color: "#64748b", fontSize: 12, margin: 0 }}>Gul nivå motsvarar gruppnamn från inställningarna. Under gruppen visas konsulter, och under konsult visas kunder enligt konsultens kostnadsställe.</p>
         </div>
 
         <AgencyTeamTable groupRows={groupRows} />

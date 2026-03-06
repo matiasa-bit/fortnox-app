@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 
 const PRESET_COLORS = [
-  "#3b9eff", // blå
-  "#00c97a", // grön
+  "#38bdf8", // blå
+  "#f59e0b", // grön
   "#fda4af", // rosa/röd
   "#a78bfa", // lila
   "#fb923c", // orange
@@ -13,12 +13,12 @@ const PRESET_COLORS = [
   "#94a3b8", // grå
 ];
 
-const cardStyle = { background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 14, padding: 20 };
+const cardStyle = { background: "#0f1419", border: "1px solid #1e293b", borderRadius: 14, padding: 20 };
 const inputStyle = {
   width: "100%",
-  background: "#0f1923",
+  background: "#080c10",
   color: "#fff",
-  border: "1px solid #2a4a5e",
+  border: "1px solid #1e293b",
   borderRadius: 8,
   padding: "9px 10px",
   fontSize: 13,
@@ -108,7 +108,7 @@ export default function CrmSettingsPage() {
     <div style={{ display: "grid", gap: 16, maxWidth: 700 }}>
       <div>
         <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 700 }}>CRM-inställningar</h2>
-        <p style={{ margin: 0, color: "#6b8fa3", fontSize: 13 }}>Hantera taggbibliotek och andra CRM-inställningar.</p>
+        <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>Hantera taggbibliotek och andra CRM-inställningar.</p>
       </div>
 
       {/* Ny tagg */}
@@ -129,8 +129,8 @@ export default function CrmSettingsPage() {
             type="submit"
             disabled={!newName.trim() || creating}
             style={{
-              background: !newName.trim() || creating ? "#5a6f82" : "#00c97a",
-              color: !newName.trim() || creating ? "#fff" : "#0f1923",
+              background: !newName.trim() || creating ? "#5a6f82" : "#f59e0b",
+              color: !newName.trim() || creating ? "#fff" : "#080c10",
               border: "none",
               borderRadius: 8,
               padding: "9px 16px",
@@ -160,7 +160,7 @@ export default function CrmSettingsPage() {
                   background: c,
                   border: newColor === c ? "3px solid #fff" : "3px solid transparent",
                   cursor: "pointer",
-                  outline: newColor === c ? "2px solid #3b9eff" : "none",
+                  outline: newColor === c ? "2px solid #38bdf8" : "none",
                   outlineOffset: 1,
                 }}
               />
@@ -172,7 +172,7 @@ export default function CrmSettingsPage() {
         {loading ? (
           <p style={{ color: "#8fb1c3", fontSize: 13, margin: 0 }}>Laddar taggar...</p>
         ) : tags.length === 0 ? (
-          <p style={{ color: "#6b8fa3", fontSize: 13, margin: 0 }}>Inga taggar skapade ännu.</p>
+          <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>Inga taggar skapade ännu.</p>
         ) : (
           <div style={{ display: "grid", gap: 8 }}>
             {tags.map(tag => (
@@ -182,8 +182,8 @@ export default function CrmSettingsPage() {
                   display: "flex",
                   alignItems: "center",
                   gap: 10,
-                  background: "#0f1923",
-                  border: "1px solid #2a4a5e",
+                  background: "#080c10",
+                  border: "1px solid #1e293b",
                   borderRadius: 8,
                   padding: "10px 12px",
                 }}
@@ -203,7 +203,7 @@ export default function CrmSettingsPage() {
                             background: c,
                             border: editColor === c ? "2px solid #fff" : "2px solid transparent",
                             cursor: "pointer",
-                            outline: editColor === c ? "2px solid #3b9eff" : "none",
+                            outline: editColor === c ? "2px solid #38bdf8" : "none",
                             outlineOffset: 1,
                           }}
                         />
@@ -218,13 +218,13 @@ export default function CrmSettingsPage() {
                     <button
                       onClick={() => saveEdit(tag.id)}
                       disabled={saving}
-                      style={{ background: "#00c97a", color: "#0f1923", border: "none", borderRadius: 6, padding: "5px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                      style={{ background: "#f59e0b", color: "#080c10", border: "none", borderRadius: 6, padding: "5px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                     >
                       Spara
                     </button>
                     <button
                       onClick={cancelEdit}
-                      style={{ background: "none", color: "#8fb1c3", border: "1px solid #2a4a5e", borderRadius: 6, padding: "5px 12px", fontSize: 12, cursor: "pointer" }}
+                      style={{ background: "none", color: "#8fb1c3", border: "1px solid #1e293b", borderRadius: 6, padding: "5px 12px", fontSize: 12, cursor: "pointer" }}
                     >
                       Avbryt
                     </button>
@@ -232,10 +232,10 @@ export default function CrmSettingsPage() {
                 ) : (
                   <>
                     <span style={{ width: 14, height: 14, borderRadius: "50%", background: tag.color, display: "inline-block", flexShrink: 0 }} />
-                    <span style={{ color: "#dbe7ef", fontSize: 14, fontWeight: 600, flex: 1 }}>{tag.name}</span>
+                    <span style={{ color: "#e2e8f0", fontSize: 14, fontWeight: 600, flex: 1 }}>{tag.name}</span>
                     <button
                       onClick={() => startEdit(tag)}
-                      style={{ background: "none", color: "#3b9eff", border: "none", fontSize: 12, cursor: "pointer", padding: "2px 8px" }}
+                      style={{ background: "none", color: "#38bdf8", border: "none", fontSize: 12, cursor: "pointer", padding: "2px 8px" }}
                     >
                       Redigera
                     </button>

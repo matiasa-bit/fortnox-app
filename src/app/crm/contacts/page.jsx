@@ -7,7 +7,7 @@ export default async function CrmContactsPage() {
   const contacts = await getCrmContactDirectory();
 
   return (
-    <section style={{ background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 16, padding: 24 }}>
+    <section style={{ background: "#0f1419", border: "1px solid #1e293b", borderRadius: 16, padding: 24 }}>
       <h2 style={{ margin: "0 0 12px", fontSize: 20, fontWeight: 700 }}>Kontakter</h2>
       <p style={{ margin: "0 0 16px", color: "#8fb1c3", fontSize: 13 }}>
         Central kontaktlista som kan kopplas till flera kunder.

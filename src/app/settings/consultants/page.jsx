@@ -119,22 +119,22 @@ export default function ConsultantsSettingsPage() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0f1923 0%, #1a2e3b 100%)", padding: 24, fontFamily: "system-ui, sans-serif" }}>
+    <main style={{ minHeight: "100vh", background: "linear-gradient(135deg, #080c10 0%, #0f1419 100%)", padding: 24, fontFamily: "system-ui, sans-serif" }}>
       <div style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ color: "#fff", margin: 0, fontSize: 28 }}>Konsultmappning</h1>
-          <p style={{ color: "#6b8fa3", margin: "6px 0 0", fontSize: 14 }}>
+          <p style={{ color: "#64748b", margin: "6px 0 0", fontSize: 14 }}>
             Mappa Fortnox user-id till namn, grupp och kostnadsställe.
           </p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Link href="/settings" style={{ color: "#fff", textDecoration: "none", border: "1px solid #2a4a5e", borderRadius: 10, padding: "8px 12px", background: "#1a2e3b" }}>
+          <Link href="/settings" style={{ color: "#fff", textDecoration: "none", border: "1px solid #1e293b", borderRadius: 10, padding: "8px 12px", background: "#0f1419" }}>
             Till inställningar
           </Link>
-          <Link href="/settings/articles" style={{ color: "#fff", textDecoration: "none", border: "1px solid #2a4a5e", borderRadius: 10, padding: "8px 12px", background: "#9b59ff" }}>
+          <Link href="/settings/articles" style={{ color: "#fff", textDecoration: "none", border: "1px solid #1e293b", borderRadius: 10, padding: "8px 12px", background: "#9b59ff" }}>
             Artikelmappning
           </Link>
-          <Link href="/" style={{ color: "#fff", textDecoration: "none", border: "1px solid #2a4a5e", borderRadius: 10, padding: "8px 12px", background: "#1a2e3b" }}>
+          <Link href="/" style={{ color: "#fff", textDecoration: "none", border: "1px solid #1e293b", borderRadius: 10, padding: "8px 12px", background: "#0f1419" }}>
             Till dashboard
           </Link>
           <button
@@ -146,7 +146,7 @@ export default function ConsultantsSettingsPage() {
           <button
             onClick={save}
             disabled={saving || loading}
-            style={{ background: "#00c97a", color: "#fff", border: "none", borderRadius: 10, padding: "8px 12px", cursor: "pointer" }}
+            style={{ background: "#f59e0b", color: "#fff", border: "none", borderRadius: 10, padding: "8px 12px", cursor: "pointer" }}
           >
             {saving ? "Sparar..." : "Spara"}
           </button>
@@ -160,49 +160,49 @@ export default function ConsultantsSettingsPage() {
       )}
 
       {message && (
-        <div style={{ background: "#00c97a22", border: "1px solid #00c97a", borderRadius: 10, padding: 12, color: "#8ff0c5", marginBottom: 12 }}>
+        <div style={{ background: "#f59e0b22", border: "1px solid #f59e0b", borderRadius: 10, padding: 12, color: "#8ff0c5", marginBottom: 12 }}>
           {message}
         </div>
       )}
 
-      <section style={{ background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 14, padding: 20 }}>
+      <section style={{ background: "#0f1419", border: "1px solid #1e293b", borderRadius: 14, padding: 20 }}>
         {loading ? (
-          <p style={{ color: "#6b8fa3", margin: 0 }}>Laddar...</p>
+          <p style={{ color: "#64748b", margin: 0 }}>Laddar...</p>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid #2a4a5e" }}>
-                  <th style={{ color: "#6b8fa3", textAlign: "left", padding: "8px 10px", fontSize: 12, textTransform: "uppercase" }}>User ID</th>
-                  <th style={{ color: "#6b8fa3", textAlign: "left", padding: "8px 10px", fontSize: 12, textTransform: "uppercase" }}>Namn</th>
-                  <th style={{ color: "#6b8fa3", textAlign: "left", padding: "8px 10px", fontSize: 12, textTransform: "uppercase" }}>Grupp</th>
-                  <th style={{ color: "#6b8fa3", textAlign: "left", padding: "8px 10px", fontSize: 12, textTransform: "uppercase" }}>Kostnadsställe</th>
+                <tr style={{ borderBottom: "1px solid #1e293b" }}>
+                  <th style={{ color: "#64748b", textAlign: "left", padding: "8px 10px", fontSize: 12, textTransform: "uppercase" }}>User ID</th>
+                  <th style={{ color: "#64748b", textAlign: "left", padding: "8px 10px", fontSize: 12, textTransform: "uppercase" }}>Namn</th>
+                  <th style={{ color: "#64748b", textAlign: "left", padding: "8px 10px", fontSize: 12, textTransform: "uppercase" }}>Grupp</th>
+                  <th style={{ color: "#64748b", textAlign: "left", padding: "8px 10px", fontSize: 12, textTransform: "uppercase" }}>Kostnadsställe</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedRows.map(row => {
                   const rowIsRemoved = isRemovedGroup(row.group_name);
                   return (
-                  <tr key={row.employee_id} style={{ borderBottom: "1px solid #1e3545", opacity: rowIsRemoved ? 0.72 : 1 }}>
+                  <tr key={row.employee_id} style={{ borderBottom: "1px solid #141c24", opacity: rowIsRemoved ? 0.72 : 1 }}>
                     <td style={{ padding: "10px" }}>
                       <input
                         value={row.employee_id || ""}
                         onChange={e => updateRow(row.employee_id, "employee_id", e.target.value)}
-                        style={{ width: "100%", background: "#0f1923", color: rowIsRemoved ? "#6b8fa3" : "#fff", border: "1px solid #2a4a5e", borderRadius: 8, padding: "8px 10px" }}
+                        style={{ width: "100%", background: "#080c10", color: rowIsRemoved ? "#64748b" : "#fff", border: "1px solid #1e293b", borderRadius: 8, padding: "8px 10px" }}
                       />
                     </td>
                     <td style={{ padding: "10px" }}>
                       <input
                         value={row.employee_name || ""}
                         onChange={e => updateRow(row.employee_id, "employee_name", e.target.value)}
-                        style={{ width: "100%", background: "#0f1923", color: rowIsRemoved ? "#6b8fa3" : "#fff", border: "1px solid #2a4a5e", borderRadius: 8, padding: "8px 10px" }}
+                        style={{ width: "100%", background: "#080c10", color: rowIsRemoved ? "#64748b" : "#fff", border: "1px solid #1e293b", borderRadius: 8, padding: "8px 10px" }}
                       />
                     </td>
                     <td style={{ padding: "10px" }}>
                       <input
                         value={row.group_name || ""}
                         onChange={e => updateRow(row.employee_id, "group_name", e.target.value)}
-                        style={{ width: "100%", background: "#0f1923", color: rowIsRemoved ? "#6b8fa3" : "#fff", border: "1px solid #2a4a5e", borderRadius: 8, padding: "8px 10px" }}
+                        style={{ width: "100%", background: "#080c10", color: rowIsRemoved ? "#64748b" : "#fff", border: "1px solid #1e293b", borderRadius: 8, padding: "8px 10px" }}
                       />
                     </td>
                     <td style={{ padding: "10px" }}>
@@ -210,7 +210,7 @@ export default function ConsultantsSettingsPage() {
                         value={row.cost_center || ""}
                         onChange={e => updateRow(row.employee_id, "cost_center", e.target.value)}
                         placeholder="t.ex. -4"
-                        style={{ width: "100%", background: "#0f1923", color: rowIsRemoved ? "#6b8fa3" : "#fff", border: "1px solid #2a4a5e", borderRadius: 8, padding: "8px 10px" }}
+                        style={{ width: "100%", background: "#080c10", color: rowIsRemoved ? "#64748b" : "#fff", border: "1px solid #1e293b", borderRadius: 8, padding: "8px 10px" }}
                       />
                     </td>
                   </tr>

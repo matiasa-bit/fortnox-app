@@ -8,7 +8,7 @@ import SyncFortnoxContactButton from "@/app/crm/clients/[id]/SyncFortnoxContactB
 export const dynamic = "force-dynamic";
 
 function sectionStyle() {
-  return { background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 16, padding: 24 };
+  return { background: "#0f1419", border: "1px solid #1e293b", borderRadius: 16, padding: 24 };
 }
 
 export default async function CrmClientProfilePage({ params }) {
@@ -19,7 +19,7 @@ export default async function CrmClientProfilePage({ params }) {
     return (
       <section style={sectionStyle()}>
         <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>Klient hittades inte</h2>
-        <Link href="/crm/clients" style={{ color: "#3b9eff" }}>Till klientlistan</Link>
+        <Link href="/crm/clients" style={{ color: "#38bdf8" }}>Till klientlistan</Link>
       </section>
     );
   }
@@ -48,9 +48,9 @@ export default async function CrmClientProfilePage({ params }) {
             <Link
               href={`/crm/clients/${client.id}/edit`}
               style={{
-                background: "#1a2e3b",
+                background: "#0f1419",
                 color: "#fff",
-                border: "1px solid #2a4a5e",
+                border: "1px solid #1e293b",
                 borderRadius: 10,
                 padding: "8px 12px",
                 textDecoration: "none",
@@ -64,19 +64,19 @@ export default async function CrmClientProfilePage({ params }) {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginTop: 16 }}>
-          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Status:</strong> {client.client_status || "-"}</div>
-          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Bransch:</strong> {client.industry || "-"}</div>
-          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Omsättning:</strong> {client.revenue ?? "-"}</div>
-          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Anställda:</strong> {client.employees ?? "-"}</div>
-          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Startdatum:</strong> {client.start_date || "-"}</div>
-          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Ansvarig:</strong> {client.cost_center_label || client.responsible_consultant || "-"}</div>
-          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Kontor:</strong> {client.office || "-"}</div>
-          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Registreringsort:</strong> {client.bolagsverket_registered_office || "-"}</div>
-          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Styrelse (antal):</strong> {client.bolagsverket_board_count ?? "-"}</div>
-          <div style={{ color: "#dbe7ef" }}><strong style={{ color: "#8fb1c3" }}>Senast Bolagsverket-sync:</strong> {client.bolagsverket_updated_at || "-"}</div>
+          <div style={{ color: "#e2e8f0" }}><strong style={{ color: "#8fb1c3" }}>Status:</strong> {client.client_status || "-"}</div>
+          <div style={{ color: "#e2e8f0" }}><strong style={{ color: "#8fb1c3" }}>Bransch:</strong> {client.industry || "-"}</div>
+          <div style={{ color: "#e2e8f0" }}><strong style={{ color: "#8fb1c3" }}>Omsättning:</strong> {client.revenue ?? "-"}</div>
+          <div style={{ color: "#e2e8f0" }}><strong style={{ color: "#8fb1c3" }}>Anställda:</strong> {client.employees ?? "-"}</div>
+          <div style={{ color: "#e2e8f0" }}><strong style={{ color: "#8fb1c3" }}>Startdatum:</strong> {client.start_date || "-"}</div>
+          <div style={{ color: "#e2e8f0" }}><strong style={{ color: "#8fb1c3" }}>Ansvarig:</strong> {client.cost_center_label || client.responsible_consultant || "-"}</div>
+          <div style={{ color: "#e2e8f0" }}><strong style={{ color: "#8fb1c3" }}>Kontor:</strong> {client.office || "-"}</div>
+          <div style={{ color: "#e2e8f0" }}><strong style={{ color: "#8fb1c3" }}>Registreringsort:</strong> {client.bolagsverket_registered_office || "-"}</div>
+          <div style={{ color: "#e2e8f0" }}><strong style={{ color: "#8fb1c3" }}>Styrelse (antal):</strong> {client.bolagsverket_board_count ?? "-"}</div>
+          <div style={{ color: "#e2e8f0" }}><strong style={{ color: "#8fb1c3" }}>Senast Bolagsverket-sync:</strong> {client.bolagsverket_updated_at || "-"}</div>
         </div>
 
-        <p style={{ margin: "16px 0 0", color: "#dbe7ef", fontSize: 14 }}>
+        <p style={{ margin: "16px 0 0", color: "#e2e8f0", fontSize: 14 }}>
           <strong style={{ color: "#8fb1c3" }}>Anteckningar:</strong> {client.notes || "-"}
         </p>
       </section>

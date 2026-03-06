@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 
 const inputStyle = {
   width: "100%",
-  background: "#0f1923",
+  background: "#080c10",
   color: "#fff",
-  border: "1px solid #2a4a5e",
+  border: "1px solid #1e293b",
   borderRadius: 8,
   padding: "9px 10px",
   fontSize: 13,
@@ -112,7 +112,7 @@ export default function ContactsManager({ initialContacts = [] }) {
 
   return (
     <>
-      <div style={{ background: "#223746", border: "1px solid #2a4a5e", borderRadius: 12, padding: 14, marginBottom: 16 }}>
+      <div style={{ background: "#223746", border: "1px solid #1e293b", borderRadius: 12, padding: 14, marginBottom: 16 }}>
         <h3 style={{ margin: "0 0 10px", fontSize: 16 }}>Skapa ny kontakt</h3>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
           <input placeholder="Namn *" value={createForm.name} onChange={e => setCreateForm(prev => ({ ...prev, name: e.target.value }))} style={inputStyle} />
@@ -124,7 +124,7 @@ export default function ContactsManager({ initialContacts = [] }) {
           type="button"
           disabled={creating}
           onClick={createContact}
-          style={{ marginTop: 10, background: "#00c97a", color: "#0f1923", border: "none", borderRadius: 8, padding: "9px 12px", fontWeight: 700, cursor: "pointer" }}
+          style={{ marginTop: 10, background: "#f59e0b", color: "#080c10", border: "none", borderRadius: 8, padding: "9px 12px", fontWeight: 700, cursor: "pointer" }}
         >
           {creating ? "Skapar..." : "Skapa kontakt"}
         </button>
@@ -133,9 +133,9 @@ export default function ContactsManager({ initialContacts = [] }) {
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: "1px solid #2a4a5e" }}>
+            <tr style={{ borderBottom: "1px solid #1e293b" }}>
               {["Namn", "Roll", "E-post", "Telefon", ""].map(h => (
-                <th key={h || "actions"} style={{ textAlign: "left", color: "#6b8fa3", fontSize: 12, fontWeight: 600, padding: "0 10px 12px 0", textTransform: "uppercase", letterSpacing: 0.8 }}>
+                <th key={h || "actions"} style={{ textAlign: "left", color: "#64748b", fontSize: 12, fontWeight: 600, padding: "0 10px 12px 0", textTransform: "uppercase", letterSpacing: 0.8 }}>
                   {h}
                 </th>
               ))}
@@ -145,17 +145,17 @@ export default function ContactsManager({ initialContacts = [] }) {
             {contacts.map(contact => {
               const isEditing = editId === Number(contact.id);
               return (
-                <tr key={contact.id} style={{ borderBottom: "1px solid #1e3545" }}>
+                <tr key={contact.id} style={{ borderBottom: "1px solid #141c24" }}>
                   <td style={{ padding: "10px 10px 10px 0", color: "#fff", fontWeight: 600, fontSize: 13 }}>
                     {isEditing ? <input value={editForm.name} onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))} style={inputStyle} /> : (contact.name || "-")}
                   </td>
-                  <td style={{ padding: "10px 10px 10px 0", color: "#dbe7ef", fontSize: 13 }}>
+                  <td style={{ padding: "10px 10px 10px 0", color: "#e2e8f0", fontSize: 13 }}>
                     {isEditing ? <input value={editForm.role} onChange={e => setEditForm(prev => ({ ...prev, role: e.target.value }))} style={inputStyle} /> : (contact.role || "-")}
                   </td>
-                  <td style={{ padding: "10px 10px 10px 0", color: "#dbe7ef", fontSize: 13 }}>
+                  <td style={{ padding: "10px 10px 10px 0", color: "#e2e8f0", fontSize: 13 }}>
                     {isEditing ? <input value={editForm.email} onChange={e => setEditForm(prev => ({ ...prev, email: e.target.value }))} style={inputStyle} /> : (contact.email || "-")}
                   </td>
-                  <td style={{ padding: "10px 10px 10px 0", color: "#dbe7ef", fontSize: 13 }}>
+                  <td style={{ padding: "10px 10px 10px 0", color: "#e2e8f0", fontSize: 13 }}>
                     {isEditing ? <input value={editForm.phone} onChange={e => setEditForm(prev => ({ ...prev, phone: e.target.value }))} style={inputStyle} /> : (contact.phone || "-")}
                   </td>
                   <td style={{ padding: "10px 0", textAlign: "right", whiteSpace: "nowrap" }}>
@@ -175,7 +175,7 @@ export default function ContactsManager({ initialContacts = [] }) {
                             setEditId(0);
                             setEditForm({ name: "", role: "", email: "", phone: "" });
                           }}
-                          style={{ background: "#233a49", color: "#fff", border: "1px solid #2a4a5e", borderRadius: 8, padding: "8px 10px", fontWeight: 700, cursor: "pointer" }}
+                          style={{ background: "#233a49", color: "#fff", border: "1px solid #1e293b", borderRadius: 8, padding: "8px 10px", fontWeight: 700, cursor: "pointer" }}
                         >
                           Avbryt
                         </button>
@@ -188,7 +188,7 @@ export default function ContactsManager({ initialContacts = [] }) {
                             setEditId(Number(contact.id));
                             setEditForm(toForm(contact));
                           }}
-                          style={{ background: "#233a49", color: "#fff", border: "1px solid #2a4a5e", borderRadius: 8, padding: "8px 10px", fontWeight: 700, cursor: "pointer" }}
+                          style={{ background: "#233a49", color: "#fff", border: "1px solid #1e293b", borderRadius: 8, padding: "8px 10px", fontWeight: 700, cursor: "pointer" }}
                         >
                           Redigera
                         </button>

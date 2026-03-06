@@ -579,7 +579,7 @@ export default async function Home({ searchParams }) {
 
   if (!hasAppAuth) {
     return (
-      <main className="min-h-screen flex items-center justify-center" style={{background: "linear-gradient(135deg, #0f1923 0%, #1a2e3b 100%)"}}>
+      <main className="min-h-screen flex items-center justify-center" style={{background: "linear-gradient(135deg, #080c10 0%, #0f1419 100%)"}}>
         <div className="w-full max-w-md rounded-2xl p-8" style={{background: "rgba(15,25,35,0.75)", border: "1px solid rgba(255,255,255,0.12)"}}>
           <h1 className="text-3xl font-bold text-white mb-2 text-center">Fortnox Dashboard</h1>
           <p className="text-gray-300 mb-6 text-center">Logga in med användarnamn och lösenord</p>
@@ -604,7 +604,7 @@ export default async function Home({ searchParams }) {
             <button
               type="submit"
               className="w-full px-6 py-3 rounded-xl text-white font-semibold"
-              style={{background: "linear-gradient(135deg, #00c97a, #00a862)", boxShadow: "0 8px 24px rgba(0,201,122,0.3)"}}
+              style={{background: "linear-gradient(135deg, #f59e0b, #00a862)", boxShadow: "0 8px 24px rgba(245,158,11,0.3)"}}
             >
               Logga in
             </button>
@@ -616,14 +616,14 @@ export default async function Home({ searchParams }) {
 
   if (!token) {
     return (
-      <main className="min-h-screen flex items-center justify-center" style={{background: "linear-gradient(135deg, #0f1923 0%, #1a2e3b 100%)"}}>
+      <main className="min-h-screen flex items-center justify-center" style={{background: "linear-gradient(135deg, #080c10 0%, #0f1419 100%)"}}>
         <div className="text-center">
           <h1 className="text-4xl font-bold text-white mb-4">Fortnox Dashboard</h1>
           <p className="text-gray-400 mb-8">Omsättning, kunder och fakturor i realtid</p>
           <a
             href="/api/auth/login"
             className="inline-block px-8 py-4 rounded-xl text-white font-semibold text-lg"
-            style={{background: "linear-gradient(135deg, #00c97a, #00a862)", boxShadow: "0 8px 32px rgba(0,201,122,0.3)"}}
+            style={{background: "linear-gradient(135deg, #f59e0b, #00a862)", boxShadow: "0 8px 32px rgba(245,158,11,0.3)"}}
           >
             Logga in med Fortnox
           </a>
@@ -654,7 +654,7 @@ export default async function Home({ searchParams }) {
       <div style={{position: "fixed", top: 12, right: 12, zIndex: 50, display: "flex", gap: 8, alignItems: "center"}}>
         <span
           className="px-3 py-2 rounded-lg text-xs font-semibold text-white"
-          style={{background: "rgba(0,201,122,0.18)", border: "1px solid rgba(0,201,122,0.45)"}}
+          style={{background: "rgba(245,158,11,0.18)", border: "1px solid rgba(245,158,11,0.45)"}}
         >
           Fortnox: Kopplat
         </span>

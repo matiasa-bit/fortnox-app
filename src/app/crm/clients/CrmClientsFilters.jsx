@@ -6,21 +6,23 @@ import { usePathname, useRouter } from "next/navigation";
 const inputStyle = {
   flex: 1,
   minWidth: 260,
-  background: "#0f1923",
-  color: "#fff",
-  border: "1px solid #2a4a5e",
+  background: "#0f1419",
+  color: "#e2e8f0",
+  border: "1px solid #1e293b",
   borderRadius: 10,
-  padding: "10px 12px",
-  fontSize: 14,
+  padding: "9px 12px",
+  fontSize: 13,
+  letterSpacing: "0.01em",
 };
 
 const selectStyle = {
-  background: "#0f1923",
-  color: "#fff",
-  border: "1px solid #2a4a5e",
+  background: "#0f1419",
+  color: "#e2e8f0",
+  border: "1px solid #1e293b",
   borderRadius: 10,
-  padding: "10px 12px",
-  fontSize: 14,
+  padding: "9px 12px",
+  fontSize: 13,
+  letterSpacing: "0.01em",
 };
 
 export default function CrmClientsFilters({ initialQuery = "", initialConsultant = "", initialStatus = "fortnox_active", consultants = [], initialTag = "", allTags = [] }) {

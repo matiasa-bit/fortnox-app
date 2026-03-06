@@ -77,13 +77,13 @@ function Section({ title, source, summary }) {
   };
 
   return (
-    <section style={{ background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 14, padding: 20, marginBottom: 18 }}>
+    <section style={{ background: "#0f1419", border: "1px solid #1e293b", borderRadius: 14, padding: 20, marginBottom: 18 }}>
       <h2 style={{ color: "#fff", margin: "0 0 8px", fontSize: 18, fontWeight: 700 }}>{title}</h2>
-      <p style={{ color: "#6b8fa3", margin: "0 0 10px", fontSize: 13 }}>Källa: {source}</p>
-      <p style={{ color: "#dbe7ef", margin: "0 0 8px", fontSize: 14 }}>
+      <p style={{ color: "#64748b", margin: "0 0 10px", fontSize: 13 }}>Källa: {source}</p>
+      <p style={{ color: "#e2e8f0", margin: "0 0 8px", fontSize: 14 }}>
         Antal rader: <strong>{summary.count}</strong>
       </p>
-      <p style={{ color: "#dbe7ef", margin: "0 0 12px", fontSize: 14 }}>
+      <p style={{ color: "#e2e8f0", margin: "0 0 12px", fontSize: 14 }}>
         Senast uppdaterad: <strong>{summary.latestUpdated || "okänt"}</strong>
       </p>
       {summary.truncated && (
@@ -96,18 +96,18 @@ function Section({ title, source, summary }) {
       )}
 
       {summary.rows.length === 0 ? (
-        <div style={{ background: "#0f1923", borderRadius: 10, padding: 12, color: "#cde3f0", fontSize: 13 }}>
+        <div style={{ background: "#080c10", borderRadius: 10, padding: 12, color: "#cde3f0", fontSize: 13 }}>
           Inga rader att visa.
         </div>
       ) : (
-        <div style={{ background: "#0f1923", borderRadius: 10, padding: 12, overflowX: "auto", maxHeight: 520, overflowY: "auto" }}>
+        <div style={{ background: "#080c10", borderRadius: 10, padding: 12, overflowX: "auto", maxHeight: 520, overflowY: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #2a4a5e" }}>
+              <tr style={{ borderBottom: "1px solid #1e293b" }}>
                 {columns.map(column => (
                   <th
                     key={column}
-                    style={{ color: "#6b8fa3", textAlign: "left", padding: "8px 10px", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.6 }}
+                    style={{ color: "#64748b", textAlign: "left", padding: "8px 10px", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.6 }}
                   >
                     {column}
                   </th>
@@ -116,11 +116,11 @@ function Section({ title, source, summary }) {
             </thead>
             <tbody>
               {summary.rows.map((row, index) => (
-                <tr key={index} style={{ borderBottom: "1px solid #1e3545" }}>
+                <tr key={index} style={{ borderBottom: "1px solid #141c24" }}>
                   {columns.map(column => (
                     <td
                       key={`${index}-${column}`}
-                      style={{ color: "#dbe7ef", padding: "8px 10px", fontSize: 12, maxWidth: 280, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                      style={{ color: "#e2e8f0", padding: "8px 10px", fontSize: 12, maxWidth: 280, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
                       title={formatValue(row[column])}
                     >
                       {formatValue(row[column])}
@@ -147,15 +147,15 @@ export default async function DatabasePage() {
   ]);
 
   return (
-    <main style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0f1923 0%, #1a2e3b 100%)", padding: 24, fontFamily: "system-ui, sans-serif" }}>
+    <main style={{ minHeight: "100vh", background: "linear-gradient(135deg, #080c10 0%, #0f1419 100%)", padding: 24, fontFamily: "system-ui, sans-serif" }}>
       <div style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ color: "#fff", margin: 0, fontSize: 28 }}>Databasöversikt</h1>
-          <p style={{ color: "#6b8fa3", margin: "6px 0 0", fontSize: 14 }}>
+          <p style={{ color: "#64748b", margin: "6px 0 0", fontSize: 14 }}>
             Här ser du exakt vad som finns i databasen och vilken Fortnox-källa datat kommer från.
           </p>
         </div>
-        <Link href="/" style={{ color: "#fff", textDecoration: "none", border: "1px solid #2a4a5e", borderRadius: 10, padding: "8px 12px", background: "#1a2e3b" }}>
+        <Link href="/" style={{ color: "#fff", textDecoration: "none", border: "1px solid #1e293b", borderRadius: 10, padding: "8px 12px", background: "#0f1419" }}>
           Till dashboard
         </Link>
       </div>

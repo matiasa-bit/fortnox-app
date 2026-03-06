@@ -30,7 +30,7 @@ function ToggleButton({ expanded, onClick, label }) {
         borderRadius: 4,
         border: "1px solid #7e906f",
         background: "#d6e0ce",
-        color: "#0f1923",
+        color: "#080c10",
         fontWeight: 700,
         cursor: "pointer",
         lineHeight: "14px",
@@ -77,7 +77,7 @@ export default function AgencyTeamTable({ groupRows = [] }) {
     <div style={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1750 }}>
         <thead>
-          <tr style={{ borderBottom: "1px solid #2a4a5e" }}>
+          <tr style={{ borderBottom: "1px solid #1e293b" }}>
             {[
               "Team - Ansvarig - Kund",
               "Antal kunder",
@@ -94,7 +94,7 @@ export default function AgencyTeamTable({ groupRows = [] }) {
               "Samarbetar med",
               "Toppsamarbete",
             ].map(h => (
-              <th key={h} style={{ color: "#6b8fa3", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, textAlign: "left", padding: "10px 14px" }}>{h}</th>
+              <th key={h} style={{ color: "#64748b", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, textAlign: "left", padding: "10px 14px" }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -105,7 +105,7 @@ export default function AgencyTeamTable({ groupRows = [] }) {
             return (
               <Fragment key={`group-${group.key}`}>
                 <tr style={{ background: "#c8d4c0", borderBottom: "1px solid #b6c5aa" }}>
-                  <td style={{ padding: "8px 14px", color: "#0f1923", fontWeight: 800 }}>
+                  <td style={{ padding: "8px 14px", color: "#080c10", fontWeight: 800 }}>
                     <ToggleButton
                       expanded={!groupCollapsed}
                       onClick={() => toggleGroup(group.key)}
@@ -113,19 +113,19 @@ export default function AgencyTeamTable({ groupRows = [] }) {
                     />
                     {group.groupName}
                   </td>
-                  <td style={{ padding: "8px 14px", color: "#0f1923", fontWeight: 700 }}>{formatNum(group.customerCountYear)}</td>
-                  <td style={{ padding: "8px 14px", color: "#0f1923", fontWeight: 800 }}>{formatSEK(group.invoiceTotalYear)}</td>
-                  <td style={{ padding: "8px 14px", color: "#0f1923", fontWeight: 700 }}>{formatSEK(group.contractTotal)}</td>
-                  <td style={{ padding: "8px 14px", color: "#0f1923", fontWeight: 700 }}>{formatSEK(group.forecastRevenueYear)}</td>
-                  <td style={{ padding: "8px 14px", color: "#0f1923", fontWeight: 700 }}>{formatNum(group.hoursYear, 1)}</td>
-                  <td style={{ padding: "8px 14px", color: "#0f1923", fontWeight: 700 }}>{formatNum(group.internalHoursYear || 0, 1)}</td>
-                  <td style={{ padding: "8px 14px", color: "#0f1923", fontWeight: 700 }}>{formatNum(group.plannedHoursPerMonth, 1)}</td>
-                  <td style={{ padding: "8px 14px", color: "#0f1923", fontWeight: 700 }}>{group.requiredHoursPerMonth != null ? formatNum(group.requiredHoursPerMonth, 1) : "-"}</td>
-                  <td style={{ padding: "8px 14px", color: "#0f1923", fontWeight: 700 }}>{group.revenuePerHourYear ? formatSEK(group.revenuePerHourYear) : "-"}</td>
-                  <td style={{ padding: "8px 14px", color: group.contractGapYear > 0 ? "#9b2c2c" : "#0f1923", fontWeight: 700 }}>{formatSEK(group.contractGapYear)}</td>
-                  <td style={{ padding: "8px 14px", color: "#0f1923", fontWeight: 700 }}>{formatNum(group.rowsYear)}</td>
-                  <td style={{ padding: "8px 14px", color: "#0f1923", fontWeight: 700 }}>{formatNum(group.consultants.length)}</td>
-                  <td style={{ padding: "8px 14px", color: "#0f1923", fontWeight: 700, fontSize: 12, lineHeight: 1.25 }}>-</td>
+                  <td style={{ padding: "8px 14px", color: "#080c10", fontWeight: 700 }}>{formatNum(group.customerCountYear)}</td>
+                  <td style={{ padding: "8px 14px", color: "#080c10", fontWeight: 800 }}>{formatSEK(group.invoiceTotalYear)}</td>
+                  <td style={{ padding: "8px 14px", color: "#080c10", fontWeight: 700 }}>{formatSEK(group.contractTotal)}</td>
+                  <td style={{ padding: "8px 14px", color: "#080c10", fontWeight: 700 }}>{formatSEK(group.forecastRevenueYear)}</td>
+                  <td style={{ padding: "8px 14px", color: "#080c10", fontWeight: 700 }}>{formatNum(group.hoursYear, 1)}</td>
+                  <td style={{ padding: "8px 14px", color: "#080c10", fontWeight: 700 }}>{formatNum(group.internalHoursYear || 0, 1)}</td>
+                  <td style={{ padding: "8px 14px", color: "#080c10", fontWeight: 700 }}>{formatNum(group.plannedHoursPerMonth, 1)}</td>
+                  <td style={{ padding: "8px 14px", color: "#080c10", fontWeight: 700 }}>{group.requiredHoursPerMonth != null ? formatNum(group.requiredHoursPerMonth, 1) : "-"}</td>
+                  <td style={{ padding: "8px 14px", color: "#080c10", fontWeight: 700 }}>{group.revenuePerHourYear ? formatSEK(group.revenuePerHourYear) : "-"}</td>
+                  <td style={{ padding: "8px 14px", color: group.contractGapYear > 0 ? "#9b2c2c" : "#080c10", fontWeight: 700 }}>{formatSEK(group.contractGapYear)}</td>
+                  <td style={{ padding: "8px 14px", color: "#080c10", fontWeight: 700 }}>{formatNum(group.rowsYear)}</td>
+                  <td style={{ padding: "8px 14px", color: "#080c10", fontWeight: 700 }}>{formatNum(group.consultants.length)}</td>
+                  <td style={{ padding: "8px 14px", color: "#080c10", fontWeight: 700, fontSize: 12, lineHeight: 1.25 }}>-</td>
                 </tr>
 
                 {!groupCollapsed && group.consultants.map(consultant => {
@@ -134,7 +134,7 @@ export default function AgencyTeamTable({ groupRows = [] }) {
 
                   return (
                     <Fragment key={`consultant-${consultant.key}`}>
-                      <tr style={{ borderBottom: "1px solid #1e3545" }}>
+                      <tr style={{ borderBottom: "1px solid #141c24" }}>
                         <td style={{ padding: "8px 14px", color: "#fff", fontWeight: 500 }}>
                           <span style={{ marginLeft: 18, display: "inline-flex", alignItems: "center", maxWidth: 420, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={consultant.name}>
                             {hasCustomers ? (
@@ -149,19 +149,19 @@ export default function AgencyTeamTable({ groupRows = [] }) {
                             ↳ {consultant.name}
                           </span>
                         </td>
-                        <td style={{ padding: "8px 14px", color: "#dbe7ef" }}>{formatNum(consultant.customerCountYear)}</td>
-                        <td style={{ padding: "8px 14px", color: "#dbe7ef", fontWeight: 700 }}>{formatSEK(consultant.invoiceTotalYear || 0)}</td>
-                        <td style={{ padding: "8px 14px", color: "#6b8fa3" }}>-</td>
-                        <td style={{ padding: "8px 14px", color: "#6b8fa3" }}>-</td>
+                        <td style={{ padding: "8px 14px", color: "#e2e8f0" }}>{formatNum(consultant.customerCountYear)}</td>
+                        <td style={{ padding: "8px 14px", color: "#e2e8f0", fontWeight: 700 }}>{formatSEK(consultant.invoiceTotalYear || 0)}</td>
+                        <td style={{ padding: "8px 14px", color: "#64748b" }}>-</td>
+                        <td style={{ padding: "8px 14px", color: "#64748b" }}>-</td>
                         <td style={{ padding: "8px 14px", color: "#1db3a7", fontWeight: 700 }}>{formatNum(consultant.hoursYear || 0, 1)}</td>
                         <td style={{ padding: "8px 14px", color: "#f59e0b", fontWeight: 700 }}>{formatNum(consultant.internalHoursYear || 0, 1)}</td>
-                        <td style={{ padding: "8px 14px", color: "#6b8fa3" }}>-</td>
-                        <td style={{ padding: "8px 14px", color: "#6b8fa3" }}>-</td>
-                        <td style={{ padding: "8px 14px", color: "#6b8fa3" }}>-</td>
-                        <td style={{ padding: "8px 14px", color: "#6b8fa3" }}>-</td>
-                        <td style={{ padding: "8px 14px", color: "#6b8fa3" }}>{formatNum(consultant.rowsYear || 0)}</td>
-                        <td style={{ padding: "8px 14px", color: "#6b8fa3" }}>{formatNum(consultant.collaboratorCount)}</td>
-                        <td style={{ padding: "8px 14px", color: "#6b8fa3", fontSize: 12, lineHeight: 1.25 }}>{consultant.topCollaborator}</td>
+                        <td style={{ padding: "8px 14px", color: "#64748b" }}>-</td>
+                        <td style={{ padding: "8px 14px", color: "#64748b" }}>-</td>
+                        <td style={{ padding: "8px 14px", color: "#64748b" }}>-</td>
+                        <td style={{ padding: "8px 14px", color: "#64748b" }}>-</td>
+                        <td style={{ padding: "8px 14px", color: "#64748b" }}>{formatNum(consultant.rowsYear || 0)}</td>
+                        <td style={{ padding: "8px 14px", color: "#64748b" }}>{formatNum(consultant.collaboratorCount)}</td>
+                        <td style={{ padding: "8px 14px", color: "#64748b", fontSize: 12, lineHeight: 1.25 }}>{consultant.topCollaborator}</td>
                       </tr>
 
                       {consultantExpanded && (consultant.customerRows || []).map(customer => (

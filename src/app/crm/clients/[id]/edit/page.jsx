@@ -8,15 +8,15 @@ export default async function CrmEditClientPage({ params }) {
 
   if (!client) {
     return (
-      <section style={{ background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 14, padding: 18 }}>
+      <section style={{ background: "#0f1419", border: "1px solid #1e293b", borderRadius: 14, padding: 18 }}>
         <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>Klient hittades inte</h2>
-        <Link href="/crm/clients" style={{ color: "#3b9eff" }}>Till klientlistan</Link>
+        <Link href="/crm/clients" style={{ color: "#38bdf8" }}>Till klientlistan</Link>
       </section>
     );
   }
 
   return (
-    <section style={{ background: "#1a2e3b", border: "1px solid #2a4a5e", borderRadius: 14, padding: 18 }}>
+    <section style={{ background: "#0f1419", border: "1px solid #1e293b", borderRadius: 14, padding: 18 }}>
       <h2 style={{ margin: "0 0 10px", fontSize: 18 }}>Redigera klient</h2>
       <p style={{ margin: "0 0 14px", color: "#8fb1c3", fontSize: 14 }}>
         Uppdatera uppgifter för {client.company_name}.

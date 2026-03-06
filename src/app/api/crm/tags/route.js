@@ -16,7 +16,7 @@ export async function GET() {
 export async function POST(request) {
   const body = await request.json().catch(() => ({}));
   const name = String(body?.name || "").trim();
-  const color = String(body?.color || "#3b9eff").trim();
+  const color = String(body?.color || "#38bdf8").trim();
 
   if (!name) {
     return Response.json({ ok: false, error: "Namn krävs" }, { status: 400 });
