@@ -512,7 +512,7 @@ async function getDashboardDataFromDbCached(fromDate) {
 
   const [invoiceRows, customerMappings, employeeMappings, articleGroupMappings, contractAccruals] = await Promise.all([
     getInvoiceRowsForInvoices(preloadedInvoiceNumbers),
-    getCustomerCostCenterMappings(Array.from(invoiceCustomerNumbers)),
+    getCustomerCostCenterMappings([]),
     getEmployeeMappings(),
     getArticleGroupMappings(),
     getCachedContractAccruals(),

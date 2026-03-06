@@ -93,9 +93,19 @@ export default function SyncPanel() {
 
   async function syncCostcenters() {
     await run("Sync kostnadsställen", async () => {
-      const data = await post("/api/admin/sync-costcenters", { batchSize: 20 });
-      if (data.ok === false) throw new Error(data.error || "okänt fel");
-      setStatus(`Kostnadsställen synkade. Uppdaterade: ${data.syncedNow || 0}, kvar: ${data.remaining || 0}`);
+      let totalSynced = 0;
+      let rounds = 0;
+      while (rounds < 200) {
+        rounds += 1;
+        const data = await post("/api/admin/sync-costcenters", { batchSize: 20 });
+        if (data.ok === false) throw new Error(data.error || "okänt fel");
+        const syncedNow = Number(data.syncedNow || 0);
+        totalSynced += syncedNow;
+        const remaining = Number(data.remaining || 0);
+        setStatus(`Synkar kostnadsställen… Uppdaterade: ${totalSynced}, kvar: ${remaining}`);
+        if (syncedNow === 0 || remaining === 0) break;
+      }
+      setStatus(`Kostnadsställen klar! Totalt uppdaterade: ${totalSynced}`);
     });
   }
 

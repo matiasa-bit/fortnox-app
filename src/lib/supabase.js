@@ -487,7 +487,7 @@ export async function getCustomerCostCenterMappings(customerNumbers = []) {
         query = query.in("customer_number", numbers);
       }
 
-      return query;
+      return query.limit(10000);
     };
 
     let { data, error } = await runQuery(true);
