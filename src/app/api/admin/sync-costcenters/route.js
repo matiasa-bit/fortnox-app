@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { readFileSync } from "fs";
 import {
   saveCustomerCostCenterMappings,
+  saveCustomers,
   getTokenFromDb,
   saveToken,
   supabaseServer,
@@ -86,32 +87,60 @@ export async function POST(request) {
   const batchSize = Math.max(1, Math.min(30, Number(body?.batchSize || 20)));
   const fromIndex = Math.max(0, Number(body?.fromIndex || 0));
 
-  // Load ALL customer numbers (sorted, stable order)
-  const [{ data: crmRows }, { data: custRows }] = await Promise.all([
-    supabaseServer.from("crm_clients").select("customer_number").not("customer_number", "is", null).order("customer_number").limit(10000),
-    supabaseServer.from("customers").select("customer_number").not("customer_number", "is", null).order("customer_number").limit(10000),
-  ]);
-
-  const allNumbers = Array.from(new Set([
-    ...(crmRows || []).map(r => String(r.customer_number).trim()),
-    ...(custRows || []).map(r => String(r.customer_number).trim()),
-  ].filter(Boolean))).sort();
+  // Hämta alla kundnummer direkt från Fortnox (hanterar paginering)
+  const allNumbers = [];
+  let fetchError = null;
+  {
+    let page = 1;
+    while (true) {
+      const { ok, data } = await fortnoxGet(`/customers?limit=500&page=${page}`, token, cookieStore, userId);
+      if (!ok) { fetchError = "Fortnox svarade med fel vid hämtning av kundlista."; break; }
+      const customers = data?.Customers || [];
+      for (const c of customers) {
+        const num = String(c.CustomerNumber || c.CustomerNo || c.Number || "").trim();
+        if (num) allNumbers.push(num);
+      }
+      const meta = data?.MetaInformation || {};
+      const totalPages = Number(meta["@TotalPages"] || meta.TotalPages || 1);
+      if (page >= totalPages || customers.length === 0) break;
+      page++;
+    }
+    allNumbers.sort((a, b) => a.localeCompare(b, "sv-SE", { numeric: true }));
+  }
 
   const total = allNumbers.length;
+
+  if (total === 0) {
+    return Response.json({ ok: false, error: fetchError || "Inga kunder hittades i Fortnox." }, { status: 502 });
+  }
+
   const batch = allNumbers.slice(fromIndex, fromIndex + batchSize);
 
   if (batch.length === 0) {
     return Response.json({ ok: true, syncedNow: 0, fromIndex, nextIndex: null, total, remaining: 0 });
   }
 
-  // Fetch cost center catalog once
+  // Fetch cost center catalog once — save code, name and active status
   const ccDict = new Map();
-  {
+  if (fromIndex === 0) {
     const { data } = await fortnoxGet("/costcenters?limit=500", token, cookieStore, userId);
+    const ccRows = [];
     for (const row of data?.CostCenters || []) {
       const code = String(row.Code || row.CostCenter || "").trim();
       const name = String(row.Description || row.Name || "").trim();
-      if (code) ccDict.set(code, name);
+      const active = row.Active !== false;
+      if (code) {
+        ccDict.set(code, { name, active });
+        ccRows.push({ code, name, active, updated_at: new Date().toISOString() });
+      }
+    }
+    if (ccRows.length > 0) {
+      await supabaseServer.from("cost_centers").upsert(ccRows, { onConflict: "code" });
+    }
+  } else {
+    const { data: existing } = await supabaseServer.from("cost_centers").select("code, name, active");
+    for (const row of existing || []) {
+      ccDict.set(row.code, { name: row.name, active: row.active });
     }
   }
 
@@ -135,7 +164,7 @@ export async function POST(request) {
       customer_number: customerNumber,
       customer_name: String(c.Name || "").trim(),
       cost_center: code,
-      cost_center_name: String(ccDict.get(code) || "").trim(),
+      cost_center_name: String(ccDict.get(code)?.name || "").trim(),
       active: c.Active !== false && c.Inactive !== true,
       updated_at: new Date().toISOString(),
     });
@@ -144,6 +173,12 @@ export async function POST(request) {
 
   if (saved.length > 0) {
     await saveCustomerCostCenterMappings(saved);
+
+    // Also upsert into customers table so all Fortnox customers appear in the app
+    await saveCustomers(saved.map(r => ({
+      customer_number: r.customer_number,
+      name: r.customer_name,
+    })));
   }
 
   const nextIndex = fromIndex + batch.length;
