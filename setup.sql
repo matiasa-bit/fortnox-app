@@ -84,6 +84,22 @@ CREATE TABLE IF NOT EXISTS time_reports (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Tabell för kostnadsställen från Fortnox (kod, namn, aktiv)
+CREATE TABLE IF NOT EXISTS cost_centers (
+  code TEXT PRIMARY KEY,
+  name TEXT,
+  active BOOLEAN DEFAULT TRUE,
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+ALTER TABLE IF EXISTS cost_centers
+  ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE;
+
+CREATE POLICY "Service role can do everything" ON cost_centers
+  FOR ALL USING (auth.role() = 'service_role');
+
+ALTER TABLE IF EXISTS cost_centers ENABLE ROW LEVEL SECURITY;
+
 -- Tabell för mappning kundnummer -> kostnadsställe
 CREATE TABLE IF NOT EXISTS customer_costcenter_map (
   customer_number TEXT PRIMARY KEY,

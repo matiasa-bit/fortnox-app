@@ -21,6 +21,9 @@ export default function SettingsPage() {
           <Link href="/settings/articles" style={{ color: "#fff", textDecoration: "none", border: "1px solid #1e293b", borderRadius: 10, padding: "8px 12px", background: "#9b59ff" }}>
             Artikelmappning
           </Link>
+          <Link href="/settings/costcenters" style={{ color: "#fff", textDecoration: "none", border: "1px solid #1e293b", borderRadius: 10, padding: "8px 12px", background: "#2f7ef7" }}>
+            Kostnadsställen
+          </Link>
         </div>
       </div>
 
@@ -45,6 +48,19 @@ export default function SettingsPage() {
             <p style={{ color: "#64748b", margin: "0 0 0", fontSize: 13 }}>
               Hämta och uppdatera data från Fortnox.
             </p>
+          </div>
+
+          <div style={{ background: "#080c10", border: "1px solid #1e293b", borderRadius: 12, padding: 14 }}>
+            <h3 style={{ color: "#fff", margin: "0 0 6px", fontSize: 15 }}>Kostnadsställen</h3>
+            <p style={{ color: "#64748b", margin: "0 0 10px", fontSize: 13 }}>
+              Visa och synka kund-till-kostnadsställe-mappning från Fortnox.
+            </p>
+            <Link
+              href="/settings/costcenters"
+              style={{ display: "inline-block", background: "#2f7ef7", color: "#fff", textDecoration: "none", borderRadius: 9, padding: "7px 11px", fontSize: 13 }}
+            >
+              Öppna kostnadsställen
+            </Link>
           </div>
 
           <div style={{ background: "#080c10", border: "1px solid #1e293b", borderRadius: 12, padding: 14 }}>

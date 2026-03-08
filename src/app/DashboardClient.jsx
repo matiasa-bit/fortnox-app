@@ -243,6 +243,7 @@ export default function DashboardClient({
   employeeMappings = [],
   articleGroupMappings = [],
   contractAccruals = [],
+  costCenterCatalog = [],
 }) {
 
   // konvertera poster till en enhetlig form (stora/små fält)
@@ -319,10 +320,18 @@ export default function DashboardClient({
     return [{ value: "ALL", label: "Alla kunder" }, ...options];
   }, [data, customerNumberToName, customersProp]);
 
-  // Kostnadsställen hämtade från kundkort (prop)
+  // Kostnadsställen — katalog från Fortnox slås ihop med kundkortdata
   const costcenters = useMemo(() => {
     const map = new Map();
 
+    // Starta med hela katalogen (alla kostnadsställen från Fortnox)
+    costCenterCatalog.forEach(cc => {
+      const code = normalizeCostCenter(cc.code);
+      const name = String(cc.name || "").trim();
+      if (code) map.set(code, name);
+    });
+
+    // Komplettera/skriv över med kundkortsdata (kan ha mer aktuella namn)
     customersProp.forEach(c => {
       const code = normalizeCostCenter(c.cost_center || c.CostCenter || c.CostCenterCode || c.CostCenterId);
       const name = String(c.cost_center_name || c.CostCenterName || c.CostCenterDescription || "").trim();
@@ -340,7 +349,7 @@ export default function DashboardClient({
       }));
 
     return [{ value: "ALL", label: "Alla kostnadsställen" }, ...options];
-  }, [customersProp]);
+  }, [customersProp, costCenterCatalog]);
 
   const [selectedYear, setSelectedYear] = useState(DEFAULT_SELECTED_YEAR);
   const [selectedCustomer, setSelectedCustomer] = useState("ALL");

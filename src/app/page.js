@@ -14,6 +14,7 @@ import {
   saveCustomerCostCenterMappings,
   getEmployeeMappings,
   getArticleGroupMappings,
+  supabaseServer,
 } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -647,7 +648,11 @@ export default async function Home({ searchParams }) {
     contractAccruals,
   } = await getDashboardDataFromDbCached(fromDate);
 
-  const freshContractAccruals = await getCachedContractAccruals();
+  const [freshContractAccruals, costCenterCatalogResult] = await Promise.all([
+    getCachedContractAccruals(),
+    supabaseServer.from("cost_centers").select("code, name, active").order("code"),
+  ]);
+  const costCenterCatalog = costCenterCatalogResult?.data || [];
 
   return (
     <>
@@ -680,6 +685,7 @@ export default async function Home({ searchParams }) {
         employeeMappings={employeeMappings}
         articleGroupMappings={articleGroupMappings}
         contractAccruals={freshContractAccruals.length > 0 ? freshContractAccruals : contractAccruals}
+        costCenterCatalog={costCenterCatalog}
       />
     </>
   );

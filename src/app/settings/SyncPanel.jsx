@@ -146,7 +146,6 @@ export default function SyncPanel() {
     { label: "Sync kundavtal", color: "#8a6f42", onClick: syncContracts },
     { label: "Synka alla artikelrader", color: "#059669", onClick: () => syncAllArticleRows(false) },
     { label: "Force omsynk artikelrader", color: "#b45309", onClick: () => syncAllArticleRows(true) },
-    { label: "Sync kostnadsställen", color: "#2f7ef7", onClick: syncCostcenters },
   ];
 
   return (
