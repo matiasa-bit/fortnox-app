@@ -326,20 +326,18 @@ export default function DashboardClient({
 
     // Starta med aktiva kostnadsställen från katalogen
     costCenterCatalog.forEach(cc => {
-      if (cc.active === false) return;
+      if (!cc.active) return; // filtrerar false, null och undefined
       const code = normalizeCostCenter(cc.code);
       const name = String(cc.name || "").trim();
       if (code) map.set(code, name);
     });
 
-    // Komplettera/skriv över med kundkortsdata (kan ha mer aktuella namn)
+    // Komplettera namn — bara för koder som redan finns i aktiv-listan
     customersProp.forEach(c => {
       const code = normalizeCostCenter(c.cost_center || c.CostCenter || c.CostCenterCode || c.CostCenterId);
       const name = String(c.cost_center_name || c.CostCenterName || c.CostCenterDescription || "").trim();
-      if (!code) return;
-      if (!map.has(code) || (!map.get(code) && name)) {
-        map.set(code, name);
-      }
+      if (!code || !map.has(code)) return; // lägg inte till inaktiva/okända koder
+      if (!map.get(code) && name) map.set(code, name);
     });
 
     const options = Array.from(map.entries())
