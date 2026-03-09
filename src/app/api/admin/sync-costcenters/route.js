@@ -88,33 +88,44 @@ export async function POST(request) {
   const fromIndex = Math.max(0, Number(body?.fromIndex || 0));
 
   // Hämta alla kundnummer direkt från Fortnox (hanterar paginering)
+  // Strategi: hämta aktiva + inaktiva separat för att komma runt Fortnox 1000-gräns i listan
   const allNumbers = [];
   let fetchError = null;
-  {
+  let fortnoxTotalResources = null;
+  let pagesFetched = 0;
+
+  for (const filterParam of ["active", "inactive"]) {
     let page = 1;
-    while (true) {
-      const { ok, data } = await fortnoxGet(`/customers?limit=500&page=${page}`, token, cookieStore, userId);
-      if (!ok) { fetchError = "Fortnox svarade med fel vid hämtning av kundlista."; break; }
+    const MAX_PAGES = 200;
+    while (page <= MAX_PAGES) {
+      const { ok, data } = await fortnoxGet(`/customers?limit=500&page=${page}&filter=${filterParam}`, token, cookieStore, userId);
+      if (!ok) { fetchError = `Fortnox fel vid filter=${filterParam} sida ${page}`; break; }
       const customers = data?.Customers || [];
+      pagesFetched++;
+      if (page === 1 && filterParam === "active") {
+        const meta = data?.MetaInformation || {};
+        fortnoxTotalResources = Number(meta["@TotalResources"] || meta.TotalResources || 0) || null;
+      }
       for (const c of customers) {
         const num = String(c.CustomerNumber || c.CustomerNo || c.Number || "").trim();
         if (num) allNumbers.push(num);
       }
-      const meta = data?.MetaInformation || {};
-      const totalPages = Number(meta["@TotalPages"] || meta.TotalPages || 1);
-      if (page >= totalPages || customers.length === 0) break;
+      if (customers.length === 0) break;
       page++;
     }
-    allNumbers.sort((a, b) => a.localeCompare(b, "sv-SE", { numeric: true }));
   }
 
-  const total = allNumbers.length;
+  // Deduplicate (en kund kan dyka upp i båda filter om Fortnox är inkonsekvent)
+  const uniqueNumbers = [...new Set(allNumbers)];
+  uniqueNumbers.sort((a, b) => a.localeCompare(b, "sv-SE", { numeric: true }));
+
+  const total = uniqueNumbers.length;
 
   if (total === 0) {
     return Response.json({ ok: false, error: fetchError || "Inga kunder hittades i Fortnox." }, { status: 502 });
   }
 
-  const batch = allNumbers.slice(fromIndex, fromIndex + batchSize);
+  const batch = uniqueNumbers.slice(fromIndex, fromIndex + batchSize);
 
   if (batch.length === 0) {
     return Response.json({ ok: true, syncedNow: 0, fromIndex, nextIndex: null, total, remaining: 0 });
@@ -192,5 +203,7 @@ export async function POST(request) {
     nextIndex: remaining > 0 ? nextIndex : null,
     total,
     remaining,
+    fortnoxTotalResources,
+    pagesFetched,
   });
 }

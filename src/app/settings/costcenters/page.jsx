@@ -82,7 +82,8 @@ export default function CostCentersPage() {
         if (data.ok === false) throw new Error(data.error || "okänt fel");
         totalSynced += Number(data.syncedNow || 0);
         const processed = nextIndex + Number(data.syncedNow || 0) + Number(data.failed || 0);
-        setStatus(`Hämtar kundkortsdata… kund ${processed} av ${data.total || "?"} (hämtar vilket kostnadsställe varje kund tillhör)`);
+        const fortnoxInfo = data.fortnoxTotalResources ? ` · Fortnox rapporterar ${data.fortnoxTotalResources} aktiva` : "";
+        setStatus(`Hämtar kundkortsdata… kund ${processed} av ${data.total || "?"}${fortnoxInfo}`);
         nextIndex = data.nextIndex ?? null;
       }
       setStatus(`Klart! Gick igenom ${totalSynced} kunder och sparade deras kostnadsställen.`);
