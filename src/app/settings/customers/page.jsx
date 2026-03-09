@@ -58,10 +58,18 @@ export default function CustomersPage() {
 
   async function syncSpecific() {
     if (specificBusy) return;
-    const numbers = specificInput.split(/[\s,;]+/).map(s => s.trim()).filter(Boolean);
-    if (numbers.length === 0) return;
+    const all = specificInput.split(/[\s,;]+/).map(s => s.trim()).filter(Boolean);
+    const numbers = all.filter(s => /^\d+$/.test(s));
+    const invalid = all.filter(s => !/^\d+$/.test(s));
+    if (numbers.length === 0) {
+      setStatus(`Ange kundnummer (siffror), t.ex. "1666, 1234". Ogiltig inmatning: ${invalid.join(", ")}`);
+      return;
+    }
+    if (invalid.length > 0) {
+      setStatus(`Hoppar över ogiltiga värden: ${invalid.join(", ")}. Synkar: ${numbers.join(", ")}…`);
+    }
     setSpecificBusy(true);
-    setStatus(`Synkar kundkort för ${numbers.length} kunder…`);
+    if (numbers.length > 0 && invalid.length === 0) setStatus(`Synkar kundkort för ${numbers.length} kunder…`);
     try {
       const res = await fetch("/api/admin/sync-specific-customers", {
         method: "POST",
