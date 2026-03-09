@@ -3341,40 +3341,40 @@ export default function DashboardClient({
                     const contractValue = costcenterContractSummary.byCustomerKey.get(c.key) || 0;
                     return (
                       <tr key={c.key} style={{borderBottom:"1px solid #141c24"}}>
-                        <td style={{padding:"14px 16px 14px 0", color:"#fff", fontWeight:500, fontSize:14}}>
+                        <td style={{padding:"5px 16px 5px 0", color:"#fff", fontWeight:500, fontSize:13}}>
                           <button
                             type="button"
                             onClick={() => openInvoicesForCustomer(c.number, c.name)}
-                            style={{background:"transparent", border:"none", color:"#fff", cursor:"pointer", padding:0, fontWeight:500, fontSize:14, textAlign:"left"}}
+                            style={{background:"transparent", border:"none", color:"#fff", cursor:"pointer", padding:0, fontWeight:500, fontSize:13, textAlign:"left"}}
                           >
                             {c.number ? `${c.number} - ${c.name}` : c.name}
                           </button>
                         </td>
-                        <td style={{padding:"14px 16px 14px 0", color:"#f59e0b", fontWeight:700, fontSize:14}}>{formatSEK(c.omsattning)}</td>
-                        <td style={{padding:"14px 16px 14px 0", color:"#64748b", fontSize:14}}>{c.antal}</td>
-                        <td style={{padding:"14px 16px 14px 0", color:"#64748b", fontSize:14}}>
+                        <td style={{padding:"5px 16px 5px 0", color:"#f59e0b", fontWeight:700, fontSize:13}}>{formatSEK(c.omsattning)}</td>
+                        <td style={{padding:"5px 16px 5px 0", color:"#64748b", fontSize:13}}>{c.antal}</td>
+                        <td style={{padding:"5px 16px 5px 0", color:"#64748b", fontSize:13}}>
                           {contractStats
                             ? (
                               <button
                                 type="button"
                                 onClick={() => openContractsForCustomer(c.number, c.name)}
-                                style={{background:"transparent", border:"none", color:"#64748b", cursor:"pointer", padding:0, fontSize:14, textDecoration:"underline", textUnderlineOffset:3}}
+                                style={{background:"transparent", border:"none", color:"#64748b", cursor:"pointer", padding:0, fontSize:13, textDecoration:"underline", textUnderlineOffset:3}}
                               >
                                 {formatSEK(contractValue)}
                               </button>
                             )
                             : "-"}
                         </td>
-                        <td style={{padding:"14px 16px 14px 0", color:"#64748b", fontSize:14}}>{c.senasteFaktura || "-"}</td>
-                        <td style={{padding:"14px 0", minWidth:120}}>
+                        <td style={{padding:"5px 16px 5px 0", color:"#64748b", fontSize:13}}>{c.senasteFaktura || "-"}</td>
+                        <td style={{padding:"5px 0", minWidth:120}}>
                           <div style={{display:"flex", alignItems:"center", gap:8}}>
-                            <div style={{flex:1, height:6, background:"#1e293b", borderRadius:3, overflow:"hidden"}}>
+                            <div style={{flex:1, height:5, background:"#1e293b", borderRadius:3, overflow:"hidden"}}>
                               <div style={{width:`${share}%`, height:"100%", background:"#38bdf8", borderRadius:3}} />
                             </div>
                             <span style={{color:"#64748b", fontSize:12, minWidth:36}}>{share}%</span>
                           </div>
                         </td>
-                        <td style={{padding:"14px 0 14px 16px", textAlign:"right", whiteSpace:"nowrap"}}>
+                        <td style={{padding:"5px 0 5px 16px", textAlign:"right", whiteSpace:"nowrap"}}>
                           <button
                             type="button"
                             onClick={() => goToCustomerFromCostcenter(c.number, c.name)}
@@ -3399,13 +3399,13 @@ export default function DashboardClient({
                   })}
                   {costcenterCustomerData.length > 0 && (
                     <tr style={{borderTop:"1px solid #1e293b", background:"rgba(9,16,24,0.22)"}}>
-                      <td style={{padding:"14px 16px 14px 0", color:"#e2e8f0", fontWeight:700, fontSize:14}}>Summa</td>
-                      <td style={{padding:"14px 16px 14px 0"}} />
-                      <td style={{padding:"14px 16px 14px 0"}} />
-                      <td style={{padding:"14px 16px 14px 0", color:"#f59e0b", fontWeight:700, fontSize:14}}>{formatSEK(costcenterContractSummary.totalValue)}</td>
-                      <td style={{padding:"14px 16px 14px 0"}} />
-                      <td style={{padding:"14px 0"}} />
-                      <td style={{padding:"14px 0 14px 16px"}} />
+                      <td style={{padding:"7px 16px 7px 0", color:"#e2e8f0", fontWeight:700, fontSize:13}}>Summa</td>
+                      <td style={{padding:"7px 16px 7px 0"}} />
+                      <td style={{padding:"7px 16px 7px 0"}} />
+                      <td style={{padding:"7px 16px 7px 0", color:"#f59e0b", fontWeight:700, fontSize:13}}>{formatSEK(costcenterContractSummary.totalValue)}</td>
+                      <td style={{padding:"7px 16px 7px 0"}} />
+                      <td style={{padding:"7px 0"}} />
+                      <td style={{padding:"7px 0 7px 16px"}} />
                     </tr>
                   )}
                 </tbody>
