@@ -324,8 +324,9 @@ export default function DashboardClient({
   const costcenters = useMemo(() => {
     const map = new Map();
 
-    // Starta med hela katalogen (alla kostnadsställen från Fortnox)
+    // Starta med aktiva kostnadsställen från katalogen
     costCenterCatalog.forEach(cc => {
+      if (cc.active === false) return;
       const code = normalizeCostCenter(cc.code);
       const name = String(cc.name || "").trim();
       if (code) map.set(code, name);
