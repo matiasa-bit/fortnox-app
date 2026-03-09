@@ -475,41 +475,54 @@ export async function getCustomerCostCenterMappings(customerNumbers = []) {
       ? customerNumbers.map(v => String(v || "").trim()).filter(Boolean)
       : [];
 
-    const runQuery = async (withActiveColumn) => {
+    // Om specifika kundnummer efterfrågas, använd enkel query
+    if (numbers.length > 0) {
+      const { data, error } = await supabaseServer
+        .from("customer_costcenter_map")
+        .select("customer_number, customer_name, cost_center, cost_center_name, active, updated_at")
+        .in("customer_number", numbers);
+      if (error) console.error("Fel vid hämtning av customer_costcenter_map:", JSON.stringify(error, null, 2));
+      return data || [];
+    }
+
+    // Hämta alla rader med paginering (kringgår Supabase max-rows=1000)
+    const PAGE = 1000;
+    const all = [];
+    let from = 0;
+    let withActiveColumn = true;
+
+    while (true) {
       let query = supabaseServer
         .from("customer_costcenter_map")
         .select(withActiveColumn
           ? "customer_number, customer_name, cost_center, cost_center_name, active, updated_at"
           : "customer_number, customer_name, cost_center, cost_center_name, updated_at"
-        );
+        )
+        .order("customer_number")
+        .range(from, from + PAGE - 1);
 
-      if (numbers.length > 0) {
-        query = query.in("customer_number", numbers);
-      }
+      const { data, error } = await query;
 
-      return query.limit(10000);
-    };
-
-    let { data, error } = await runQuery(true);
-
-    if (error) {
-      const message = String(error.message || "").toLowerCase();
-      const details = String(error.details || "").toLowerCase();
-      const missingActiveColumn = message.includes("active") || details.includes("active");
-
-      if (missingActiveColumn) {
-        const fallback = await runQuery(false);
-        data = fallback.data;
-        error = fallback.error;
-
-        if (!error) {
-          return (data || []).map(row => ({ ...row, active: true }));
+      if (error) {
+        const message = String(error.message || "").toLowerCase();
+        if (withActiveColumn && (message.includes("active") || String(error.details || "").toLowerCase().includes("active"))) {
+          withActiveColumn = false;
+          continue; // försök igen utan active-kolumn
         }
+        console.error("Fel vid hämtning av customer_costcenter_map:", JSON.stringify(error, null, 2));
+        break;
       }
+
+      if (!data || data.length === 0) break;
+      all.push(...data);
+      if (data.length < PAGE) break;
+      from += PAGE;
     }
 
-    if (error) console.error("Fel vid hämtning av customer_costcenter_map:", JSON.stringify(error, null, 2));
-    return data || [];
+    if (!withActiveColumn) {
+      return all.map(row => ({ ...row, active: true }));
+    }
+    return all;
   } catch (err) {
     console.error("Exception vid getCustomerCostCenterMappings:", err);
     return [];
