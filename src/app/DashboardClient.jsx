@@ -895,8 +895,17 @@ export default function DashboardClient({
     });
 
     // Lägg till kunder kopplade till detta KS men utan fakturor i perioden
+    // Bygg uppslagning av inaktiva kunder för att filtrera bort dem
+    const inactiveNumbers = new Set(
+      customersProp
+        .filter(c => c.active === false)
+        .map(c => normalizeCustomerNumber(c.customer_number || c.CustomerNumber || c.CustomerNo))
+        .filter(Boolean)
+    );
+
     if (selectedCostcenter !== "ALL") {
       customersProp.forEach(c => {
+        if (c.active === false) return; // hoppa över inaktiva
         const number = normalizeCustomerNumber(c.customer_number || c.CustomerNumber || c.CustomerNo);
         if (!number) return;
         const cc = normalizeCostCenter(c.cost_center || c.CostCenter || "");
@@ -914,6 +923,7 @@ export default function DashboardClient({
     }
 
     return Object.values(map)
+      .filter(c => !inactiveNumbers.has(c.number))
       .sort((a, b) => b.omsattning - a.omsattning || a.name.localeCompare(b.name, "sv-SE"));
   }, [costcenterFocusedInvoices, customerNumberToName, customersProp, selectedCostcenter]);
 
