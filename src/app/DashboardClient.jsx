@@ -895,10 +895,28 @@ export default function DashboardClient({
       }
     });
 
+    // Lägg till kunder kopplade till detta KS men utan fakturor i perioden
+    if (selectedCostcenter !== "ALL") {
+      customersProp.forEach(c => {
+        const number = normalizeCustomerNumber(c.customer_number || c.CustomerNumber || c.CustomerNo);
+        if (!number) return;
+        const cc = normalizeCostCenter(c.cost_center || c.CostCenter || "");
+        if (cc !== selectedCostcenter) return;
+        if (map[number]) return; // redan med via faktura
+        map[number] = {
+          key: number,
+          number,
+          name: customerNumberToName.get(number) || String(c.customer_name || c.Name || ""),
+          omsattning: 0,
+          antal: 0,
+          senasteFaktura: "",
+        };
+      });
+    }
+
     return Object.values(map)
-      .filter(c => c.omsattning !== 0)
-      .sort((a, b) => b.omsattning - a.omsattning);
-  }, [costcenterFocusedInvoices, customerNumberToName]);
+      .sort((a, b) => b.omsattning - a.omsattning || a.name.localeCompare(b.name, "sv-SE"));
+  }, [costcenterFocusedInvoices, customerNumberToName, customersProp, selectedCostcenter]);
 
   const contractStatsByCustomer = useMemo(() => {
     const map = new Map();
