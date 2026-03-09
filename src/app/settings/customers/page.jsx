@@ -13,6 +13,8 @@ export default function CustomersPage() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("aktiva");
   const [ccFilter, setCcFilter] = useState("");
+  const [specificInput, setSpecificInput] = useState("");
+  const [specificBusy, setSpecificBusy] = useState(false);
 
   async function loadRows() {
     setLoading(true);
@@ -51,6 +53,32 @@ export default function CustomersPage() {
       setStatus(`Fel: ${err?.message || "okänt"}`);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function syncSpecific() {
+    if (specificBusy) return;
+    const numbers = specificInput.split(/[\s,;]+/).map(s => s.trim()).filter(Boolean);
+    if (numbers.length === 0) return;
+    setSpecificBusy(true);
+    setStatus(`Synkar kundkort för ${numbers.length} kunder…`);
+    try {
+      const res = await fetch("/api/admin/sync-specific-customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerNumbers: numbers }),
+      });
+      const data = await res.json();
+      if (data.ok === false) throw new Error(data.error || "okänt fel");
+      const failInfo = data.failed > 0 ? ` · ${data.failed} misslyckades (${data.failedNumbers?.join(", ")})` : "";
+      const results = (data.results || []).map(r => `${r.customer_number}: KS ${r.cost_center || "–"}`).join(" · ");
+      setStatus(`Klart! ${data.synced} kunder uppdaterade.${failInfo}${results ? ` · ${results}` : ""}`);
+      setSpecificInput("");
+      await loadRows();
+    } catch (err) {
+      setStatus(`Fel: ${err?.message || "okänt"}`);
+    } finally {
+      setSpecificBusy(false);
     }
   }
 
@@ -100,6 +128,25 @@ export default function CustomersPage() {
           {status}
         </div>
       )}
+
+      <section style={{ background: "#0f1419", border: "1px solid #1e293b", borderRadius: 10, padding: "14px 16px", marginBottom: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <span style={{ color: "#94a3b8", fontSize: 13, whiteSpace: "nowrap" }}>Uppdatera specifika kunder:</span>
+        <input
+          type="text"
+          placeholder="t.ex. 1234, 5678"
+          value={specificInput}
+          onChange={(e) => setSpecificInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && syncSpecific()}
+          style={{ flex: 1, minWidth: 180, background: "#080c10", border: "1px solid #1e293b", borderRadius: 8, padding: "7px 12px", color: "#fff", fontSize: 13, outline: "none" }}
+        />
+        <button
+          onClick={syncSpecific}
+          disabled={specificBusy || !specificInput.trim()}
+          style={{ padding: "8px 14px", borderRadius: 8, border: "none", cursor: (specificBusy || !specificInput.trim()) ? "not-allowed" : "pointer", fontWeight: 600, fontSize: 13, color: "#fff", background: "#059669", opacity: (specificBusy || !specificInput.trim()) ? 0.5 : 1, whiteSpace: "nowrap" }}
+        >
+          {specificBusy ? "Synkar…" : "Hämta kundkort"}
+        </button>
+      </section>
 
       <section style={{ background: "#0f1419", border: "1px solid #1e293b", borderRadius: 14, padding: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 10, flexWrap: "wrap" }}>
