@@ -1975,6 +1975,19 @@ export default function DashboardClient({
       return getAnnualContractValueForCustomer(selectedCustomer, targetYear);
     }
 
+    // När ett KS är valt: inkludera alla kunder kopplade till KS, även de utan fakturor i perioden
+    if (selectedCostcenter && selectedCostcenter !== "ALL") {
+      let sum = 0;
+      customersProp.forEach(c => {
+        const number = normalizeCustomerNumber(c.customer_number || c.CustomerNumber || c.CustomerNo);
+        const cc = normalizeCostCenter(c.cost_center || c.CostCenter || "");
+        if (number && cc === selectedCostcenter) {
+          sum += getAnnualContractValueForCustomer(number, targetYear);
+        }
+      });
+      return sum;
+    }
+
     const visibleCustomerNumbers = new Set(
       filtered
         .map(inv => normalizeCustomerNumber(inv.customer_number))
@@ -1987,7 +2000,7 @@ export default function DashboardClient({
     });
 
     return sum;
-  }, [selectedCustomer, selectedYear, filtered, contractRowsByCustomer]);
+  }, [selectedCustomer, selectedCostcenter, selectedYear, filtered, contractRowsByCustomer, customersProp]);
 
   const hasContractsForCurrentSelection = useMemo(() => {
     if (selectedCustomer && selectedCustomer !== "ALL") {
