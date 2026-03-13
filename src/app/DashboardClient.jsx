@@ -2587,6 +2587,12 @@ export default function DashboardClient({
             Byråvy
           </Link>
           <Link
+            href="/licenses"
+            style={{background:"#0f1419", color:"#e2e8f0", border:"1px solid #1e293b", borderRadius:10, padding:"7px 14px", fontSize:13, textDecoration:"none", fontWeight:500, letterSpacing:"0.01em"}}
+          >
+            Licensfakturering
+          </Link>
+          <Link
             href="/crm/clients"
             style={{background:"#0f1419", color:"#e2e8f0", border:"1px solid #1e293b", borderRadius:10, padding:"7px 14px", fontSize:13, textDecoration:"none", fontWeight:500, letterSpacing:"0.01em"}}
           >

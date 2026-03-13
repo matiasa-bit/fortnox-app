@@ -819,3 +819,43 @@ export async function getAppSetting(key) {
     return null;
   }
 }
+
+export async function getLicensePriceList() {
+  const { data, error } = await supabaseServer
+    .from("license_price_list")
+    .select("*")
+    .order("article_number", { ascending: true });
+  if (error) console.error("Fel vid hämtning av license_price_list:", error);
+  return data || [];
+}
+
+export async function saveLicensePriceList(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) return [];
+  const now = new Date().toISOString();
+  const withTs = rows.map(r => ({ ...r, updated_at: now }));
+  const { data, error } = await supabaseServer
+    .from("license_price_list")
+    .upsert(withTs, { onConflict: "article_number" });
+  if (error) console.error("Fel vid sparande av license_price_list:", error);
+  return data;
+}
+
+export async function getLicenseCustomerConfigs() {
+  const { data, error } = await supabaseServer
+    .from("license_customer_config")
+    .select("*")
+    .order("name", { ascending: true });
+  if (error) console.error("Fel vid hämtning av license_customer_config:", error);
+  return data || [];
+}
+
+export async function saveLicenseCustomerConfigs(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) return [];
+  const now = new Date().toISOString();
+  const withTs = rows.map(r => ({ ...r, updated_at: now }));
+  const { data, error } = await supabaseServer
+    .from("license_customer_config")
+    .upsert(withTs, { onConflict: "org_number" });
+  if (error) console.error("Fel vid sparande av license_customer_config:", error);
+  return data;
+}
